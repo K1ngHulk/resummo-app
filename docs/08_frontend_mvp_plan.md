@@ -125,3 +125,10 @@ Nuevos candidatos:
 - `npm.cmd run build` debe pasar.
 - No se deben agregar dependencias salvo necesidad justificada.
 - No se debe tocar backend porque no existe en esta fase.
+
+## Frontend debts
+
+- P0: ninguno detectado despues de usar el logo real y validar rutas Learning.
+- P1: mejorar fidelidad visual fina contra Figma y contener el crecimiento de `src/styles/index.css`.
+- P1: decidir si los componentes `src/components/learning/*` se reutilizan o se eliminan.
+- P2: evaluar React Router cuando haya rutas dinamicas; TypeScript y WebP quedan para una etapa posterior si crece el alcance o el peso de assets.

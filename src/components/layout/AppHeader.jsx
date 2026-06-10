@@ -1,5 +1,6 @@
 import AppIcon from '../ui/AppIcon'
 import SearchBar from '../ui/SearchBar'
+import resummoLogo from '../../assets/brand/originals/logorojo.png'
 import { mockUser } from '../../mocks/learningMockData'
 
 function AppHeader({ activeSection, navigationItems, onNavigate }) {
@@ -7,11 +8,8 @@ function AppHeader({ activeSection, navigationItems, onNavigate }) {
     <header className="app-header">
       <div className="app-header__inner">
         <div className="app-header__top">
-          <div className="brand-mark" aria-label="Resummo placeholder logo">
-            <div className="resummo-mark" aria-hidden="true">
-              <span>R</span>
-              <small>+</small>
-            </div>
+          <div className="brand-mark">
+            <img src={resummoLogo} alt="Resummo" className="brand-logo" />
             <div className="brand-mark__text">RESUMMO</div>
           </div>
 
