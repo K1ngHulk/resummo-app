@@ -1,10 +1,10 @@
-﻿import { overallProgress, progressSegments } from '../../data/dashboardData'
+import { overallProgress, progressSegments } from '../../mocks/learningMockData'
 import DonutChart from '../ui/DonutChart'
 
 function ProgressOverviewCard() {
   return (
     <article className="dashboard-card dashboard-card--progress">
-      <h2>Analisis de tu progreso</h2>
+      <h2>{overallProgress.heading}</h2>
 
       <div className="progress-overview">
         <DonutChart
@@ -14,7 +14,7 @@ function ProgressOverviewCard() {
         />
 
         <div className="progress-overview__legend">
-          <p>En general, respondiste {overallProgress.totalAnswered} preguntas:</p>
+          <p>{overallProgress.intro} {overallProgress.totalAnswered} preguntas:</p>
           <ul>
             {progressSegments.map((segment) => (
               <li key={segment.label}>
@@ -27,7 +27,7 @@ function ProgressOverviewCard() {
       </div>
 
       <button type="button" className="primary-button primary-button--full">
-        Crear sesion de preguntas
+        {overallProgress.action}
       </button>
     </article>
   )

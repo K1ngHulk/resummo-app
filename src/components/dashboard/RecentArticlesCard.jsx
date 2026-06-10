@@ -1,4 +1,4 @@
-﻿import { recentArticles } from '../../data/dashboardData'
+import { recentArticles } from '../../mocks/learningMockData'
 import AppIcon from '../ui/AppIcon'
 
 function RecentArticlesCard() {

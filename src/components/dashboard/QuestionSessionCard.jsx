@@ -1,4 +1,4 @@
-﻿import { questionSession } from '../../data/dashboardData'
+import { questionSession } from '../../mocks/learningMockData'
 
 function QuestionSessionCard() {
   const completion = (questionSession.answered / questionSession.total) * 100
@@ -6,9 +6,9 @@ function QuestionSessionCard() {
   return (
     <article className="dashboard-card">
       <div className="dashboard-card__row dashboard-card__row--top">
-        <h2>Continuar sesion de preguntas</h2>
+        <h2>{questionSession.heading}</h2>
         <button type="button" className="text-link">
-          Ver todo
+          {questionSession.viewAllLabel}
         </button>
       </div>
 
@@ -25,7 +25,7 @@ function QuestionSessionCard() {
 
       <div className="dashboard-card__footer-action">
         <button type="button" className="secondary-button">
-          Continuar
+          {questionSession.action}
         </button>
       </div>
     </article>
