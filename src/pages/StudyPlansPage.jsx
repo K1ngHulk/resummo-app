@@ -1,6 +1,6 @@
 import { studyPlans } from '../mocks/learningMockData'
 
-function StudyPlansPage() {
+function StudyPlansPage({ onNavigate }) {
   return (
     <section className="figma-page">
       <h1>{studyPlans.title}</h1>
@@ -9,7 +9,11 @@ function StudyPlansPage() {
         <div>
           <h2>{studyPlans.heroTitle}</h2>
           <p>{studyPlans.heroDescription}</p>
-          <button type="button" className="primary-button">
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => onNavigate('/learning/study-plans/new/step-1')}
+          >
             {studyPlans.heroAction}
           </button>
         </div>

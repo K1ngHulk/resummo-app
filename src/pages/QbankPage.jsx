@@ -27,7 +27,11 @@ function QbankPage({ onNavigate }) {
               <p>
                 <strong>{qbankOverview.sessionMode.mode}:</strong> Preguntas basadas en "{session.title}" ({session.status})
               </p>
-              <button type="button" className="outline-pill-button">
+              <button
+                type="button"
+                className="outline-pill-button"
+                onClick={() => onNavigate('/learning/qbank/session')}
+              >
                 {qbankOverview.continueAction}
               </button>
               <span aria-hidden="true">...</span>

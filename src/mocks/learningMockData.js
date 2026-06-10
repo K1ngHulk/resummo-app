@@ -198,6 +198,83 @@ export const qbankStatusModes = [
   { id: 'latest-attempt', label: 'Basado en el intento de pregunta más reciente', defaultSelected: true },
 ]
 
+export const qbankQuestionSession = {
+  title: 'Sesión personalizada de estudio',
+  backAction: 'Volver al banco',
+  progress: {
+    current: 3,
+    total: 20,
+    label: '3/20',
+    percent: 15,
+  },
+  questionPreview: 'Un cirujano es llamado para...',
+  difficultyLabels: ['R', 'R', 'R', 'R', 'R'],
+  questionList: Array.from({ length: 12 }, (_, index) => ({
+    id: index + 1,
+    number: index + 1,
+    title: 'Un cirujano es llamado para...',
+    difficulty: index < 3 ? 1 : index < 7 ? 3 : 5,
+  })),
+  clinicalCase:
+    'Un cirujano de guardia para el fin de semana es llamado para realizar una apendicectomía de emergencia a un hombre de 19 años diagnosticado con apendicitis perforada y peritonitis generalizada en el servicio de urgencias. El paciente conservaba la capacidad de tomar decisiones al momento del diagnóstico y un residente de cirugía obtuvo su consentimiento informado para el procedimiento. El cirujano de guardia llega con 30 minutos de retraso y el personal del quirófano no puede comunicarse con él por teléfono para confirmar los instrumentos y materiales necesarios para la intervención. Al llegar, el técnico quirúrgico percibe olor a alcohol en el aliento del cirujano y confirma esta sospecha con el enfermero anestesista presente. Si el cirujano de guardia realiza el procedimiento en su estado actual, ¿cuál de los siguientes principios de atención al paciente se violaría con mayor probabilidad?',
+  tipButtons: ['Tip médico', 'Tip médico', 'Información clave'],
+  options: [
+    {
+      id: 'a',
+      label: 'A',
+      text: 'Beneficencia',
+      outcome: 'incorrect',
+    },
+    {
+      id: 'b',
+      label: 'B',
+      text: 'Justicia',
+      outcome: 'incorrect',
+    },
+    {
+      id: 'c',
+      label: 'C',
+      text: 'Autonomía',
+      outcome: 'incorrect',
+    },
+    {
+      id: 'd',
+      label: 'D',
+      text: 'No maleficencia',
+      outcome: 'correct',
+    },
+  ],
+  feedback: {
+    neutral: {
+      label: 'Sin responder',
+      selectedOptionId: null,
+    },
+    correct: {
+      label: 'Respuesta correcta',
+      selectedOptionId: 'd',
+    },
+    incorrect: {
+      label: 'Respuesta incorrecta',
+      selectedOptionId: 'd',
+    },
+  },
+  explanation: {
+    title: 'Explicación mock',
+    body:
+      'En ética médica, la autonomía se refiere al derecho del paciente o su tutor a decidir si se somete o no a un tratamiento. Este paciente está legalmente emancipado, conservaba plena capacidad de decisión al momento del diagnóstico y un residente obtuvo su consentimiento informado para el procedimiento. Por lo tanto, se respeta el principio de autonomía del paciente.',
+  },
+  incorrectHint:
+    'Un médico que se encuentra bajo los efectos del alcohol o las drogas tiene un mayor riesgo de cometer un error médico que cause lesiones al paciente.',
+  reportAction: 'Reportar respuesta',
+  explanationsAction: 'Mostrar todas las explicaciones',
+  actions: {
+    simulateCorrect: 'Simular correcta',
+    simulateIncorrect: 'Simular incorrecta',
+    next: 'Siguiente pregunta',
+    finish: 'Terminar sesion',
+  },
+}
+
 export const studyPlans = {
   title: 'Planes de Estudio',
   heroTitle: '¿Estás por dar un examen pronto?',
@@ -208,6 +285,49 @@ export const studyPlans = {
   emptyTitle: 'Aún no has empezado ningún plan de estudio',
   emptyAction: 'Puedes crearlo dando clic aquí',
   discoverTitle: 'Descubre todos los Planes de Estudio',
+}
+
+export const studyPlanWizard = {
+  title: 'Crea un plan de estudio personalizado',
+  step1: {
+    introTitle: 'Creamos en base a tus objetivos',
+    intro:
+      'Y adaptamos el contenido para que coincida con ellos. Asegúrate de que tu información sea correcta porque hay muchos cálculos pasando tras bambalinas.',
+    question: '¿Para qué estás estudiando?',
+    selectedExam: 'Pediatrics (ABP)',
+    rows: [
+      { id: 'articles', label: 'Artículos', chip: 'Todos' },
+      { id: 'systems', label: 'Sistemas', chip: 'Todos' },
+    ],
+    statusTitle: 'Incluir preguntas con el siguiente estado:',
+    statuses: [
+      { id: 'unanswered', label: 'Aún no contestado', checked: true },
+      { id: 'correct-hints', label: 'Respondido correctamente utilizando pistas', checked: true },
+      { id: 'incorrect', label: 'Respondido incorrectamente', checked: true },
+      { id: 'correct', label: 'Respondido correctamente', checked: false },
+    ],
+    action: 'Continuar',
+  },
+  step2: {
+    introTitle: 'Establece una rutina de estudio',
+    intro:
+      'Basado en tus objetivos, calculamos que necesitas estudiar 3 horas 30 minutos, 3 días una semana para terminar tu plan antes de la fecha límite establecida.',
+    hoursLabel: 'Horas por día',
+    hoursValue: '3h 30min',
+    helper:
+      'Incluye el tiempo dedicado a responder preguntas y revisarlas. Asume un promedio de 20 preguntas por hora.',
+    daysTitle: 'Días de Estudio',
+    days: [
+      { id: 'monday', label: 'Lunes', checked: true },
+      { id: 'tuesday', label: 'Martes', checked: true },
+      { id: 'wednesday', label: 'Miércoles', checked: true },
+      { id: 'thursday', label: 'Jueves', checked: false },
+      { id: 'friday', label: 'Viernes', checked: false },
+      { id: 'saturday', label: 'Sábado', checked: false },
+      { id: 'sunday', label: 'Domingo', checked: false },
+    ],
+    action: 'Crear plan',
+  },
 }
 
 export const library = {

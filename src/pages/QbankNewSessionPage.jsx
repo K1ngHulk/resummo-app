@@ -466,7 +466,11 @@ function QbankNewSessionPage({ onNavigate }) {
             <span className="ns-question-count__value">2,498</span>
           </div>
 
-          <button type="button" className="ns-create-btn">
+          <button
+            type="button"
+            className="ns-create-btn"
+            onClick={() => onNavigate('/learning/qbank/session')}
+          >
             {qbankNewSession.primaryAction}
           </button>
         </div>
