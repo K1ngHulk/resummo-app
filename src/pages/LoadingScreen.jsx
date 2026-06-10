@@ -1,5 +1,5 @@
 import { loadingScreen } from '../mocks/learningMockData'
-import resummoLogo from '../assets/brand/originals/logorojo.png'
+import resummoLogo from '../assets/brand/originals/logoguinda.png'
 
 function LoadingScreen() {
   return (

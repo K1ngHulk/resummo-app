@@ -1,6 +1,6 @@
 import { qbankOverview } from '../mocks/learningMockData'
 
-function QbankPage() {
+function QbankPage({ onNavigate }) {
   return (
     <section className="figma-page">
       <h1>{qbankOverview.title}</h1>
@@ -9,7 +9,7 @@ function QbankPage() {
         <div>
           <h2>{qbankOverview.heroTitle}</h2>
           <p>{qbankOverview.heroDescription}</p>
-          <button type="button" className="primary-button">
+          <button type="button" className="primary-button" onClick={() => onNavigate('/learning/qbank/new')}>
             {qbankOverview.heroAction}
           </button>
         </div>

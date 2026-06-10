@@ -99,6 +99,105 @@ export const qbankOverview = {
   },
 }
 
+export const qbankNewSession = {
+  title: 'Nueva sesión personalizada de estudio',
+  secondaryAction: 'Volver al banco',
+  primaryAction: 'Crear sesión',
+  resetAction: 'Restablecer',
+  saveAction: 'Guardar',
+}
+
+// Panel izquierdo: Establece los temas de tu sesión
+export const qbankTopicRows = [
+  {
+    id: 'exams',
+    label: 'Exámenes',
+    chips: [{ label: 'USMLE Step 2 CK' }, { label: '+1', isCount: true }],
+    opensModal: 'exams',
+  },
+  {
+    id: 'articles',
+    label: 'Artículos',
+    chips: [{ label: 'Todos' }],
+    opensModal: null,
+  },
+  {
+    id: 'systems',
+    label: 'Sistemas',
+    chips: [{ label: 'Todos' }],
+    opensModal: null,
+  },
+  {
+    id: 'disciplines',
+    label: 'Disciplinas',
+    chips: [{ label: 'Anesthesiology' }, { label: '+10', isCount: true }],
+    opensModal: null,
+  },
+  {
+    id: 'symptoms',
+    label: 'Síntomas',
+    chips: [{ label: 'Todos' }],
+    opensModal: null,
+  },
+]
+
+// Panel derecho: Criterios de sesión
+export const qbankSessionRows = [
+  {
+    id: 'difficulty',
+    label: 'Dificultad',
+    chips: [{ label: 'Todos' }],
+    opensModal: 'difficulty',
+  },
+  {
+    id: 'status',
+    label: 'Estado',
+    chips: [{ label: 'Aún no contestado' }],
+    opensModal: 'status',
+  },
+]
+
+export const qbankSessionSwitches = [
+  { id: 'marked-only', label: 'Solo preguntas marcadas', defaultOn: false },
+  { id: 'images-only', label: 'Preguntas con imágenes solamente', defaultOn: false },
+]
+
+// Modal de Exámenes
+export const qbankExamOptions = [
+  { id: 'usmle-step2', label: 'USMLE Step 2 CK', defaultChecked: true },
+  { id: 'supplemental-step2', label: 'Supplemental Step 2', defaultChecked: true },
+  { id: 'clinical-shelf', label: 'Clinical Shelf Exams', defaultChecked: true },
+  { id: 'usmle-step1', label: 'USMLE Step 1', defaultChecked: false },
+  { id: 'usmle-step3', label: 'USMLE Step 3', defaultChecked: false },
+  { id: 'family-medicine', label: 'Family Medicine Shelf', defaultChecked: false },
+  { id: 'internal-medicine', label: 'Internal Medicine Shelf', defaultChecked: false },
+  { id: 'surgery-shelf', label: 'Surgery Shelf', defaultChecked: false },
+  { id: 'ob-shelf', label: 'OB/GYN Shelf', defaultChecked: false },
+  { id: 'pediatrics-shelf', label: 'Pediatrics Shelf', defaultChecked: false },
+]
+
+// Modal de Dificultad
+export const qbankDifficultyLevels = [
+  { id: 'level-1', level: 1, label: 'Nivel 1', defaultChecked: true },
+  { id: 'level-2', level: 2, label: 'Nivel 2', defaultChecked: true },
+  { id: 'level-3', level: 3, label: 'Nivel 3', defaultChecked: true },
+  { id: 'level-4', level: 4, label: 'Nivel 4', defaultChecked: false },
+  { id: 'level-5', level: 5, label: 'Nivel 5', defaultChecked: false },
+]
+
+// Modal de Estado
+export const qbankStatusOptions = [
+  { id: 'unanswered', label: 'Aún no contestado', defaultChecked: true },
+  { id: 'correct-hints', label: 'Respondido correctamente utilizando pistas', defaultChecked: true },
+  { id: 'incorrect', label: 'Respondido incorrectamente', defaultChecked: true },
+  { id: 'correct', label: 'Respondido correctamente', defaultChecked: false },
+]
+
+export const qbankStatusModes = [
+  { id: 'all-attempts', label: 'Basado en todos los intentos de preguntas anteriores', defaultSelected: false },
+  { id: 'latest-attempt', label: 'Basado en el intento de pregunta más reciente', defaultSelected: true },
+]
+
 export const studyPlans = {
   title: 'Planes de Estudio',
   heroTitle: '¿Estás por dar un examen pronto?',

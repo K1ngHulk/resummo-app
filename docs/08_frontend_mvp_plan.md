@@ -17,6 +17,7 @@ El entregable inmediato no resuelve backend, autenticacion, administracion, pago
 - Loading screen.
 - Dashboard / pantalla general.
 - Qbank / banco de preguntas.
+- Qbank / nueva sesion personalizada de estudio.
 - Study Plans / planes de estudio.
 - Library / biblioteca.
 
@@ -70,12 +71,25 @@ Reglas:
 - `/learning/loading`
 - `/learning`
 - `/learning/qbank`
+- `/learning/qbank/new`
 - `/learning/study-plans`
 - `/learning/library`
 
 Para esta fase se puede usar routing minimo con History API. `react-router` debe evaluarse cuando aparezcan rutas dinamicas, loaders o transiciones mas complejas.
 
 La pestaña `Analisis` se mantiene visible porque aparece en el Figma, pero queda deshabilitada en esta fase porque no fue una de las pantallas solicitadas para implementar.
+
+## Flujo Qbank visual
+
+El flujo frontend-first de Qbank queda limitado a:
+
+- Banco de Preguntas.
+- Crear sesion de Qbank.
+- Nueva sesion personalizada de estudio.
+
+La ruta `/learning/qbank/new` permite configurar visualmente una sesion mock con dropdowns para `Examenes`, `Dificultad` y `Estado`. Estos controles solo actualizan estado local temporal; no filtran contenido real, no llaman a backend y no inician una sesion persistente.
+
+La pantalla final para responder preguntas sigue fuera de alcance para este entregable.
 
 ## Componentes candidatos
 
@@ -98,6 +112,7 @@ Nuevos candidatos:
 - `LearningItemCard`
 - `LoadingScreen`
 - `QbankPage`
+- `QbankNewSessionPage`
 - `StudyPlansPage`
 - `LibraryPage`
 
@@ -110,6 +125,7 @@ Nuevos candidatos:
 - Los mocks estan separados del codigo visual.
 - Las acciones profundas pueden ser botones mock sin persistencia.
 - El copy no promete uso clinico ni decision medica.
+- El logo activo del MVP usa el asset guinda real `src/assets/brand/originals/logoguinda.png`; los PNG originales se conservan.
 
 ## Criterios responsive
 
@@ -129,6 +145,7 @@ Nuevos candidatos:
 ## Frontend debts
 
 - P0: ninguno detectado despues de usar el logo real y validar rutas Learning.
-- P1: mejorar fidelidad visual fina contra Figma y contener el crecimiento de `src/styles/index.css`.
+- P1: mejorar fidelidad visual fina contra Figma, incluyendo la pantalla de nueva sesion Qbank y sus dropdowns mock.
+- P1: contener el crecimiento de `src/styles/index.css`.
 - P1: decidir si los componentes `src/components/learning/*` se reutilizan o se eliminan.
 - P2: evaluar React Router cuando haya rutas dinamicas; TypeScript y WebP quedan para una etapa posterior si crece el alcance o el peso de assets.

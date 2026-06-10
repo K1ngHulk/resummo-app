@@ -4,6 +4,7 @@ import { learningRoutes } from './mocks/learningMockData'
 import DashboardPage from './pages/DashboardPage'
 import LibraryPage from './pages/LibraryPage'
 import LoadingScreen from './pages/LoadingScreen'
+import QbankNewSessionPage from './pages/QbankNewSessionPage'
 import QbankPage from './pages/QbankPage'
 import StudyPlansPage from './pages/StudyPlansPage'
 
@@ -11,6 +12,7 @@ const routeConfig = [
   { path: '/learning/loading', id: 'loading', component: LoadingScreen, hideHeader: true },
   { path: '/learning', id: 'general', component: DashboardPage },
   { path: '/learning/qbank', id: 'qbank', component: QbankPage },
+  { path: '/learning/qbank/new', id: 'qbank', component: QbankNewSessionPage },
   { path: '/learning/study-plans', id: 'study-plans', component: StudyPlansPage },
   { path: '/learning/library', id: 'library', component: LibraryPage },
 ]

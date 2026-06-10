@@ -1,6 +1,6 @@
 import AppIcon from '../ui/AppIcon'
 import SearchBar from '../ui/SearchBar'
-import resummoLogo from '../../assets/brand/originals/logorojo.png'
+import resummoLogo from '../../assets/brand/originals/logoguinda.png'
 import { mockUser } from '../../mocks/learningMockData'
 
 function AppHeader({ activeSection, navigationItems, onNavigate }) {
