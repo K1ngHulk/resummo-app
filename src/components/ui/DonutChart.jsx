@@ -1,11 +1,17 @@
-﻿function DonutChart({ segments, value, description }) {
-  let currentStop = 0
+function DonutChart({ segments, value, description }) {
   const gradientStops = segments
-    .map((segment) => {
-      const start = currentStop
-      currentStop += segment.value
-      return `${segment.color} ${start}% ${currentStop}%`
-    })
+    .reduce(
+      (acc, segment) => {
+        const end = acc.currentStop + segment.value
+
+        return {
+          currentStop: end,
+          stops: [...acc.stops, `${segment.color} ${acc.currentStop}% ${end}%`],
+        }
+      },
+      { currentStop: 0, stops: [] },
+    )
+    .stops
     .join(', ')
 
   return (

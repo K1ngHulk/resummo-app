@@ -2,16 +2,13 @@ import ContinueLearningCard from '../components/dashboard/ContinueLearningCard'
 import ProgressOverviewCard from '../components/dashboard/ProgressOverviewCard'
 import QuestionSessionCard from '../components/dashboard/QuestionSessionCard'
 import RecentArticlesCard from '../components/dashboard/RecentArticlesCard'
-import AppHeader from '../components/layout/AppHeader'
 import SearchBar from '../components/ui/SearchBar'
 
-function DashboardPage({ activeSection, onSectionChange }) {
+function DashboardPage() {
   return (
-    <main className="dashboard-shell">
-      <AppHeader activeSection={activeSection} onSectionChange={onSectionChange} />
-
+    <>
       <section className="dashboard-hero">
-        <h1>Complementa tus conocimientos medicos</h1>
+        <h1>Complementa tus conocimientos médicos</h1>
         <SearchBar placeholder="Buscar en Resummo" showAction className="dashboard-hero__search" />
       </section>
 
@@ -26,7 +23,7 @@ function DashboardPage({ activeSection, onSectionChange }) {
           <ProgressOverviewCard />
         </div>
       </section>
-    </main>
+    </>
   )
 }
 
