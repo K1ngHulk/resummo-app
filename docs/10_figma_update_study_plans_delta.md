@@ -50,6 +50,12 @@ Nota: `docs/09_learning_figma_flow_map.md` ya quedo parcialmente desactualizado 
 
 Ambas pertenecen a `Planes de estudio y cursos`.
 
+Revision adicional: en una segunda pasada del canvas de Figma no se detectaron
+mas pantallas nuevas relevantes alrededor del flujo de Study Plans. La vista
+general muestra el conjunto actual de frames Learning y, dentro del bloque de
+Study Plans, las unicas pantallas nuevas frente al frontend actual son las dos
+anteriores.
+
 ### Pantallas cambiadas o que requieren confirmar
 
 - `Crear plan de estudio personalizado (Paso1)`: sigue existiendo y coincide conceptualmente con la ruta actual `/learning/study-plans/new/step-1`. No se detecto un cambio de flujo, solo conviene revisar fidelidad visual cuando se implemente el siguiente bloque.
@@ -78,6 +84,12 @@ No se detecto una nueva pantalla de Banco de Preguntas con contenido relevante d
 | Plan de estudio | Study Plans | nueva / faltante | `/learning/study-plans/current` | Boton `Crear plan` desde paso 2; tambien posible acceso desde lista de planes | Ver dias del plan o volver a planes | Implementar como P0: detalle/resumen del plan creado mock. |
 | Plan de estudio - Elementos | Study Plans | nueva / faltante | `/learning/study-plans/current/elements` o estado interno de `/learning/study-plans/current` | Click en un dia, articulo o sesion dentro de `Plan de estudio` | Volver al detalle general o continuar actividad | Tratar inicialmente como estado interno/detalle del plan, no como pantalla de primer nivel. |
 | Banco de Preguntas adicional sin contenido claro | QBank | irrelevante / no implementar todavia | sin ruta nueva | No confirmada | No confirmada | No implementar hasta que Figma muestre contenido o flujo claro. |
+
+Clasificacion final de la revision adicional:
+
+- `Plan de estudio`: pantalla navegable faltante.
+- `Plan de estudio - Elementos`: variante/estado interno faltante del detalle de plan.
+- No se encontraron otros frames nuevos relevantes para implementar en esta tanda.
 
 ## C. Flujo actualizado de Study Plans
 

@@ -330,6 +330,45 @@ export const studyPlanWizard = {
   },
 }
 
+export const studyPlanCurrent = {
+  backAction: 'Volver a los planes',
+  title: 'Step 1 Prep Condensed',
+  subtitle: '30 Topics en 30 Days',
+  badge: 'Step Prep Condensed',
+  welcomeTitle: 'Welcome to the Step 1 Prep Condensed Study Plan!',
+  welcomeText:
+    'Whether you are making the most of a little extra study time or continuing your regular routine, this plan is the perfect way to learn the most important concepts from our most high-yield Articles for Step 1. The study plan presents one Article and one question session every day for 30 days. Each question session contains five questions. The Article and question session will reinforce one another, making the study plan an efficient and effective journey. Jump in and get started today!',
+  days: Array.from({ length: 7 }, (_, index) => ({
+    id: `day-${index + 1}`,
+    label: `Day ${index + 1}`,
+    title: 'Bacteria Overview',
+    articleProgress: '0/1 Articulo',
+    questionProgress: '0/5 Preguntas',
+    percent: 0,
+    percentLabel: '0% Completado',
+  })),
+  elements: {
+    articlesTitle: 'Articulos',
+    sessionsTitle: 'Sesiones',
+    articles: [
+      {
+        id: 'bacteria-description',
+        title: 'Descripcion general de las bacterias',
+        readLabel: 'Marcar como leido',
+      },
+    ],
+    sessions: [
+      {
+        id: 'bacteria-session',
+        title: 'High-Yield Step 1 - Day 1 - Bacteria Overview',
+        progress: '0/5 Preguntas',
+        percent: 0,
+        action: 'Continuar',
+      },
+    ],
+  },
+}
+
 export const library = {
   title: 'Biblioteca',
   ariaLabel: 'Biblioteca Learning',

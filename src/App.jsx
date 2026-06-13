@@ -7,6 +7,7 @@ import LoadingScreen from './pages/LoadingScreen'
 import QuestionSessionPage from './pages/QuestionSessionPage'
 import QbankNewSessionPage from './pages/QbankNewSessionPage'
 import QbankPage from './pages/QbankPage'
+import StudyPlanCurrentPage from './pages/StudyPlanCurrentPage'
 import StudyPlanWizardPage from './pages/StudyPlanWizardPage'
 import StudyPlansPage from './pages/StudyPlansPage'
 
@@ -36,6 +37,16 @@ const routeConfig = [
     path: '/learning/study-plans/new/step-2',
     id: 'study-plans',
     component: (props) => <StudyPlanWizardPage {...props} step={2} />,
+  },
+  {
+    path: '/learning/study-plans/current',
+    id: 'study-plans',
+    component: StudyPlanCurrentPage,
+  },
+  {
+    path: '/learning/study-plans/current/elements',
+    id: 'study-plans',
+    component: (props) => <StudyPlanCurrentPage {...props} mode="elements" />,
   },
   { path: '/learning/library', id: 'library', component: LibraryPage },
 ]
