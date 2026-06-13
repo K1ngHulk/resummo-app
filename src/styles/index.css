@@ -4,9 +4,17 @@
   font-family: 'Poppins', sans-serif;
   color: #2f2624;
   background: #1d1d1d;
-  --color-primary: #8a342c;
-  --color-primary-dark: #6f2923;
-  --color-primary-soft: #f2dfdc;
+  --color-primary: #8A342C;
+  --color-primary-dark: #6F2923;
+  --color-primary-soft: #C44F45;
+  --color-primary-tint: #F2DFDC;
+  --color-primary-track: #EAD3CE;
+  --color-primary-muted: rgba(138, 52, 44, 0.12);
+  --color-primary-border: rgba(138, 52, 44, 0.35);
+  --color-primary-shadow-soft: rgba(138, 52, 44, 0.08);
+  --color-primary-shadow: rgba(138, 52, 44, 0.16);
+  --color-primary-shadow-medium: rgba(138, 52, 44, 0.14);
+  --color-primary-shadow-strong: rgba(138, 52, 44, 0.22);
   --color-accent-green: #44c8a6;
   --color-accent-yellow: #f2c24f;
   --color-accent-coral: #ef7f7d;
@@ -15,7 +23,7 @@
   --color-border: #d8b4ad;
   --color-text: #2f2624;
   --color-text-soft: #7a6661;
-  --shadow-soft: 0 18px 40px rgba(52, 28, 25, 0.14);
+  --shadow-soft: 0 18px 40px var(--color-primary-shadow-medium);
   --font-size-display: clamp(1.52rem, 1.22rem + 1vw, 2.08rem);
   --font-size-h2: clamp(1rem, 0.92rem + 0.35vw, 1.18rem);
   --font-size-body: clamp(0.95rem, 0.9rem + 0.15vw, 1rem);
@@ -81,8 +89,8 @@ input:focus {
   position: relative;
   z-index: 10;
   background: #fff;
-  border-bottom: 1px solid rgba(138, 52, 44, 0.18);
-  box-shadow: 0 2px 7px rgba(91, 37, 31, 0.08);
+  border-bottom: 1px solid var(--color-primary-muted);
+  box-shadow: 0 2px 7px var(--color-primary-shadow-soft);
 }
 
 .app-header__inner {
@@ -282,7 +290,7 @@ input:focus {
   padding: 0.68rem 1.8rem 0.62rem;
   background: var(--color-primary);
   border-radius: 0 0 0.82rem 0.82rem;
-  box-shadow: 0 6px 12px rgba(91, 37, 31, 0.18);
+  box-shadow: 0 6px 12px var(--color-primary-shadow);
   overflow-x: auto;
   max-width: 100%;
 }
@@ -332,7 +340,7 @@ input:focus {
   margin: clamp(0.75rem, 1.3vw, 1rem) auto 0;
   min-height: clamp(3.08rem, 3.4vw, 3.45rem);
   padding: 0.72rem 0.92rem;
-  box-shadow: 0 10px 25px rgba(138, 52, 44, 0.08);
+  box-shadow: 0 10px 25px var(--color-primary-shadow-soft);
 }
 
 .dashboard-grid {
@@ -354,7 +362,7 @@ input:focus {
   border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: clamp(1rem, 1.2vw, 1.25rem) clamp(1rem, 1.4vw, 1.35rem);
-  box-shadow: 0 10px 28px rgba(138, 52, 44, 0.06);
+  box-shadow: 0 10px 28px var(--color-primary-shadow-soft);
 }
 
 .dashboard-card h2 {
@@ -457,7 +465,7 @@ input:focus {
   width: clamp(6.5rem, 8vw, 7.5rem);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: conic-gradient(var(--color-primary) var(--progress-angle), #ead3ce 0deg);
+  background: conic-gradient(var(--color-primary) var(--progress-angle), var(--color-primary-track) 0deg);
   display: grid;
   place-items: center;
 }
@@ -496,7 +504,7 @@ input:focus {
   flex: 1;
   height: 0.55rem;
   border-radius: 999px;
-  background: #f1d8d4;
+  background: var(--color-primary-tint);
   overflow: hidden;
 }
 
@@ -942,7 +950,7 @@ input:focus {
   background:
     linear-gradient(#cbd9dc 0 0) 0.7rem 0.7rem / 2.6rem 0.25rem no-repeat,
     linear-gradient(#cbd9dc 0 0) 0.7rem 1.35rem / 2.9rem 0.25rem no-repeat,
-    linear-gradient(#9e352f 0 0) 4.25rem 0.65rem / 2rem 2.1rem no-repeat,
+    linear-gradient(var(--color-primary) 0 0) 4.25rem 0.65rem / 2rem 2.1rem no-repeat,
     linear-gradient(#dce8ea 0 0) 0.7rem 3.1rem / 5.2rem 0.22rem no-repeat,
     linear-gradient(#44c8a6 0 0) 0.7rem 3.75rem / 5.7rem 0.28rem no-repeat,
     #f8fbfb;
@@ -1115,7 +1123,7 @@ input:focus {
 
 .qbank-filter--open .qbank-filter__trigger {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(138, 52, 44, 0.08);
+  box-shadow: 0 0 0 3px var(--color-primary-shadow-soft);
 }
 
 .qbank-filter__trigger small {
@@ -1151,7 +1159,7 @@ input:focus {
   border-radius: 0.75rem;
   background: #fff;
   padding: 0.35rem;
-  box-shadow: 0 14px 30px rgba(91, 37, 31, 0.16);
+  box-shadow: 0 14px 30px var(--color-primary-shadow);
 }
 
 .qbank-filter__option {
@@ -1166,7 +1174,7 @@ input:focus {
 
 .qbank-filter__option:hover,
 .qbank-filter__option--active {
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
   color: var(--color-primary);
 }
 
@@ -1174,7 +1182,7 @@ input:focus {
   display: grid;
   gap: 0.7rem;
   border-radius: 0.75rem;
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
   padding: 1rem;
 }
 
@@ -1246,7 +1254,7 @@ input:focus {
 .learning-metric-card {
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  box-shadow: 0 10px 28px rgba(138, 52, 44, 0.06);
+  box-shadow: 0 10px 28px var(--color-primary-shadow-soft);
 }
 
 .loading-screen__panel {
@@ -1275,7 +1283,7 @@ input:focus {
 
 .loading-screen__panel li {
   border-radius: 999px;
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
   color: var(--color-primary);
   padding: 0.65rem 1rem;
   font-size: var(--font-size-small);
@@ -1286,7 +1294,7 @@ input:focus {
   width: 100%;
   height: 0.65rem;
   border-radius: 999px;
-  background: #ead3ce;
+  background: var(--color-primary-track);
   overflow: hidden;
 }
 
@@ -1422,7 +1430,7 @@ input:focus {
 .learning-item-card__progress {
   height: 0.55rem;
   border-radius: 999px;
-  background: #f1d8d4;
+  background: var(--color-primary-tint);
   overflow: hidden;
 }
 
@@ -1448,7 +1456,7 @@ input:focus {
 
 .learning-chip-list li {
   border-radius: 999px;
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
   color: var(--color-primary);
   padding: 0.5rem 0.8rem;
   font-size: var(--font-size-label);
@@ -1611,7 +1619,7 @@ input:focus {
 }
 
 .ns-action-btn--ghost:hover {
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
 }
 
 .ns-action-btn--primary {
@@ -1637,7 +1645,7 @@ input:focus {
   border-radius: 1.1rem;
   padding: 0;
   overflow: hidden;
-  box-shadow: 0 18px 48px rgba(91, 37, 31, 0.22);
+  box-shadow: 0 18px 48px var(--color-primary-shadow-strong);
 }
 
 .ns-panel__head {
@@ -1894,7 +1902,7 @@ input:focus {
 }
 
 .ns-create-btn:hover {
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
 }
 
 .ns-create-btn:active {
@@ -2042,7 +2050,7 @@ input:focus {
 }
 
 .ns-modal__reset-btn:hover {
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
 }
 
 .ns-modal__done-btn {
@@ -2075,7 +2083,7 @@ input:focus {
 }
 
 .ns-checkbox-row:hover {
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
 }
 
 .ns-checkbox__input {
@@ -2317,7 +2325,7 @@ input:focus {
 .qs-progress__track {
   height: 0.6rem;
   border-radius: 999px;
-  background: #ead3ce;
+  background: var(--color-primary-track);
   overflow: hidden;
 }
 
@@ -2344,7 +2352,7 @@ input:focus {
   border: 1px solid var(--color-primary);
   border-radius: 0.9rem;
   background: #fff;
-  box-shadow: 0 14px 34px rgba(91, 37, 31, 0.08);
+  box-shadow: 0 14px 34px var(--color-primary-shadow-soft);
 }
 
 .qs-stem-card {
@@ -2417,7 +2425,7 @@ input:focus {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
   color: var(--color-primary);
   font-weight: 800;
 }
@@ -2431,7 +2439,7 @@ input:focus {
 
 .qs-answer--selected {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(138, 52, 44, 0.08);
+  box-shadow: 0 0 0 3px var(--color-primary-shadow-soft);
 }
 
 .qs-answer--correct {
@@ -2500,7 +2508,7 @@ input:focus {
   gap: 0.45rem;
   margin-top: 0.35rem;
   border-radius: 0.75rem;
-  background: var(--color-primary-soft);
+  background: var(--color-primary-tint);
   padding: 0.9rem;
 }
 
@@ -2574,8 +2582,8 @@ input:focus {
   display: grid;
   grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
   background: #fff;
-  border: 1px solid rgba(138, 52, 44, 0.18);
-  box-shadow: 0 18px 44px rgba(44, 22, 19, 0.08);
+  border: 1px solid var(--color-primary-muted);
+  box-shadow: 0 18px 44px var(--color-primary-shadow-soft);
 }
 
 .qs-sidebar {
@@ -2714,7 +2722,7 @@ input:focus {
   justify-content: center;
   gap: 0.35rem;
   border-radius: 999px;
-  background: #bd4f45;
+  background: var(--color-primary);
   color: #fff;
   padding: 0.56rem 1.05rem;
   font-size: 0.84rem;
@@ -2750,7 +2758,7 @@ input:focus {
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.8rem;
-  border: 1.5px solid #c86c63;
+  border: 1.5px solid var(--color-primary-border);
   border-radius: 999px;
   background: #fff;
   color: #211c1b;
@@ -2763,7 +2771,7 @@ input:focus {
   height: 1.75rem;
   display: grid;
   place-items: center;
-  border: 1.5px solid #b8554c;
+  border: 1.5px solid var(--color-primary);
   border-radius: 999px;
   color: #111;
   font-size: 0.86rem;
@@ -2862,7 +2870,7 @@ input:focus {
   align-items: center;
   gap: 0.8rem;
   border-radius: 0 0 0 1.35rem;
-  background: #bd4f45;
+  background: var(--color-primary);
   color: #fff;
   padding: 0.65rem 1rem 0.8rem;
 }
@@ -3173,12 +3181,12 @@ input:focus {
   align-items: center;
   gap: 0.45rem;
   border-radius: 999px;
-  background: #bd4f45;
+  background: var(--color-primary);
   color: #fff;
   padding: 0.78rem 1.45rem;
   font-size: 0.94rem;
   font-weight: 800;
-  box-shadow: 0 8px 16px rgba(91, 37, 31, 0.16);
+  box-shadow: 0 8px 16px var(--color-primary-shadow);
 }
 
 .spd-back-button span {
@@ -3211,9 +3219,9 @@ input:focus {
 .spd-element-card,
 .spd-session-card {
   border-radius: 0.62rem;
-  background: #bd4f45;
+  background: var(--color-primary);
   color: #fff;
-  box-shadow: 0 3px 7px rgba(78, 39, 34, 0.22);
+  box-shadow: 0 3px 7px var(--color-primary-shadow-strong);
 }
 
 .spd-welcome-card {
@@ -3394,7 +3402,7 @@ input:focus {
   width: fit-content;
   margin-bottom: 1.55rem;
   border-radius: 999px;
-  background: #bd4f45;
+  background: var(--color-primary);
   color: #fff;
   padding: 0.6rem 1.25rem;
   font-size: 0.82rem;
@@ -3490,7 +3498,7 @@ input:focus {
 .spd-session-card button {
   border-radius: 999px;
   background: #fff;
-  color: #bd4f45;
+  color: var(--color-primary);
   padding: 0.44rem 1.1rem;
   font-size: 0.82rem;
   font-weight: 900;

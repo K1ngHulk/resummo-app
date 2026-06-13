@@ -104,3 +104,22 @@ Consecuencias:
 Dudas abiertas:
 
 - El conector Figma no pudo acceder al archivo desde esta sesion; se necesita confirmar permisos o compartir nodos especificos si se requiere paridad visual exacta.
+
+### 2026-06-13 - Color principal oficial de marca
+
+Estado: decidido.
+
+Decision: El color principal oficial de Resummo para el frontend Learning es `#8A342C`.
+
+Motivo: Evitar que nuevas pantallas introduzcan tonos guinda/rojo distintos y mantener consistencia visual con la marca.
+
+Consecuencias:
+
+- `#8A342C` debe ser la base de `--color-primary`.
+- Los fondos, botones, nav, cards, chips y bordes de marca deben usar tokens derivados de `#8A342C`.
+- No se deben introducir nuevos colores guinda hardcodeados sin justificarlo en este log.
+- Los colores semanticos se mantienen separados: verde de correcto, rojo de error/incorrecto, grises, overlays y estados disabled.
+
+Dudas abiertas:
+
+- Definir si el equipo quiere documentar una paleta completa de marca mas adelante.
