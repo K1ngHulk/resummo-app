@@ -370,6 +370,240 @@ export const studyPlanCurrent = {
 }
 
 export const library = {
-  title: 'Biblioteca',
+  title: 'Biblioteca médica',
+  eyebrow: 'Learning Library',
   ariaLabel: 'Biblioteca Learning',
+  subtitle:
+    'Explora artículos mock, sistemas y recursos de repaso. Esta primera versión valida navegación y estructura, no contenido médico final.',
+  searchLabel: 'Buscar en Biblioteca médica',
+  searchPlaceholder: 'Buscar artículos, sistemas o temas',
+  categoryPanelEyebrow: 'Carpetas',
+  categoryPanelTitle: 'Explorar por categoría',
+  categoryPanelDescription: 'Navega la biblioteca por sistemas y áreas de estudio.',
+  featuredTitle: 'Artículos recomendados',
+  featuredDescription: 'Contenido temporal para validar una experiencia de lectura conectada al QBank.',
+  allArticlesTitle: 'Todos los artículos',
+  categoryArticlesTitle: 'Artículos de {category}',
+  searchResultsTitle: 'Resultados de búsqueda',
+  resultsLabel: '{count} resultados mock',
+  readAction: 'Leer artículo',
+  pendingAction: 'Vista mock pendiente',
+  emptyTitle: 'No encontramos artículos con esa búsqueda',
+  emptyDescription: 'Prueba con otro término o vuelve a ver todas las categorías disponibles.',
+  emptyAction: 'Restablecer búsqueda',
+  backToLibrary: 'Volver a Biblioteca',
 }
+
+export const libraryCategories = [
+  { id: 'basic-sciences', label: 'Ciencias básicas' },
+  { id: 'cardiology', label: 'Cardiología' },
+  { id: 'pulmonology', label: 'Neumología' },
+  { id: 'pediatrics', label: 'Pediatría' },
+  { id: 'gynecology', label: 'Ginecología' },
+  { id: 'pharmacology', label: 'Farmacología' },
+  { id: 'emergency', label: 'Emergencias' },
+  { id: 'internal-medicine', label: 'Medicina interna' },
+]
+
+export const libraryArticles = [
+  {
+    id: 'bacteria-overview',
+    title: 'Bacteria overview',
+    categoryId: 'basic-sciences',
+    category: 'Ciencias básicas',
+    summary:
+      'Artículo mock para validar una vista de lectura con índice, puntos clave y conexión visual con preguntas relacionadas.',
+    readingTime: '8 min',
+    tags: ['Microbiología', 'Bases'],
+    badges: ['High-yield', 'Nuevo'],
+    path: '/learning/library/articles/bacteria-overview',
+  },
+  {
+    id: 'acute-coronary-syndrome',
+    title: 'Síndrome coronario agudo',
+    categoryId: 'cardiology',
+    category: 'Cardiología',
+    summary:
+      'Ficha temporal para probar jerarquía de artículos cardiovasculares sin contenido clínico definitivo.',
+    readingTime: '11 min',
+    tags: ['Urgencias', 'Cardio'],
+    badges: ['High-yield'],
+    path: null,
+  },
+  {
+    id: 'fetal-growth-restriction',
+    title: 'Restricción del crecimiento fetal',
+    categoryId: 'gynecology',
+    category: 'Ginecología',
+    summary:
+      'Entrada mock para representar artículos de obstetricia vinculables a sesiones de práctica futuras.',
+    readingTime: '9 min',
+    tags: ['Obstetricia', 'Repaso'],
+    badges: ['Guardado'],
+    path: null,
+  },
+  {
+    id: 'tuberculosis',
+    title: 'Tuberculosis',
+    categoryId: 'pulmonology',
+    category: 'Neumología',
+    summary:
+      'Artículo placeholder para explorar búsqueda por temas respiratorios y tags de enfermedades infecciosas.',
+    readingTime: '10 min',
+    tags: ['Respiratorio', 'Infecciosas'],
+    badges: ['High-yield'],
+    path: null,
+  },
+  {
+    id: 'cataracts',
+    title: 'Cataratas',
+    categoryId: 'internal-medicine',
+    category: 'Medicina interna',
+    summary:
+      'Recurso mock para validar que la biblioteca soporte temas no centrados en una sola especialidad.',
+    readingTime: '6 min',
+    tags: ['Clínica', 'Repaso'],
+    badges: ['Nuevo'],
+    path: null,
+  },
+  {
+    id: 'acute-respiratory-infections',
+    title: 'Infecciones respiratorias agudas',
+    categoryId: 'pediatrics',
+    category: 'Pediatría',
+    summary:
+      'Artículo temporal pensado para probar categorías pediátricas y tarjetas de lectura rápida.',
+    readingTime: '7 min',
+    tags: ['Pediatría', 'Respiratorio'],
+    badges: ['High-yield'],
+    path: null,
+  },
+  {
+    id: 'diabetes-mellitus-type-2',
+    title: 'Diabetes mellitus tipo 2',
+    categoryId: 'internal-medicine',
+    category: 'Medicina interna',
+    summary:
+      'Placeholder de medicina interna para validar listados, filtros y artículos relacionados.',
+    readingTime: '12 min',
+    tags: ['Endocrino', 'Crónico'],
+    badges: [],
+    path: null,
+  },
+  {
+    id: 'arterial-hypertension',
+    title: 'Hipertensión arterial',
+    categoryId: 'cardiology',
+    category: 'Cardiología',
+    summary:
+      'Entrada mock para probar navegación por temas frecuentes y conexión futura con QBank.',
+    readingTime: '9 min',
+    tags: ['Cardio', 'Crónico'],
+    badges: ['Guardado'],
+    path: null,
+  },
+  {
+    id: 'bronchial-asthma',
+    title: 'Asma bronquial',
+    categoryId: 'pulmonology',
+    category: 'Neumología',
+    summary:
+      'Artículo placeholder para validar búsquedas por síntomas, sistemas y temas respiratorios.',
+    readingTime: '8 min',
+    tags: ['Respiratorio', 'Pediatría'],
+    badges: ['Nuevo'],
+    path: null,
+  },
+]
+
+export const featuredLibraryArticles = [
+  'bacteria-overview',
+  'acute-coronary-syndrome',
+  'fetal-growth-restriction',
+]
+
+export const libraryArticleDetail = {
+  id: 'bacteria-overview',
+  title: 'Bacteria overview',
+  category: 'Ciencias básicas',
+  readingTime: '8 min de lectura',
+  updatedAt: 'Última actualización mock: junio 2026',
+  tags: ['Microbiología', 'High-yield', 'QBank relacionado'],
+  initiallySaved: false,
+  saveAction: 'Guardar artículo',
+  savedAction: 'Artículo guardado',
+  indexTitle: 'En este artículo',
+  summary:
+    'Vista mock para validar cómo se leería un artículo de Biblioteca dentro de Resummo. El contenido médico final queda fuera de alcance.',
+  keyPointsTitle: 'Puntos clave',
+  keyPoints: [
+    'Usa esta pantalla para probar estructura de lectura, no para estudiar contenido real.',
+    'El índice lateral prepara artículos largos sin obligar a scroll excesivo.',
+    'La conexión con QBank se representa visualmente con preguntas relacionadas mock.',
+  ],
+  callout: {
+    title: 'Nota de aprendizaje',
+    body:
+      'Cuando exista contenido editorial real, este bloque puede resumir lo que el estudiante debería repasar antes de practicar preguntas.',
+  },
+  sections: [
+    {
+      id: 'definition',
+      title: 'Definición',
+      body:
+        'Espacio reservado para una definición editorial breve. En esta fase solo valida jerarquía visual, lectura y navegación interna.',
+    },
+    {
+      id: 'classification',
+      title: 'Clasificación',
+      body:
+        'Bloque placeholder para organizar subtemas y criterios. La clasificación final dependerá del sistema de contenido médico.',
+    },
+    {
+      id: 'diagnosis',
+      title: 'Diagnóstico',
+      body:
+        'Sección mock para representar cómo se vería un apartado clínico sin incluir guías, recomendaciones ni datos médicos reales.',
+    },
+    {
+      id: 'initial-management',
+      title: 'Manejo inicial',
+      body:
+        'Estructura temporal para validar callouts, párrafos y futuros enlaces a preguntas de práctica relacionadas.',
+    },
+    {
+      id: 'complications',
+      title: 'Complicaciones',
+      body:
+        'Cierre placeholder para comprobar consistencia de espaciado y navegación en artículos con varias secciones.',
+    },
+  ],
+  relatedArticlesTitle: 'Artículos relacionados',
+  relatedQuestionsTitle: 'Preguntas relacionadas',
+  relatedQuestionsDescription:
+    'Sesiones mock para validar la conexión visual entre Biblioteca y Banco de Preguntas.',
+  qbankAction: 'Practicar preguntas relacionadas',
+}
+
+export const relatedLibraryArticles = [
+  'tuberculosis',
+  'acute-respiratory-infections',
+  'bronchial-asthma',
+]
+
+export const relatedLibraryQuestions = [
+  {
+    id: 'bacteria-session-1',
+    type: 'QBank mock',
+    title: 'Microbiología básica',
+    description: '5 preguntas temporales para validar el flujo Biblioteca -> QBank.',
+    action: 'Practicar',
+  },
+  {
+    id: 'bacteria-session-2',
+    type: 'Repaso mock',
+    title: 'Conceptos high-yield',
+    description: 'Sesión visual sin lógica real de calificación ni persistencia.',
+    action: 'Continuar',
+  },
+]

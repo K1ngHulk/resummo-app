@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AppHeader from './components/layout/AppHeader'
 import { learningRoutes } from './mocks/learningMockData'
 import DashboardPage from './pages/DashboardPage'
+import LibraryArticlePage from './pages/LibraryArticlePage'
 import LibraryPage from './pages/LibraryPage'
 import LoadingScreen from './pages/LoadingScreen'
 import QuestionSessionPage from './pages/QuestionSessionPage'
@@ -49,6 +50,11 @@ const routeConfig = [
     component: (props) => <StudyPlanCurrentPage {...props} mode="elements" />,
   },
   { path: '/learning/library', id: 'library', component: LibraryPage },
+  {
+    path: '/learning/library/articles/bacteria-overview',
+    id: 'library',
+    component: LibraryArticlePage,
+  },
 ]
 
 function normalizePath(pathname) {
