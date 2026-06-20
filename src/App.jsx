@@ -51,6 +51,21 @@ const routeConfig = [
   },
   { path: '/learning/library', id: 'library', component: LibraryPage },
   {
+    path: '/learning/library/browse/basic-sciences',
+    id: 'library',
+    component: (props) => <LibraryPage {...props} activeNodeId="folder-basic-sciences" />,
+  },
+  {
+    path: '/learning/library/browse/basic-sciences/microbiology',
+    id: 'library',
+    component: (props) => <LibraryPage {...props} activeNodeId="folder-microbiology" />,
+  },
+  {
+    path: '/learning/library/browse/basic-sciences/microbiology/bacteriology',
+    id: 'library',
+    component: (props) => <LibraryPage {...props} activeNodeId="folder-bacteriology" />,
+  },
+  {
     path: '/learning/library/articles/bacteria-overview',
     id: 'library',
     component: LibraryArticlePage,

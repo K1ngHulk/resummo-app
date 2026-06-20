@@ -1,24 +1,30 @@
 import { useState } from 'react'
+import { getLibraryNode, getLibraryPath } from '../data/libraryTree'
 import {
   library,
   libraryArticleDetail,
-  libraryArticles,
+  libraryNodes,
   relatedLibraryArticles,
   relatedLibraryQuestions,
 } from '../mocks/learningMockData'
 
 function RelatedArticleList() {
   const relatedArticles = relatedLibraryArticles
-    .map((articleId) => libraryArticles.find((article) => article.id === articleId))
+    .map((articleId) => getLibraryNode(libraryNodes, articleId))
     .filter(Boolean)
 
   return (
     <div className="library-related-list">
       {relatedArticles.map((article) => (
         <article key={article.id} className="library-related-card">
-          <span>{article.category}</span>
-          <strong>{article.title}</strong>
-          <p>{article.summary}</p>
+          <span>
+            {getLibraryPath(libraryNodes, article.id)
+              .slice(0, -1)
+              .map((node) => node.label)
+              .join(' / ')}
+          </span>
+          <strong>{article.label}</strong>
+          <p>{article.description}</p>
         </article>
       ))}
     </div>
@@ -66,6 +72,9 @@ function ArticleIndex({ items }) {
 function LibraryArticlePage({ onNavigate }) {
   const [isSaved, setIsSaved] = useState(libraryArticleDetail.initiallySaved)
   const article = libraryArticleDetail
+  const articleNode = getLibraryNode(libraryNodes, article.nodeId)
+  const articlePath = getLibraryPath(libraryNodes, article.nodeId)
+  const rootLabel = articlePath[0]?.label
 
   return (
     <section className="library-article-page">
@@ -84,8 +93,11 @@ function LibraryArticlePage({ onNavigate }) {
         <article className="library-article-content">
           <header className="library-article-header">
             <div>
-              <span className="library-eyebrow">{article.category}</span>
-              <h1>{article.title}</h1>
+              <span className="library-eyebrow">{rootLabel}</span>
+              <div className="library-article-path">
+                {articlePath.slice(0, -1).map((node) => node.label).join(' / ')}
+              </div>
+              <h1>{articleNode?.label}</h1>
               <p>{article.summary}</p>
             </div>
 
@@ -99,7 +111,7 @@ function LibraryArticlePage({ onNavigate }) {
           </header>
 
           <div className="library-article-meta" aria-label="Metadata del articulo">
-            <span>{article.category}</span>
+            <span>{rootLabel}</span>
             <span>{article.readingTime}</span>
             <span>{article.updatedAt}</span>
           </div>
