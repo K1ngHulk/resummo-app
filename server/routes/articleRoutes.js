@@ -23,7 +23,7 @@ function parseArticleBody(body) {
 router.get('/:slug', requireAuth, async (request, response, next) => {
   try {
     const article = await prisma.article.findUnique({
-      where: { slug: request.params.slug },
+      where: { slug: request.params.slug, status: 'PUBLISHED' },
       include: {
         topic: true,
         progresses: {
@@ -43,6 +43,7 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
       where: {
         topicId: article.topicId,
         NOT: { id: article.id },
+        status: 'PUBLISHED',
       },
       orderBy: { createdAt: 'asc' },
       take: 3,
@@ -56,7 +57,7 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
     })
 
     const relatedQuestionCount = await prisma.question.count({
-      where: { articleId: article.id },
+      where: { articleId: article.id, status: 'PUBLISHED' },
     })
 
     response.json({
@@ -89,7 +90,7 @@ router.post('/:slug/progress', requireAuth, async (request, response, next) => {
       progressPercent: z.number().int().min(0).max(100).default(0),
     }).parse(request.body)
 
-    const article = await prisma.article.findUnique({ where: { slug: request.params.slug } })
+    const article = await prisma.article.findUnique({ where: { slug: request.params.slug, status: 'PUBLISHED' } })
 
     if (!article) {
       const error = new Error('Articulo no encontrado')

@@ -10,6 +10,7 @@ router.get('/', requireAuth, async (request, response, next) => {
     const topics = await prisma.topic.findMany({
       include: {
         articles: {
+          where: { status: 'PUBLISHED' },
           orderBy: { title: 'asc' },
           include: {
             progresses: {
@@ -72,10 +73,11 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
       where: { slug: request.params.slug },
       include: {
         articles: {
+          where: { status: 'PUBLISHED' },
           orderBy: { title: 'asc' },
         },
         _count: {
-          select: { questions: true },
+          select: { questions: { where: { status: 'PUBLISHED' } } },
         },
       },
     })

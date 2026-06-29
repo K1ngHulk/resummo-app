@@ -7,7 +7,7 @@ const router = express.Router()
 router.get('/', requireAuth, async (request, response, next) => {
   try {
     const articleProgresses = await prisma.userArticleProgress.findMany({
-      where: { userId: request.user.id },
+      where: { userId: request.user.id, article: { status: 'PUBLISHED' } },
       include: {
         article: {
           include: {
@@ -31,7 +31,7 @@ router.get('/', requireAuth, async (request, response, next) => {
     })
 
     const recentArticles = await prisma.userArticleProgress.findMany({
-      where: { userId: request.user.id },
+      where: { userId: request.user.id, article: { status: 'PUBLISHED' } },
       include: {
         article: true,
       },
