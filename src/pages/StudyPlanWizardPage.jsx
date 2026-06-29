@@ -112,7 +112,7 @@ function StudyPlanStepTwo({ onNavigate }) {
         <button
           type="button"
           className="spw-primary-action"
-          onClick={() => onNavigate('/learning/study-plans')}
+          onClick={() => onNavigate('/learning/study-plans/current')}
         >
           {step.action}
         </button>

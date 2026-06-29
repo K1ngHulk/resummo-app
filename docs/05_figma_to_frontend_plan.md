@@ -68,6 +68,19 @@ El CSS actual ya contiene variables globales en `src/styles/index.css`.
 
 Antes de escalar UI, decidir si se mantiene CSS global o se migra a una estrategia mas modular. Mientras el repo siga pequeno, se puede conservar CSS global con convenciones claras.
 
+### Marca
+
+Color principal oficial de Resummo:
+
+- `#8A342C`
+
+Regla operativa:
+
+- Usar `#8A342C` como base de `--color-primary`.
+- No introducir tonos guinda/rojo de marca hardcodeados en componentes o CSS.
+- Crear o reutilizar tokens derivados para variantes oscuras, tintes, bordes y sombras.
+- No mezclar este color con colores semanticos de correcto, error, progreso, disabled u overlays.
+
 Tokens a consolidar:
 
 - Colores de marca.

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import AppHeader from './components/layout/AppHeader'
 import { learningRoutes } from './mocks/learningMockData'
 import DashboardPage from './pages/DashboardPage'
+import LibraryArticlePage from './pages/LibraryArticlePage'
 import LibraryPage from './pages/LibraryPage'
 import LoadingScreen from './pages/LoadingScreen'
 import QuestionSessionPage from './pages/QuestionSessionPage'
 import QbankNewSessionPage from './pages/QbankNewSessionPage'
 import QbankPage from './pages/QbankPage'
+import StudyPlanCurrentPage from './pages/StudyPlanCurrentPage'
 import StudyPlanWizardPage from './pages/StudyPlanWizardPage'
 import StudyPlansPage from './pages/StudyPlansPage'
 
@@ -37,7 +39,37 @@ const routeConfig = [
     id: 'study-plans',
     component: (props) => <StudyPlanWizardPage {...props} step={2} />,
   },
+  {
+    path: '/learning/study-plans/current',
+    id: 'study-plans',
+    component: StudyPlanCurrentPage,
+  },
+  {
+    path: '/learning/study-plans/current/elements',
+    id: 'study-plans',
+    component: (props) => <StudyPlanCurrentPage {...props} mode="elements" />,
+  },
   { path: '/learning/library', id: 'library', component: LibraryPage },
+  {
+    path: '/learning/library/browse/basic-sciences',
+    id: 'library',
+    component: (props) => <LibraryPage {...props} activeNodeId="folder-basic-sciences" />,
+  },
+  {
+    path: '/learning/library/browse/basic-sciences/microbiology',
+    id: 'library',
+    component: (props) => <LibraryPage {...props} activeNodeId="folder-microbiology" />,
+  },
+  {
+    path: '/learning/library/browse/basic-sciences/microbiology/bacteriology',
+    id: 'library',
+    component: (props) => <LibraryPage {...props} activeNodeId="folder-bacteriology" />,
+  },
+  {
+    path: '/learning/library/articles/bacteria-overview',
+    id: 'library',
+    component: LibraryArticlePage,
+  },
 ]
 
 function normalizePath(pathname) {
