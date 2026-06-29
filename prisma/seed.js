@@ -193,6 +193,20 @@ const demoUser = {
   password: 'Demo12345'
 }
 
+const editorUser = {
+  firstName: 'Editor',
+  lastName: 'Medico',
+  email: 'editor@resummo.app',
+  password: 'Editor12345'
+}
+
+const adminUser = {
+  firstName: 'Admin',
+  lastName: 'Resummo',
+  email: 'admin@resummo.app',
+  password: 'Admin12345'
+}
+
 async function seedTopics() {
   for (const topic of topics) {
     const createdTopic = await prisma.topic.create({
@@ -362,14 +376,38 @@ async function main() {
       lastName: demoUser.lastName,
       email: demoUser.email,
       passwordHash,
+      role: 'STUDENT',
+    },
+  })
+
+  const editorHash = await bcrypt.hash(editorUser.password, 10)
+  await prisma.user.create({
+    data: {
+      firstName: editorUser.firstName,
+      lastName: editorUser.lastName,
+      email: editorUser.email,
+      passwordHash: editorHash,
+      role: 'EDITOR',
+    },
+  })
+
+  const adminHash = await bcrypt.hash(adminUser.password, 10)
+  await prisma.user.create({
+    data: {
+      firstName: adminUser.firstName,
+      lastName: adminUser.lastName,
+      email: adminUser.email,
+      passwordHash: adminHash,
+      role: 'ADMIN',
     },
   })
 
   await seedDemoActivity(user.id)
 
   console.log('Seed completado')
-  console.log(`Usuario demo: ${demoUser.email}`)
-  console.log(`Password demo: ${demoUser.password}`)
+  console.log(`Usuario demo: ${demoUser.email} / ${demoUser.password}`)
+  console.log(`Usuario editor: ${editorUser.email} / ${editorUser.password}`)
+  console.log(`Usuario admin: ${adminUser.email} / ${adminUser.password}`)
 }
 
 main()

@@ -8,6 +8,8 @@ datasource db {
 
 enum UserRole {
   STUDENT
+  EDITOR
+  ADMIN
 }
 
 enum ArticleProgressStatus {

@@ -7,6 +7,7 @@ import dashboardRoutes from './routes/dashboardRoutes.js'
 import progressRoutes from './routes/progressRoutes.js'
 import practiceSessionRoutes from './routes/practiceSessionRoutes.js'
 import topicRoutes from './routes/topicRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
 
 dotenv.config()
 
@@ -27,6 +28,7 @@ app.use('/api/articles', articleRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/progress', progressRoutes)
 app.use('/api/practice-sessions', practiceSessionRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.use((error, _request, response, next) => {
   console.error(error)
