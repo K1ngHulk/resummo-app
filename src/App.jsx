@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import AppHeader from './components/layout/AppHeader'
-import { learningRoutes } from './mocks/learningMockData'
+import { learningRoutes } from './constants/navigation'
+import { useAuth } from './context/AuthContext.jsx'
 import DashboardPage from './pages/DashboardPage'
 import LibraryArticlePage from './pages/LibraryArticlePage'
 import LibraryPage from './pages/LibraryPage'
 import LoadingScreen from './pages/LoadingScreen'
+import LoginPage from './pages/LoginPage'
 import QuestionSessionPage from './pages/QuestionSessionPage'
 import QbankNewSessionPage from './pages/QbankNewSessionPage'
 import QbankPage from './pages/QbankPage'
@@ -13,63 +15,27 @@ import StudyPlanWizardPage from './pages/StudyPlanWizardPage'
 import StudyPlansPage from './pages/StudyPlansPage'
 
 const routeConfig = [
+  { path: '/login', id: 'login', component: LoginPage, hideHeader: true },
   { path: '/learning/loading', id: 'loading', component: LoadingScreen, hideHeader: true },
   { path: '/learning', id: 'general', component: DashboardPage },
   { path: '/learning/qbank', id: 'qbank', component: QbankPage },
   { path: '/learning/qbank/new', id: 'qbank', component: QbankNewSessionPage },
   { path: '/learning/qbank/session', id: 'qbank', component: QuestionSessionPage },
-  {
-    path: '/learning/qbank/session/correct',
-    id: 'qbank',
-    component: (props) => <QuestionSessionPage {...props} variant="correct" />,
-  },
-  {
-    path: '/learning/qbank/session/incorrect',
-    id: 'qbank',
-    component: (props) => <QuestionSessionPage {...props} variant="incorrect" />,
-  },
   { path: '/learning/study-plans', id: 'study-plans', component: StudyPlansPage },
-  {
-    path: '/learning/study-plans/new/step-1',
-    id: 'study-plans',
-    component: StudyPlanWizardPage,
-  },
+  { path: '/learning/study-plans/new/step-1', id: 'study-plans', component: StudyPlanWizardPage },
   {
     path: '/learning/study-plans/new/step-2',
     id: 'study-plans',
     component: (props) => <StudyPlanWizardPage {...props} step={2} />,
   },
-  {
-    path: '/learning/study-plans/current',
-    id: 'study-plans',
-    component: StudyPlanCurrentPage,
-  },
+  { path: '/learning/study-plans/current', id: 'study-plans', component: StudyPlanCurrentPage },
   {
     path: '/learning/study-plans/current/elements',
     id: 'study-plans',
     component: (props) => <StudyPlanCurrentPage {...props} mode="elements" />,
   },
   { path: '/learning/library', id: 'library', component: LibraryPage },
-  {
-    path: '/learning/library/browse/basic-sciences',
-    id: 'library',
-    component: (props) => <LibraryPage {...props} activeNodeId="folder-basic-sciences" />,
-  },
-  {
-    path: '/learning/library/browse/basic-sciences/microbiology',
-    id: 'library',
-    component: (props) => <LibraryPage {...props} activeNodeId="folder-microbiology" />,
-  },
-  {
-    path: '/learning/library/browse/basic-sciences/microbiology/bacteriology',
-    id: 'library',
-    component: (props) => <LibraryPage {...props} activeNodeId="folder-bacteriology" />,
-  },
-  {
-    path: '/learning/library/articles/bacteria-overview',
-    id: 'library',
-    component: LibraryArticlePage,
-  },
+  { path: '/learning/library/article', id: 'library', component: LibraryArticlePage },
 ]
 
 function normalizePath(pathname) {
@@ -80,43 +46,76 @@ function normalizePath(pathname) {
   return pathname.replace(/\/$/, '') || '/learning'
 }
 
+function getLocationState() {
+  return {
+    path: normalizePath(window.location.pathname),
+    search: window.location.search,
+  }
+}
+
 function App() {
-  const [currentPath, setCurrentPath] = useState(() => normalizePath(window.location.pathname))
+  const [locationState, setLocationState] = useState(getLocationState)
+  const { isAuthenticated, isLoading, logout, user } = useAuth()
 
   useEffect(() => {
-    const handlePopState = () => setCurrentPath(normalizePath(window.location.pathname))
+    const handlePopState = () => setLocationState(getLocationState())
 
     window.addEventListener('popstate', handlePopState)
-
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  const activeRoute = useMemo(
-    () => routeConfig.find((route) => route.path === currentPath) ?? routeConfig.find((route) => route.path === '/learning'),
-    [currentPath],
-  )
-
   const navigate = (path) => {
-    const nextPath = normalizePath(path)
+    const nextUrl = new URL(path, window.location.origin)
+    const nextState = {
+      path: normalizePath(nextUrl.pathname),
+      search: nextUrl.search,
+    }
 
-    if (nextPath !== currentPath) {
-      window.history.pushState({}, '', nextPath)
-      setCurrentPath(nextPath)
+    if (
+      nextState.path !== locationState.path ||
+      nextState.search !== locationState.search
+    ) {
+      window.history.pushState({}, '', `${nextState.path}${nextState.search}`)
+      setLocationState(nextState)
     }
   }
 
+  const requestedRoute = useMemo(
+    () => routeConfig.find((route) => route.path === locationState.path) || routeConfig[2],
+    [locationState.path],
+  )
+
+  if (isLoading) {
+    return (
+      <main className="dashboard-shell dashboard-shell--loading">
+        <LoadingScreen />
+      </main>
+    )
+  }
+
+  const activeRoute = !isAuthenticated
+    ? routeConfig[0]
+    : requestedRoute.path === '/login'
+      ? routeConfig[2]
+      : requestedRoute
   const ActivePage = activeRoute.component
 
   return (
     <main className={`dashboard-shell ${activeRoute.hideHeader ? 'dashboard-shell--loading' : ''}`}>
-      {activeRoute.hideHeader ? null : (
+      {activeRoute.hideHeader || !isAuthenticated ? null : (
         <AppHeader
           activeSection={activeRoute.id}
           navigationItems={learningRoutes}
+          onLogout={logout}
           onNavigate={navigate}
+          user={user}
         />
       )}
-      <ActivePage onNavigate={navigate} />
+      <ActivePage
+        currentUser={user}
+        onNavigate={navigate}
+        searchParams={new URLSearchParams(locationState.search)}
+      />
     </main>
   )
 }

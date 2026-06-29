@@ -1,31 +1,43 @@
-import { questionSession } from '../../mocks/learningMockData'
+function QuestionSessionCard({ item, onNavigate }) {
+  if (!item) {
+    return (
+      <article className="dashboard-card">
+        <div className="dashboard-card__row dashboard-card__row--top">
+          <h2>Continuar sesion de preguntas</h2>
+        </div>
+        <p className="dashboard-card__meta">Todavia no tienes sesiones activas.</p>
+        <div className="dashboard-card__footer-action">
+          <button type="button" className="secondary-button" onClick={() => onNavigate('/learning/qbank/new')}>
+            Crear una sesion
+          </button>
+        </div>
+      </article>
+    )
+  }
 
-function QuestionSessionCard() {
-  const completion = (questionSession.answered / questionSession.total) * 100
+  const completion = item.total ? (item.answered / item.total) * 100 : 0
 
   return (
     <article className="dashboard-card">
       <div className="dashboard-card__row dashboard-card__row--top">
-        <h2>{questionSession.heading}</h2>
-        <button type="button" className="text-link">
-          {questionSession.viewAllLabel}
+        <h2>Continuar sesion de preguntas</h2>
+        <button type="button" className="text-link" onClick={() => onNavigate('/learning/qbank')}>
+          Ver todo
         </button>
       </div>
 
-      <p className="dashboard-card__meta">
-        {questionSession.mode}: {questionSession.topic}
-      </p>
+      <p className="dashboard-card__meta">Modo de estudio: {item.title}</p>
 
       <div className="progress-line">
         <div className="progress-line__track">
           <div className="progress-line__fill" style={{ width: `${completion}%` }} />
         </div>
-        <span>{questionSession.answered}/{questionSession.total}</span>
+        <span>{item.answered}/{item.total}</span>
       </div>
 
       <div className="dashboard-card__footer-action">
-        <button type="button" className="secondary-button">
-          {questionSession.action}
+        <button type="button" className="secondary-button" onClick={() => onNavigate(item.path)}>
+          Continuar
         </button>
       </div>
     </article>

@@ -1,17 +1,16 @@
 import AppIcon from '../ui/AppIcon'
 import SearchBar from '../ui/SearchBar'
 import resummoLogo from '../../assets/brand/originals/logoguinda.png'
-import { mockUser } from '../../mocks/learningMockData'
 
-function AppHeader({ activeSection, navigationItems, onNavigate }) {
+function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, user }) {
   return (
     <header className="app-header">
       <div className="app-header__inner">
         <div className="app-header__top">
-          <div className="brand-mark">
+          <button type="button" className="brand-mark" onClick={() => onNavigate('/learning')}>
             <img src={resummoLogo} alt="Resummo" className="brand-logo" />
             <div className="brand-mark__text">RESUMMO</div>
-          </div>
+          </button>
 
           <SearchBar placeholder="Buscar en Resummo" compact className="app-header__search" />
 
@@ -25,11 +24,14 @@ function AppHeader({ activeSection, navigationItems, onNavigate }) {
               </span>
             </button>
             <button type="button" className="profile-chip" aria-label="Perfil del usuario">
-              <span className="profile-chip__avatar">{mockUser.initials}</span>
+              <span className="profile-chip__avatar">{user?.initials || 'R'}</span>
               <span className="profile-chip__text">
-                <strong>{mockUser.name}</strong>
-                <small>{mockUser.role}</small>
+                <strong>{user?.fullName || 'Resummo User'}</strong>
+                <small>{user?.role === 'STUDENT' ? 'Estudiante de medicina' : user?.role}</small>
               </span>
+            </button>
+            <button type="button" className="text-link app-header__logout" onClick={onLogout}>
+              Salir
             </button>
           </div>
         </div>
@@ -44,7 +46,7 @@ function AppHeader({ activeSection, navigationItems, onNavigate }) {
               aria-current={activeSection === item.id ? 'page' : undefined}
               className={`section-nav__item ${activeSection === item.id ? 'section-nav__item--active' : ''}`}
               onClick={() => {
-                if (!item.disabled) {
+                if (!item.disabled && item.path) {
                   onNavigate(item.path)
                 }
               }}

@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+}
+
+enum ArticleProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+}
+
+enum ActivityType {
+  ARTICLE_VIEWED
+  SESSION_CREATED
+  SESSION_ANSWERED
+  SESSION_COMPLETED
+}
+
+model User {
+  id                String                @id @default(cuid())
+  email             String                @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  role              UserRole              @default(STUDENT)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  articleProgresses UserArticleProgress[]
+  studySessions     StudySession[]
+  recentActivities  RecentActivity[]
+}
+
+model Topic {
+  id            String         @id @default(cuid())
+  slug          String         @unique
+  title         String
+  summary       String
+  description   String
+  color         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  articles      Article[]
+  questions     Question[]
+  studySessions StudySession[]
+}
+
+model Article {
+  id           String                @id @default(cuid())
+  topicId       String
+  slug          String                @unique
+  title         String
+  summary       String
+  body          String
+  readTimeMinutes Int
+  tags          String[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  topic         Topic                 @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  progresses    UserArticleProgress[]
+  questions     Question[]
+  activities    RecentActivity[]
+}
+
+model UserArticleProgress {
+  id            String                @id @default(cuid())
+  userId        String
+  articleId      String
+  status        ArticleProgressStatus @default(NOT_STARTED)
+  progressPercent Int                 @default(0)
+  lastViewedAt  DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article       Article               @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+}
+
+model Question {
+  id           String               @id @default(cuid())
+  topicId       String
+  articleId      String?
+  prompt       String
+  explanation  String
+  difficulty   Int
+  hint         String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  topic        Topic                @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  article      Article?             @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  options      QuestionOption[]
+  sessionItems StudySessionQuestion[]
+  answers      StudyAnswer[]
+}
+
+model QuestionOption {
+  id          String        @id @default(cuid())
+  questionId   String
+  label       String
+  text        String
+  isCorrect   Boolean       @default(false)
+  order       Int
+  question    Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers     StudyAnswer[]
+
+  @@unique([questionId, label])
+}
+
+model StudySession {
+  id                String                @id @default(cuid())
+  userId            String
+  topicId           String
+  status            SessionStatus         @default(ACTIVE)
+  mode              String                @default("study")
+  totalQuestions    Int
+  currentQuestionIndex Int               @default(0)
+  correctCount      Int                   @default(0)
+  incorrectCount    Int                   @default(0)
+  hintedCorrectCount Int                  @default(0)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  finishedAt        DateTime?
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic             Topic                 @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  questions         StudySessionQuestion[]
+  answers           StudyAnswer[]
+  activities        RecentActivity[]
+}
+
+model StudySessionQuestion {
+  id          String       @id @default(cuid())
+  sessionId    String
+  questionId   String
+  order       Int
+  session     StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question    Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer      StudyAnswer?
+
+  @@unique([sessionId, order])
+  @@unique([sessionId, questionId])
+}
+
+model StudyAnswer {
+  id               String               @id @default(cuid())
+  sessionQuestionId String              @unique
+  sessionId         String
+  questionId        String
+  selectedOptionId  String
+  isCorrect         Boolean
+  usedHint          Boolean             @default(false)
+  answeredAt        DateTime            @default(now())
+  sessionQuestion   StudySessionQuestion @relation(fields: [sessionQuestionId], references: [id], onDelete: Cascade)
+  session           StudySession        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question          Question            @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption    QuestionOption      @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
+}
+
+model RecentActivity {
+  id         String       @id @default(cuid())
+  userId      String
+  sessionId   String?
+  articleId   String?
+  type       ActivityType
+  title      String
+  path       String
+  createdAt  DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session    StudySession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  article    Article?      @relation(fields: [articleId], references: [id], onDelete: Cascade)
+}
