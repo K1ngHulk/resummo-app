@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import 'dotenv/config'
+import { prisma } from '../server/lib/prisma.js'
 
 const topics = [
   {
