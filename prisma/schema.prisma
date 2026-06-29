@@ -23,6 +23,12 @@ enum SessionStatus {
   COMPLETED
 }
 
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 enum ActivityType {
   ARTICLE_VIEWED
   SESSION_CREATED
@@ -67,6 +73,7 @@ model Article {
   body          String
   readTimeMinutes Int
   tags          String[]
+  status        ContentStatus         @default(PUBLISHED)
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
   topic         Topic                 @relation(fields: [topicId], references: [id], onDelete: Cascade)
@@ -99,6 +106,7 @@ model Question {
   explanation  String
   difficulty   Int
   hint         String?
+  status       ContentStatus        @default(PUBLISHED)
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
   topic        Topic                @relation(fields: [topicId], references: [id], onDelete: Cascade)

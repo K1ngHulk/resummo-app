@@ -50,6 +50,7 @@ router.post('/', requireAuth, async (request, response, next) => {
     const questions = await prisma.question.findMany({
       where: {
         topicId: topic.id,
+        status: 'PUBLISHED',
         ...(parsed.difficulty ? { difficulty: parsed.difficulty } : {}),
       },
       orderBy: [{ difficulty: 'asc' }, { createdAt: 'asc' }],
