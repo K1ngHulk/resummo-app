@@ -416,4 +416,151 @@ router.patch('/questions/:id', async (request, response, next) => {
   }
 })
 
+router.post('/import/anki/preview', async (request, response, next) => {
+  try {
+    const { format, content } = request.body
+    if (format !== 'tsv') {
+      throw validationError('Solo se soporta formato TSV en esta fase')
+    }
+    if (typeof content !== 'string') {
+      throw validationError('Content debe ser un string')
+    }
+
+    const lines = content.split(/\r?\n/)
+    if (lines.length < 2) {
+      throw validationError('El TSV debe tener al menos una fila de headers y una de datos')
+    }
+
+    const headers = lines[0].split('\t').map(h => h.trim())
+    const getCol = (rowArr, name) => {
+      const idx = headers.indexOf(name)
+      return idx >= 0 ? rowArr[idx]?.trim() || '' : ''
+    }
+
+    const topics = await prisma.topic.findMany({ select: { id: true, slug: true } })
+    const articles = await prisma.article.findMany({ select: { id: true, slug: true, topicId: true } })
+    const existingQuestions = await prisma.question.findMany({ select: { prompt: true, topicId: true } })
+
+    const stats = { totalRows: 0, validRows: 0, invalidRows: 0, warningRows: 0 }
+    const items = []
+    const seenPrompts = new Set()
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.trim()) continue
+
+      stats.totalRows++
+      const rowArr = line.split('\t')
+      const rowErrors = []
+      const rowWarnings = []
+
+      const topicSlug = getCol(rowArr, 'topicSlug')
+      const articleSlug = getCol(rowArr, 'articleSlug')
+      const prompt = getCol(rowArr, 'prompt')
+      const explanation = getCol(rowArr, 'explanation')
+      const correctOption = getCol(rowArr, 'correctOption').toUpperCase()
+      const optionA = getCol(rowArr, 'optionA')
+      const optionB = getCol(rowArr, 'optionB')
+      const optionC = getCol(rowArr, 'optionC')
+      const optionD = getCol(rowArr, 'optionD')
+      const optionE = getCol(rowArr, 'optionE')
+      const tagsStr = getCol(rowArr, 'tags')
+
+      let difficulty = parseInt(getCol(rowArr, 'difficulty'), 10)
+      if (isNaN(difficulty) || difficulty < 1 || difficulty > 5) {
+        difficulty = 3
+        if (getCol(rowArr, 'difficulty')) {
+          rowErrors.push('difficulty debe ser un entero entre 1 y 5')
+        }
+      }
+
+      if (!topicSlug) rowErrors.push('topicSlug es requerido')
+      if (!prompt) rowErrors.push('prompt es requerido')
+      if (!explanation) rowErrors.push('explanation es requerido')
+      if (!correctOption) rowErrors.push('correctOption es requerido')
+
+      const rawOptions = [
+        { label: 'A', text: optionA },
+        { label: 'B', text: optionB },
+        { label: 'C', text: optionC },
+        { label: 'D', text: optionD },
+        { label: 'E', text: optionE },
+      ]
+
+      const options = rawOptions
+        .filter(o => o.text)
+        .map((o, idx) => ({ ...o, isCorrect: o.label === correctOption, order: idx }))
+
+      if (options.length < 2) {
+        rowErrors.push('Se requieren al menos 2 opciones no vacías')
+      } else {
+        const correctCount = options.filter(o => o.isCorrect).length
+        if (correctCount !== 1) {
+          rowErrors.push('correctOption debe apuntar a exactamente 1 opción no vacía')
+        }
+      }
+
+      const topic = topics.find(t => t.slug === topicSlug)
+      if (topicSlug && !topic) rowErrors.push(`El topicSlug '${topicSlug}' no existe en la DB`)
+
+      let article = null
+      if (articleSlug) {
+        article = articles.find(a => a.slug === articleSlug)
+        if (!article) {
+          rowErrors.push(`El articleSlug '${articleSlug}' no existe en la DB`)
+        } else if (topic && article.topicId !== topic.id) {
+          rowErrors.push(`El articleSlug '${articleSlug}' no pertenece al topicSlug '${topicSlug}'`)
+        }
+      }
+
+      if (prompt) {
+        const normalizedPrompt = prompt.toLowerCase()
+        if (seenPrompts.has(normalizedPrompt)) {
+          rowWarnings.push('Prompt duplicado en este mismo archivo TSV')
+        }
+        seenPrompts.add(normalizedPrompt)
+
+        if (topic && existingQuestions.some(q => q.topicId === topic.id && q.prompt.toLowerCase() === normalizedPrompt)) {
+          rowWarnings.push('Este prompt ya existe en la base de datos para este topic')
+        }
+      }
+
+      const status = rowErrors.length > 0 ? 'INVALID' : 'VALID'
+      if (status === 'VALID') stats.validRows++
+      else stats.invalidRows++
+
+      if (rowWarnings.length > 0) stats.warningRows++
+
+      let questionPayload = null
+      if (status === 'VALID') {
+        questionPayload = {
+          topicId: topic.id,
+          topicSlug: topic.slug,
+          articleId: article ? article.id : null,
+          articleSlug: article ? article.slug : null,
+          prompt,
+          explanation,
+          difficulty,
+          hint: getCol(rowArr, 'hint') || null,
+          tags: tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [],
+          status: 'DRAFT',
+          options
+        }
+      }
+
+      items.push({
+        rowIndex: i + 1,
+        status,
+        question: questionPayload,
+        errors: rowErrors,
+        warnings: rowWarnings
+      })
+    }
+
+    response.json({ stats, items })
+  } catch (error) {
+    next(error)
+  }
+})
+
 export default router
