@@ -57,6 +57,22 @@
   font-weight: 500;
 }
 
+.admin-header__back {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-header__back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .admin-header__logout {
   background: transparent;
   color: var(--color-surface);

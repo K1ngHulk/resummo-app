@@ -13,8 +13,11 @@ export default function AdminHeader({ onLogout, onNavigate, user }) {
           <span className="admin-header__role">{user?.role}</span>
           <span className="admin-header__name">{user?.firstName}</span>
         </div>
+        <button className="admin-header__back" onClick={() => onNavigate('/learning')}>
+          Volver a plataforma
+        </button>
         <button className="admin-header__logout" onClick={onLogout}>
-          Salir
+          Cerrar sesión
         </button>
       </div>
     </header>
