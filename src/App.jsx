@@ -14,6 +14,7 @@ import StudyPlanCurrentPage from './pages/StudyPlanCurrentPage'
 import StudyPlanWizardPage from './pages/StudyPlanWizardPage'
 import StudyPlansPage from './pages/StudyPlansPage'
 import AdminHomePage from './pages/admin/AdminHomePage'
+import AdminAnkiImportPage from './pages/admin/AdminAnkiImportPage'
 import AdminHeader from './components/admin/AdminHeader'
 
 const routeConfig = [
@@ -39,6 +40,7 @@ const routeConfig = [
   { path: '/learning/library', id: 'library', component: LibraryPage },
   { path: '/learning/library/article', id: 'library', component: LibraryArticlePage },
   { path: '/admin', id: 'admin', component: AdminHomePage, isAdmin: true },
+  { path: '/admin/import/anki', id: 'admin-anki', component: AdminAnkiImportPage, isAdmin: true },
 ]
 
 function normalizePath(pathname) {

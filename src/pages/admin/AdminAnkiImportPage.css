@@ -1,0 +1,138 @@
+.admin-import-page {
+  width: min(100%, 800px);
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.admin-import-header h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem;
+}
+
+.admin-import-header p {
+  color: var(--color-text-soft);
+  margin: 0;
+}
+
+.admin-import-card {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 10px 24px var(--color-primary-shadow-soft);
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-import-file-area {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-import-file-area label {
+  font-weight: 700;
+  font-size: var(--font-size-small);
+}
+
+.admin-import-file-area input[type="file"] {
+  border: 1px dashed var(--color-primary-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: var(--color-primary-tint);
+  cursor: pointer;
+}
+
+.admin-import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.admin-import-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-stat-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.admin-stat-card span {
+  display: block;
+  font-size: var(--font-size-small);
+  color: var(--color-text-soft);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-stat-card strong {
+  display: block;
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin-top: 0.25rem;
+}
+
+.admin-preview-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-preview-item {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: #fff;
+}
+
+.admin-preview-item--invalid {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.admin-preview-item header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.admin-preview-item header strong {
+  font-size: var(--font-size-small);
+  color: var(--color-primary);
+}
+
+.admin-preview-status {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+
+.admin-preview-status--invalid {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-preview-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.admin-preview-errors {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: inside disc;
+  color: #991b1b;
+  font-size: 0.85rem;
+}
