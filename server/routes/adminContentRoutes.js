@@ -416,148 +416,362 @@ router.patch('/questions/:id', async (request, response, next) => {
   }
 })
 
-router.post('/import/anki/preview', async (request, response, next) => {
-  try {
-    const { format, content } = request.body
-    if (format !== 'tsv') {
-      throw validationError('Solo se soporta formato TSV en esta fase')
+const duplicateTsvWarning = 'Prompt duplicado en este mismo archivo TSV'
+const duplicateDatabaseWarning = 'Este prompt ya existe en la base de datos para este topic'
+const duplicateTsvConfirmError = 'Prompt duplicado en este mismo archivo TSV; solo se importa la primera fila valida'
+const duplicateDatabaseConfirmError = 'Este prompt ya existe en la base de datos para este topic y no se importara'
+
+function normalizePrompt(prompt) {
+  return prompt.trim().replace(/\s+/g, ' ').toLocaleLowerCase('es')
+}
+
+function normalizeTags(tagsValue) {
+  const normalizedTags = []
+  const seenTags = new Set()
+
+  for (const tag of tagsValue.split(',')) {
+    const trimmedTag = tag.trim()
+    const normalizedTag = trimmedTag.toLocaleLowerCase('es')
+
+    if (trimmedTag && !seenTags.has(normalizedTag)) {
+      seenTags.add(normalizedTag)
+      normalizedTags.push(trimmedTag)
     }
-    if (typeof content !== 'string') {
-      throw validationError('Content debe ser un string')
-    }
+  }
 
-    const lines = content.split(/\r?\n/)
-    if (lines.length < 2) {
-      throw validationError('El TSV debe tener al menos una fila de headers y una de datos')
-    }
+  return normalizedTags
+}
 
-    const headers = lines[0].split('\t').map(h => h.trim())
-    const getCol = (rowArr, name) => {
-      const idx = headers.indexOf(name)
-      return idx >= 0 ? rowArr[idx]?.trim() || '' : ''
-    }
+export function parseAnkiTsv(content) {
+  if (typeof content !== 'string') {
+    throw validationError('Content debe ser un string')
+  }
 
-    const topics = await prisma.topic.findMany({ select: { id: true, slug: true } })
-    const articles = await prisma.article.findMany({ select: { id: true, slug: true, topicId: true } })
-    const existingQuestions = await prisma.question.findMany({ select: { prompt: true, topicId: true } })
+  const lines = content.split(/\r?\n/)
+  if (lines.length < 2) {
+    throw validationError('El TSV debe tener al menos una fila de headers y una de datos')
+  }
 
-    const stats = { totalRows: 0, validRows: 0, invalidRows: 0, warningRows: 0 }
-    const items = []
-    const seenPrompts = new Set()
+  const headers = lines[0].split('\t').map(header => header.trim())
+  const rows = []
 
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i]
-      if (!line.trim()) continue
+  for (let index = 1; index < lines.length; index++) {
+    if (!lines[index].trim()) continue
 
-      stats.totalRows++
-      const rowArr = line.split('\t')
-      const rowErrors = []
-      const rowWarnings = []
+    rows.push({
+      rowIndex: index + 1,
+      values: lines[index].split('\t'),
+    })
+  }
 
-      const topicSlug = getCol(rowArr, 'topicSlug')
-      const articleSlug = getCol(rowArr, 'articleSlug')
-      const prompt = getCol(rowArr, 'prompt')
-      const explanation = getCol(rowArr, 'explanation')
-      const correctOption = getCol(rowArr, 'correctOption').toUpperCase()
-      const optionA = getCol(rowArr, 'optionA')
-      const optionB = getCol(rowArr, 'optionB')
-      const optionC = getCol(rowArr, 'optionC')
-      const optionD = getCol(rowArr, 'optionD')
-      const optionE = getCol(rowArr, 'optionE')
-      const tagsStr = getCol(rowArr, 'tags')
+  return { headers, rows }
+}
 
-      let difficulty = parseInt(getCol(rowArr, 'difficulty'), 10)
-      if (isNaN(difficulty) || difficulty < 1 || difficulty > 5) {
-        difficulty = 3
-        if (getCol(rowArr, 'difficulty')) {
+function getTsvColumn(headers, values, columnName) {
+  const columnIndex = headers.indexOf(columnName)
+  return columnIndex >= 0 ? values[columnIndex]?.trim() || '' : ''
+}
+
+async function loadAnkiReferenceData() {
+  const [topics, articles, existingQuestions] = await Promise.all([
+    prisma.topic.findMany({ select: { id: true, slug: true } }),
+    prisma.article.findMany({ select: { id: true, slug: true, topicId: true } }),
+    prisma.question.findMany({ select: { prompt: true, topicId: true } }),
+  ])
+
+  return { topics, articles, existingQuestions }
+}
+
+export function validateAnkiRows(parsedTsv, referenceData) {
+  const { headers, rows } = parsedTsv
+  const { topics, articles, existingQuestions } = referenceData
+  const topicsBySlug = new Map(topics.map(topic => [topic.slug, topic]))
+  const articlesBySlug = new Map(articles.map(article => [article.slug, article]))
+  const existingPromptKeys = new Set(
+    existingQuestions.map(question => `${question.topicId}:${normalizePrompt(question.prompt)}`),
+  )
+  const seenPreviewPrompts = new Set()
+  const seenValidPrompts = new Set()
+  const stats = { totalRows: 0, validRows: 0, invalidRows: 0, warningRows: 0 }
+  const items = []
+
+  for (const row of rows) {
+    stats.totalRows++
+    const rowErrors = []
+    const rowWarnings = []
+    const confirmErrors = []
+    const getColumn = (columnName) => getTsvColumn(headers, row.values, columnName)
+    const topicSlug = getColumn('topicSlug')
+    const articleSlug = getColumn('articleSlug')
+    const prompt = getColumn('prompt')
+    const explanation = getColumn('explanation')
+    const correctOption = getColumn('correctOption').toUpperCase()
+    const difficultyValue = getColumn('difficulty')
+    const tagsValue = getColumn('tags')
+    const sourceStatus = getColumn('status')
+
+    let difficulty = 3
+    if (difficultyValue) {
+      if (!/^\d+$/.test(difficultyValue)) {
+        rowErrors.push('difficulty debe ser un entero entre 1 y 5')
+      } else {
+        difficulty = Number(difficultyValue)
+        if (difficulty < 1 || difficulty > 5) {
           rowErrors.push('difficulty debe ser un entero entre 1 y 5')
         }
       }
+    }
 
-      if (!topicSlug) rowErrors.push('topicSlug es requerido')
-      if (!prompt) rowErrors.push('prompt es requerido')
-      if (!explanation) rowErrors.push('explanation es requerido')
-      if (!correctOption) rowErrors.push('correctOption es requerido')
+    if (!topicSlug) rowErrors.push('topicSlug es requerido')
+    if (!prompt) rowErrors.push('prompt es requerido')
+    if (!explanation) rowErrors.push('explanation es requerido')
+    if (!correctOption) rowErrors.push('correctOption es requerido')
 
-      const rawOptions = [
-        { label: 'A', text: optionA },
-        { label: 'B', text: optionB },
-        { label: 'C', text: optionC },
-        { label: 'D', text: optionD },
-        { label: 'E', text: optionE },
-      ]
+    if (sourceStatus && sourceStatus.toUpperCase() !== 'DRAFT') {
+      rowWarnings.push('La columna status se ignora; las preguntas siempre se crean como DRAFT')
+    }
 
-      const options = rawOptions
-        .filter(o => o.text)
-        .map((o, idx) => ({ ...o, isCorrect: o.label === correctOption, order: idx }))
+    const rawOptions = ['A', 'B', 'C', 'D', 'E'].map(label => ({
+      label,
+      text: getColumn(`option${label}`),
+    }))
+    const options = rawOptions
+      .filter(option => option.text)
+      .map((option, index) => ({
+        ...option,
+        isCorrect: option.label === correctOption,
+        order: index,
+      }))
 
-      if (options.length < 2) {
-        rowErrors.push('Se requieren al menos 2 opciones no vacías')
+    if (options.length < 2) {
+      rowErrors.push('Se requieren al menos 2 opciones no vacias')
+    } else if (options.filter(option => option.isCorrect).length !== 1) {
+      rowErrors.push('correctOption debe apuntar a exactamente 1 opcion no vacia')
+    }
+
+    const topic = topicsBySlug.get(topicSlug) ?? null
+    if (topicSlug && !topic) {
+      rowErrors.push(`El topicSlug '${topicSlug}' no existe en la DB`)
+    }
+
+    let article = null
+    if (articleSlug) {
+      article = articlesBySlug.get(articleSlug) ?? null
+      if (!article) {
+        rowErrors.push(`El articleSlug '${articleSlug}' no existe en la DB`)
+      } else if (topic && article.topicId !== topic.id) {
+        rowErrors.push(`El articleSlug '${articleSlug}' no pertenece al topicSlug '${topicSlug}'`)
+      }
+    }
+
+    const normalizedPrompt = prompt ? normalizePrompt(prompt) : ''
+    if (normalizedPrompt) {
+      if (seenPreviewPrompts.has(normalizedPrompt)) {
+        rowWarnings.push(duplicateTsvWarning)
+      }
+      seenPreviewPrompts.add(normalizedPrompt)
+
+      if (topic && existingPromptKeys.has(`${topic.id}:${normalizedPrompt}`)) {
+        rowWarnings.push(duplicateDatabaseWarning)
+      }
+    }
+
+    const status = rowErrors.length > 0 ? 'INVALID' : 'VALID'
+    if (status === 'VALID') {
+      stats.validRows++
+
+      if (seenValidPrompts.has(normalizedPrompt)) {
+        confirmErrors.push(duplicateTsvConfirmError)
       } else {
-        const correctCount = options.filter(o => o.isCorrect).length
-        if (correctCount !== 1) {
-          rowErrors.push('correctOption debe apuntar a exactamente 1 opción no vacía')
-        }
+        seenValidPrompts.add(normalizedPrompt)
       }
 
-      const topic = topics.find(t => t.slug === topicSlug)
-      if (topicSlug && !topic) rowErrors.push(`El topicSlug '${topicSlug}' no existe en la DB`)
-
-      let article = null
-      if (articleSlug) {
-        article = articles.find(a => a.slug === articleSlug)
-        if (!article) {
-          rowErrors.push(`El articleSlug '${articleSlug}' no existe en la DB`)
-        } else if (topic && article.topicId !== topic.id) {
-          rowErrors.push(`El articleSlug '${articleSlug}' no pertenece al topicSlug '${topicSlug}'`)
-        }
+      if (existingPromptKeys.has(`${topic.id}:${normalizedPrompt}`)) {
+        confirmErrors.push(duplicateDatabaseConfirmError)
       }
+    } else {
+      stats.invalidRows++
+    }
 
-      if (prompt) {
-        const normalizedPrompt = prompt.toLowerCase()
-        if (seenPrompts.has(normalizedPrompt)) {
-          rowWarnings.push('Prompt duplicado en este mismo archivo TSV')
-        }
-        seenPrompts.add(normalizedPrompt)
+    if (rowWarnings.length > 0) stats.warningRows++
 
-        if (topic && existingQuestions.some(q => q.topicId === topic.id && q.prompt.toLowerCase() === normalizedPrompt)) {
-          rowWarnings.push('Este prompt ya existe en la base de datos para este topic')
-        }
-      }
+    items.push({
+      rowIndex: row.rowIndex,
+      status,
+      question: status === 'VALID'
+        ? {
+            topicId: topic.id,
+            topicSlug: topic.slug,
+            articleId: article?.id ?? null,
+            articleSlug: article?.slug ?? null,
+            prompt,
+            explanation,
+            difficulty,
+            hint: getColumn('hint') || null,
+            tags: normalizeTags(tagsValue),
+            status: 'DRAFT',
+            options,
+          }
+        : null,
+      errors: rowErrors,
+      warnings: rowWarnings,
+      confirmErrors,
+    })
+  }
 
-      const status = rowErrors.length > 0 ? 'INVALID' : 'VALID'
-      if (status === 'VALID') stats.validRows++
-      else stats.invalidRows++
+  return { stats, items }
+}
 
-      if (rowWarnings.length > 0) stats.warningRows++
+export async function buildAnkiPreview(format, content, referenceData = null) {
+  if (format !== 'tsv') {
+    throw validationError('Solo se soporta formato TSV en esta fase')
+  }
 
-      let questionPayload = null
-      if (status === 'VALID') {
-        questionPayload = {
-          topicId: topic.id,
-          topicSlug: topic.slug,
-          articleId: article ? article.id : null,
-          articleSlug: article ? article.slug : null,
-          prompt,
-          explanation,
-          difficulty,
-          hint: getCol(rowArr, 'hint') || null,
-          tags: tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [],
-          status: 'DRAFT',
-          options
-        }
-      }
+  const parsedTsv = parseAnkiTsv(content)
+  const resolvedReferenceData = referenceData ?? await loadAnkiReferenceData()
+  return validateAnkiRows(parsedTsv, resolvedReferenceData)
+}
 
-      items.push({
-        rowIndex: i + 1,
-        status,
-        question: questionPayload,
-        errors: rowErrors,
-        warnings: rowWarnings
+export function mapValidPreviewItemToCreateData(item) {
+  if (item.status !== 'VALID' || !item.question) {
+    throw validationError('Solo se pueden persistir items validos')
+  }
+
+  return {
+    topicId: item.question.topicId,
+    articleId: item.question.articleId,
+    prompt: item.question.prompt,
+    explanation: item.question.explanation,
+    difficulty: item.question.difficulty,
+    hint: item.question.hint,
+    status: 'DRAFT',
+    options: {
+      create: item.question.options.map((option, index) => ({
+        label: option.label,
+        text: option.text,
+        isCorrect: option.isCorrect,
+        order: index,
+      })),
+    },
+  }
+}
+
+function toPublicPreviewItem(item) {
+  return {
+    rowIndex: item.rowIndex,
+    status: item.status,
+    question: item.question,
+    errors: item.errors,
+    warnings: item.warnings,
+  }
+}
+
+function toSkippedItem(item, additionalErrors = []) {
+  return {
+    rowIndex: item.rowIndex,
+    errors: [...item.errors, ...item.confirmErrors, ...additionalErrors],
+    warnings: item.warnings,
+  }
+}
+
+router.post('/import/anki/preview', async (request, response, next) => {
+  try {
+    const { format, content } = request.body ?? {}
+    const preview = await buildAnkiPreview(format, content)
+
+    response.json({
+      stats: preview.stats,
+      items: preview.items.map(toPublicPreviewItem),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/import/anki/confirm', async (request, response, next) => {
+  try {
+    const { format, content } = request.body ?? {}
+    const preview = await buildAnkiPreview(format, content)
+    const invalidItems = preview.items.filter(item => item.status === 'INVALID')
+    const duplicateItems = preview.items.filter(
+      item => item.status === 'VALID' && item.confirmErrors.length > 0,
+    )
+    const candidates = preview.items.filter(
+      item => item.status === 'VALID' && item.confirmErrors.length === 0,
+    )
+
+    if (candidates.length === 0) {
+      return response.status(400).json({
+        stats: {
+          totalRows: preview.stats.totalRows,
+          createdRows: 0,
+          skippedRows: duplicateItems.length,
+          invalidRows: invalidItems.length,
+        },
+        createdQuestions: [],
+        skippedItems: [...invalidItems, ...duplicateItems]
+          .sort((left, right) => left.rowIndex - right.rowIndex)
+          .map(item => toSkippedItem(item)),
       })
     }
 
-    response.json({ stats, items })
+    const transactionResult = await prisma.$transaction(async transaction => {
+      const topicIds = [...new Set(candidates.map(item => item.question.topicId))]
+      const currentQuestions = await transaction.question.findMany({
+        where: { topicId: { in: topicIds } },
+        select: { topicId: true, prompt: true },
+      })
+      const currentPromptKeys = new Set(
+        currentQuestions.map(question => `${question.topicId}:${normalizePrompt(question.prompt)}`),
+      )
+      const createdQuestions = []
+      const runtimeSkippedItems = []
+
+      for (const item of candidates) {
+        const promptKey = `${item.question.topicId}:${normalizePrompt(item.question.prompt)}`
+        if (currentPromptKeys.has(promptKey)) {
+          runtimeSkippedItems.push(toSkippedItem(item, [duplicateDatabaseConfirmError]))
+          continue
+        }
+
+        const question = await transaction.question.create({
+          data: mapValidPreviewItemToCreateData(item),
+          include: { options: { select: { id: true } } },
+        })
+        currentPromptKeys.add(promptKey)
+        createdQuestions.push({
+          rowIndex: item.rowIndex,
+          id: question.id,
+          prompt: question.prompt,
+          status: question.status,
+          optionsCount: question.options.length,
+        })
+      }
+
+      return { createdQuestions, runtimeSkippedItems }
+    }, { isolationLevel: 'Serializable' })
+
+    const skippedItems = [
+      ...invalidItems.map(item => toSkippedItem(item)),
+      ...duplicateItems.map(item => toSkippedItem(item)),
+      ...transactionResult.runtimeSkippedItems,
+    ].sort((left, right) => left.rowIndex - right.rowIndex)
+    const result = {
+      stats: {
+        totalRows: preview.stats.totalRows,
+        createdRows: transactionResult.createdQuestions.length,
+        skippedRows: duplicateItems.length + transactionResult.runtimeSkippedItems.length,
+        invalidRows: invalidItems.length,
+      },
+      createdQuestions: transactionResult.createdQuestions,
+      skippedItems,
+    }
+
+    if (result.stats.createdRows === 0) {
+      return response.status(400).json(result)
+    }
+
+    response.status(201).json(result)
   } catch (error) {
     next(error)
   }
