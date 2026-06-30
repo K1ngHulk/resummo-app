@@ -47,7 +47,7 @@ function AdminAnkiImportPage() {
     try {
       const payload = await request('/api/admin/content/import/anki/preview', {
         method: 'POST',
-        body: JSON.stringify({ format: 'tsv', content: fileContent }),
+        body: { format: 'tsv', content: fileContent },
       })
       setPreviewData(payload)
     } catch (err) {
@@ -66,7 +66,7 @@ function AdminAnkiImportPage() {
     try {
       const payload = await request('/api/admin/content/import/anki/confirm', {
         method: 'POST',
-        body: JSON.stringify({ format: 'tsv', content: fileContent }),
+        body: { format: 'tsv', content: fileContent },
       })
       setConfirmData(payload)
       setPreviewData(null)
