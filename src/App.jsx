@@ -13,6 +13,8 @@ import QbankPage from './pages/QbankPage'
 import StudyPlanCurrentPage from './pages/StudyPlanCurrentPage'
 import StudyPlanWizardPage from './pages/StudyPlanWizardPage'
 import StudyPlansPage from './pages/StudyPlansPage'
+import AdminHomePage from './pages/admin/AdminHomePage'
+import AdminHeader from './components/admin/AdminHeader'
 
 const routeConfig = [
   { path: '/login', id: 'login', component: LoginPage, hideHeader: true },
@@ -36,6 +38,7 @@ const routeConfig = [
   },
   { path: '/learning/library', id: 'library', component: LibraryPage },
   { path: '/learning/library/article', id: 'library', component: LibraryArticlePage },
+  { path: '/admin', id: 'admin', component: AdminHomePage, isAdmin: true },
 ]
 
 function normalizePath(pathname) {
@@ -98,18 +101,35 @@ function App() {
     : requestedRoute.path === '/login'
       ? routeConfig[2]
       : requestedRoute
+
+  if (activeRoute.isAdmin && user && user.role !== 'EDITOR' && user.role !== 'ADMIN') {
+    return (
+      <main className="dashboard-shell">
+        <div style={{ padding: '3rem', textAlign: 'center' }}>
+          <h2>Acceso Restringido</h2>
+          <p>No tienes permisos para ver esta página.</p>
+          <button onClick={() => navigate('/learning')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Volver al inicio</button>
+        </div>
+      </main>
+    )
+  }
+
   const ActivePage = activeRoute.component
 
   return (
     <main className={`dashboard-shell ${activeRoute.hideHeader ? 'dashboard-shell--loading' : ''}`}>
       {activeRoute.hideHeader || !isAuthenticated ? null : (
-        <AppHeader
-          activeSection={activeRoute.id}
-          navigationItems={learningRoutes}
-          onLogout={logout}
-          onNavigate={navigate}
-          user={user}
-        />
+        activeRoute.isAdmin ? (
+          <AdminHeader onLogout={logout} onNavigate={navigate} user={user} />
+        ) : (
+          <AppHeader
+            activeSection={activeRoute.id}
+            navigationItems={learningRoutes}
+            onLogout={logout}
+            onNavigate={navigate}
+            user={user}
+          />
+        )
       )}
       <ActivePage
         currentUser={user}

@@ -30,6 +30,15 @@ function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, user 
                 <small>{user?.role === 'STUDENT' ? 'Estudiante de medicina' : user?.role}</small>
               </span>
             </button>
+            {user && (user.role === 'EDITOR' || user.role === 'ADMIN') && (
+              <button
+                type="button"
+                className="app-header__admin-pill"
+                onClick={() => onNavigate('/admin')}
+              >
+                Panel editorial
+              </button>
+            )}
             <button type="button" className="text-link app-header__logout" onClick={onLogout}>
               Salir
             </button>

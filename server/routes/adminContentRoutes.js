@@ -16,6 +16,23 @@ function validationError(message) {
 
 router.use(requireAuth)
 router.use(requireRole('EDITOR', 'ADMIN'))
+router.get('/topics', async (request, response, next) => {
+  try {
+    const topics = await prisma.topic.findMany({
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        summary: true,
+      },
+      orderBy: { title: 'asc' },
+    })
+
+    response.json({ topics })
+  } catch (error) {
+    next(error)
+  }
+})
 
 router.get('/articles', async (request, response, next) => {
   try {

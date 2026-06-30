@@ -4802,3 +4802,23 @@ input:focus {
     grid-template-columns: 1fr;
   }
 }
+
+.app-header__admin-pill {
+  background: var(--color-card);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-shadow);
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.2s;
+}
+
+.app-header__admin-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--color-primary-shadow-soft);
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
