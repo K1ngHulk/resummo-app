@@ -77,7 +77,7 @@ function LoginPage({ onNavigate }) {
         <header className="auth-card__header">
           <h1>{title}</h1>
           <p>
-            Usa el usuario demo `demo@resummo.app` con password `Demo12345` o crea una cuenta nueva.
+            Ingresa con la cuenta de estudiante demo <strong>(demo@resummo.app / Demo12345)</strong> o crea una nueva.
           </p>
         </header>
 
