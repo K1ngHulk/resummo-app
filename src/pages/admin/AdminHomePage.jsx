@@ -18,11 +18,15 @@ export default function AdminHomePage({ onNavigate }) {
           <div className="admin-card__action" style={{ color: 'var(--color-text-soft)' }}>Próximamente</div>
         </div>
 
-        <div className="admin-card">
+        <div
+          className="admin-card"
+          style={{ cursor: 'pointer', borderColor: 'var(--color-primary-muted)' }}
+          onClick={() => onNavigate('/admin/questions')}
+        >
           <div className="admin-card__icon">❓</div>
           <h2 className="admin-card__title">Preguntas</h2>
           <p className="admin-card__desc">Gestiona el banco de preguntas, explicaciones y niveles.</p>
-          <div className="admin-card__action" style={{ color: 'var(--color-text-soft)' }}>Próximamente</div>
+          <div className="admin-card__action" style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>Ver preguntas &rarr;</div>
         </div>
 
         <div

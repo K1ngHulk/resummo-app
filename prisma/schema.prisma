@@ -73,7 +73,7 @@ model Article {
   body          String
   readTimeMinutes Int
   tags          String[]
-  status        ContentStatus         @default(PUBLISHED)
+  status        ContentStatus         @default(DRAFT)
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
   topic         Topic                 @relation(fields: [topicId], references: [id], onDelete: Cascade)
@@ -106,7 +106,7 @@ model Question {
   explanation  String
   difficulty   Int
   hint         String?
-  status       ContentStatus        @default(PUBLISHED)
+  status       ContentStatus        @default(DRAFT)
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
   topic        Topic                @relation(fields: [topicId], references: [id], onDelete: Cascade)
