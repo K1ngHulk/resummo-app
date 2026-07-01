@@ -9,7 +9,7 @@ function getHumanStatus(status) {
   return status
 }
 
-export default function AdminQuestionsPage() {
+export default function AdminQuestionsPage({ onNavigate }) {
   const { request } = useAuth()
   const [questions, setQuestions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -118,6 +118,12 @@ export default function AdminQuestionsPage() {
                 <span>Dificultad: {q.difficulty}</span>
               </div>
               <div className="admin-question-item__actions">
+                <button
+                  className="admin-action-btn admin-action-btn--draft"
+                  onClick={() => onNavigate && onNavigate(`/admin/questions/review?id=${q.id}`)}
+                >
+                  Revisar
+                </button>
                 {q.status !== 'PUBLISHED' && (
                   <button
                     className="admin-action-btn admin-action-btn--publish"
