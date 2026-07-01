@@ -33,7 +33,7 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
       },
     })
 
-    if (!article) {
+    if (!article || article.topic.status !== 'PUBLISHED') {
       const error = new Error('Articulo no encontrado')
       error.statusCode = 404
       throw error
@@ -44,6 +44,9 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
         topicId: article.topicId,
         NOT: { id: article.id },
         status: 'PUBLISHED',
+        topic: {
+          status: 'PUBLISHED',
+        },
       },
       orderBy: { createdAt: 'asc' },
       take: 3,
@@ -90,7 +93,15 @@ router.post('/:slug/progress', requireAuth, async (request, response, next) => {
       progressPercent: z.number().int().min(0).max(100).default(0),
     }).parse(request.body)
 
-    const article = await prisma.article.findUnique({ where: { slug: request.params.slug, status: 'PUBLISHED' } })
+    const article = await prisma.article.findFirst({
+      where: {
+        slug: request.params.slug,
+        status: 'PUBLISHED',
+        topic: {
+          status: 'PUBLISHED',
+        },
+      },
+    })
 
     if (!article) {
       const error = new Error('Articulo no encontrado')
