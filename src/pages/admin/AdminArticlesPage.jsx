@@ -9,7 +9,7 @@ function getHumanStatus(status) {
   return status
 }
 
-export default function AdminArticlesPage() {
+export default function AdminArticlesPage({ onNavigate }) {
   const { request } = useAuth()
   const [articles, setArticles] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -120,6 +120,12 @@ export default function AdminArticlesPage() {
                 )}
               </div>
               <div className="admin-article-item__actions">
+                <button
+                  className="admin-action-btn admin-action-btn--draft"
+                  onClick={() => onNavigate && onNavigate(`/admin/articles/review?id=${a.id}`)}
+                >
+                  Revisar
+                </button>
                 {a.status !== 'PUBLISHED' && (
                   <button
                     className="admin-action-btn admin-action-btn--publish"

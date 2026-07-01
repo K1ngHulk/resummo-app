@@ -1,0 +1,167 @@
+.admin-review-page {
+  padding: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.admin-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.admin-review-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.admin-review-subtitle {
+  color: var(--color-text-soft);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.admin-back-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+.admin-back-btn:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.admin-review-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.admin-form-section {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.admin-form-section h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.admin-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.admin-form-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.admin-form-input,
+.admin-form-textarea,
+.admin-form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  transition: border-color 0.2s ease;
+}
+
+.admin-form-input:focus,
+.admin-form-textarea:focus,
+.admin-form-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.admin-form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.admin-form-input:disabled,
+.admin-form-textarea:disabled,
+.admin-form-select:disabled {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-soft);
+  cursor: not-allowed;
+}
+
+.admin-review-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.admin-review-actions-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.admin-btn--primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.admin-btn--primary:hover {
+  background-color: var(--color-primary-dark, #631021);
+}
+
+.admin-btn--secondary {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.admin-btn--secondary:hover {
+  border-color: var(--color-primary-muted);
+}
+
+.admin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-error-container {
+  padding: 3rem 1rem;
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
