@@ -1,5 +1,5 @@
+import 'dotenv/config'
 import cors from 'cors'
-import dotenv from 'dotenv'
 import express from 'express'
 import authRoutes from './routes/authRoutes.js'
 import articleRoutes from './routes/articleRoutes.js'
@@ -9,8 +9,6 @@ import practiceSessionRoutes from './routes/practiceSessionRoutes.js'
 import topicRoutes from './routes/topicRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import adminContentRoutes from './routes/adminContentRoutes.js'
-
-dotenv.config()
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
