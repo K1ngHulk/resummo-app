@@ -57,6 +57,7 @@ model Topic {
   summary       String
   description   String
   color         String?
+  status        ContentStatus  @default(DRAFT)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   articles      Article[]

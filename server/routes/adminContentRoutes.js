@@ -24,11 +24,139 @@ router.get('/topics', async (request, response, next) => {
         slug: true,
         title: true,
         summary: true,
+        description: true,
+        color: true,
+        status: true,
+        _count: {
+          select: {
+            articles: true,
+            questions: true,
+          }
+        }
       },
       orderBy: { title: 'asc' },
     })
 
-    response.json({ topics })
+    const topicsWithCounts = topics.map(topic => ({
+      ...topic,
+      counts: {
+        articles: topic._count.articles,
+        questions: topic._count.questions,
+      }
+    }))
+
+    response.json({ topics: topicsWithCounts })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/topics/:id', async (request, response, next) => {
+  try {
+    const topic = await prisma.topic.findUnique({
+      where: { id: request.params.id },
+      include: {
+        _count: {
+          select: {
+            articles: true,
+            questions: true,
+          }
+        }
+      }
+    })
+
+    if (!topic) {
+      const error = new Error('Tema no encontrado')
+      error.statusCode = 404
+      throw error
+    }
+
+    response.json({ topic })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/topics', async (request, response, next) => {
+  try {
+    const schema = z.object({
+      slug: z.string().trim().min(1),
+      title: z.string().trim().min(1),
+      summary: z.string().trim().min(1),
+      description: z.string().trim().min(1),
+      color: z.string().optional().nullable(),
+      status: contentStatusSchema.optional().default('DRAFT'),
+    })
+
+    const result = schema.safeParse(request.body)
+    if (!result.success) {
+      throw validationError('Payload invalido')
+    }
+    const parsed = result.data
+
+    const existingSlug = await prisma.topic.findUnique({ where: { slug: parsed.slug } })
+    if (existingSlug) {
+      const error = new Error('Ya existe un tema con este slug')
+      error.statusCode = 409
+      throw error
+    }
+
+    const topic = await prisma.topic.create({
+      data: {
+        slug: parsed.slug,
+        title: parsed.title,
+        summary: parsed.summary,
+        description: parsed.description,
+        color: parsed.color,
+        status: parsed.status,
+      }
+    })
+
+    response.status(201).json({ topic })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.patch('/topics/:id', async (request, response, next) => {
+  try {
+    const schema = z.object({
+      slug: z.string().trim().min(1).optional(),
+      title: z.string().trim().min(1).optional(),
+      summary: z.string().trim().min(1).optional(),
+      description: z.string().trim().min(1).optional(),
+      color: z.string().optional().nullable(),
+      status: contentStatusSchema.optional(),
+    })
+
+    const result = schema.safeParse(request.body)
+    if (!result.success) {
+      throw validationError('Payload invalido')
+    }
+    const parsed = result.data
+
+    const existingTopic = await prisma.topic.findUnique({ where: { id: request.params.id } })
+    if (!existingTopic) {
+      const error = new Error('Tema no encontrado')
+      error.statusCode = 404
+      throw error
+    }
+
+    if (parsed.slug && parsed.slug !== existingTopic.slug) {
+      const existingSlug = await prisma.topic.findUnique({ where: { slug: parsed.slug } })
+      if (existingSlug) {
+        const error = new Error('Ya existe un tema con este slug')
+        error.statusCode = 409
+        throw error
+      }
+    }
+
+    const topic = await prisma.topic.update({
+      where: { id: request.params.id },
+      data: parsed,
+    })
+
+    response.json({ topic })
   } catch (error) {
     next(error)
   }

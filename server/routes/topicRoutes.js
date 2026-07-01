@@ -8,6 +8,13 @@ router.get('/', requireAuth, async (request, response, next) => {
   try {
     const query = String(request.query.query || '').trim().toLowerCase()
     const topics = await prisma.topic.findMany({
+      where: {
+        status: 'PUBLISHED',
+        OR: [
+          { articles: { some: { status: 'PUBLISHED' } } },
+          { questions: { some: { status: 'PUBLISHED' } } },
+        ],
+      },
       include: {
         articles: {
           where: { status: 'PUBLISHED' },
@@ -82,7 +89,7 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
       },
     })
 
-    if (!topic) {
+    if (!topic || topic.status !== 'PUBLISHED' || (topic.articles.length === 0 && topic._count.questions === 0)) {
       const error = new Error('Tema no encontrado')
       error.statusCode = 404
       throw error
