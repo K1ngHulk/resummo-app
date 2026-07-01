@@ -19,6 +19,7 @@ import AdminQuestionsPage from './pages/admin/AdminQuestionsPage'
 import AdminQuestionReviewPage from './pages/admin/AdminQuestionReviewPage'
 import AdminArticlesPage from './pages/admin/AdminArticlesPage'
 import AdminArticleReviewPage from './pages/admin/AdminArticleReviewPage'
+import AdminArticleCreatePage from './pages/admin/AdminArticleCreatePage'
 import AdminHeader from './components/admin/AdminHeader'
 
 const routeConfig = [
@@ -45,6 +46,7 @@ const routeConfig = [
   { path: '/learning/library/article', id: 'library', component: LibraryArticlePage },
   { path: '/admin', id: 'admin', component: AdminHomePage, isAdmin: true },
   { path: '/admin/articles', id: 'admin-articles', component: AdminArticlesPage, isAdmin: true },
+  { path: '/admin/articles/new', id: 'admin-article-new', component: AdminArticleCreatePage, isAdmin: true },
   { path: '/admin/articles/review', id: 'admin-article-review', component: AdminArticleReviewPage, isAdmin: true },
   { path: '/admin/questions', id: 'admin-questions', component: AdminQuestionsPage, isAdmin: true },
   { path: '/admin/questions/review', id: 'admin-question-review', component: AdminQuestionReviewPage, isAdmin: true },

@@ -63,8 +63,18 @@ export default function AdminArticlesPage({ onNavigate }) {
   return (
     <div className="admin-articles-page">
       <header className="admin-articles-header">
-        <h1>Gestión de Artículos</h1>
-        <p>Revisa y cambia el estado editorial de los artículos (Borrador, Publicado, Archivado).</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1>Gestión de Artículos</h1>
+            <p>Revisa y cambia el estado editorial de los artículos (Borrador, Publicado, Archivado).</p>
+          </div>
+          <button
+            className="admin-action-btn admin-action-btn--publish"
+            onClick={() => onNavigate && onNavigate('/admin/articles/new')}
+          >
+            Nuevo artículo
+          </button>
+        </div>
       </header>
 
       <div className="admin-filters">
