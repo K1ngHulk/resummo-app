@@ -16,6 +16,7 @@ import StudyPlansPage from './pages/StudyPlansPage'
 import AdminHomePage from './pages/admin/AdminHomePage'
 import AdminAnkiImportPage from './pages/admin/AdminAnkiImportPage'
 import AdminQuestionsPage from './pages/admin/AdminQuestionsPage'
+import AdminArticlesPage from './pages/admin/AdminArticlesPage'
 import AdminHeader from './components/admin/AdminHeader'
 
 const routeConfig = [
@@ -41,6 +42,7 @@ const routeConfig = [
   { path: '/learning/library', id: 'library', component: LibraryPage },
   { path: '/learning/library/article', id: 'library', component: LibraryArticlePage },
   { path: '/admin', id: 'admin', component: AdminHomePage, isAdmin: true },
+  { path: '/admin/articles', id: 'admin-articles', component: AdminArticlesPage, isAdmin: true },
   { path: '/admin/questions', id: 'admin-questions', component: AdminQuestionsPage, isAdmin: true },
   { path: '/admin/import/anki', id: 'admin-anki', component: AdminAnkiImportPage, isAdmin: true },
 ]

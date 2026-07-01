@@ -11,11 +11,15 @@ export default function AdminHomePage({ onNavigate }) {
       </div>
 
       <div className="admin-grid">
-        <div className="admin-card">
+        <div
+          className="admin-card"
+          style={{ cursor: 'pointer', borderColor: 'var(--color-primary-muted)' }}
+          onClick={() => onNavigate('/admin/articles')}
+        >
           <div className="admin-card__icon">📄</div>
           <h2 className="admin-card__title">Artículos</h2>
           <p className="admin-card__desc">Administra la biblioteca de lectura y sus temas.</p>
-          <div className="admin-card__action" style={{ color: 'var(--color-text-soft)' }}>Próximamente</div>
+          <div className="admin-card__action" style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>Ver artículos &rarr;</div>
         </div>
 
         <div
