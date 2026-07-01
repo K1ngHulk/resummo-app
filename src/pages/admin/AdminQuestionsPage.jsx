@@ -63,8 +63,19 @@ export default function AdminQuestionsPage({ onNavigate }) {
   return (
     <div className="admin-questions-page">
       <header className="admin-questions-header">
-        <h1>Gestión de Preguntas</h1>
-        <p>Revisa y cambia el estado de las preguntas del banco (Borrador, Publicado, Archivado).</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1>Gestión de Preguntas</h1>
+            <p>Revisa y cambia el estado de las preguntas del banco (Borrador, Publicado, Archivado).</p>
+          </div>
+          <button
+            className="admin-action-btn admin-action-btn--publish"
+            style={{ padding: '0.75rem 1.25rem', fontSize: '1rem' }}
+            onClick={() => onNavigate && onNavigate('/admin/questions/new')}
+          >
+            Nueva pregunta
+          </button>
+        </div>
       </header>
 
       <div className="admin-filters">

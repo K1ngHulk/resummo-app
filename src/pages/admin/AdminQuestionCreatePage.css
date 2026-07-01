@@ -1,0 +1,198 @@
+.admin-question-create-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.admin-question-create-page .admin-question-create-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-question-create-page .admin-question-create-header h1 {
+  font-size: 1.75rem;
+  color: var(--color-text-strong);
+  margin: 0 0 0.5rem 0;
+}
+
+.admin-question-create-page .admin-question-create-header p {
+  color: var(--color-text-soft);
+  margin: 0;
+}
+
+.admin-question-create-page .admin-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.admin-question-create-page .admin-form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-strong);
+}
+
+.admin-question-create-page .admin-form-group input[type="text"],
+.admin-question-create-page .admin-form-group input[type="number"],
+.admin-question-create-page .admin-form-group select,
+.admin-question-create-page .admin-form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-strong);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.admin-question-create-page .admin-form-group input:focus,
+.admin-question-create-page .admin-form-group select:focus,
+.admin-question-create-page .admin-form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(138, 52, 44, 0.12);
+}
+
+.admin-question-create-page .admin-form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.admin-question-create-page .admin-form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-question-create-page .admin-form-row > * {
+  flex: 1;
+}
+
+.admin-question-create-page .admin-options-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.admin-question-create-page .admin-options-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.admin-question-create-page .admin-options-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--color-text-strong);
+}
+
+.admin-question-create-page .admin-option-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-question-create-page .admin-option-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.admin-question-create-page .admin-option-label {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--color-primary);
+  width: 30px;
+  text-align: center;
+  padding-top: 0.75rem;
+}
+
+.admin-question-create-page .admin-option-content {
+  flex: 1;
+}
+
+.admin-question-create-page .admin-option-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  min-width: 100px;
+}
+
+.admin-question-create-page .admin-option-correct-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+}
+
+.admin-question-create-page .admin-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-question-create-page .admin-btn--primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.admin-question-create-page .admin-btn--primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.admin-question-create-page .admin-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-question-create-page .admin-btn--secondary {
+  background: #ebe4de;
+  color: var(--color-text-strong);
+  border: 1px solid var(--color-border);
+}
+
+.admin-question-create-page .admin-btn--secondary:hover:not(:disabled) {
+  background: var(--color-border);
+}
+
+.admin-question-create-page .admin-btn--secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-question-create-page .admin-btn--danger-outline {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+.admin-question-create-page .admin-btn--danger-outline:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.admin-question-create-page .admin-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border);
+}

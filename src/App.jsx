@@ -20,6 +20,7 @@ import AdminQuestionReviewPage from './pages/admin/AdminQuestionReviewPage'
 import AdminArticlesPage from './pages/admin/AdminArticlesPage'
 import AdminArticleReviewPage from './pages/admin/AdminArticleReviewPage'
 import AdminArticleCreatePage from './pages/admin/AdminArticleCreatePage'
+import AdminQuestionCreatePage from './pages/admin/AdminQuestionCreatePage'
 import AdminHeader from './components/admin/AdminHeader'
 
 const routeConfig = [
@@ -49,6 +50,7 @@ const routeConfig = [
   { path: '/admin/articles/new', id: 'admin-article-new', component: AdminArticleCreatePage, isAdmin: true },
   { path: '/admin/articles/review', id: 'admin-article-review', component: AdminArticleReviewPage, isAdmin: true },
   { path: '/admin/questions', id: 'admin-questions', component: AdminQuestionsPage, isAdmin: true },
+  { path: '/admin/questions/new', id: 'admin-question-new', component: AdminQuestionCreatePage, isAdmin: true },
   { path: '/admin/questions/review', id: 'admin-question-review', component: AdminQuestionReviewPage, isAdmin: true },
   { path: '/admin/import/anki', id: 'admin-anki', component: AdminAnkiImportPage, isAdmin: true },
 ]
