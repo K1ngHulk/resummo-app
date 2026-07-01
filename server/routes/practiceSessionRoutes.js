@@ -41,8 +41,8 @@ router.post('/', requireAuth, async (request, response, next) => {
     const parsed = createSessionSchema.parse(request.body)
     const topic = await prisma.topic.findUnique({ where: { slug: parsed.topicSlug } })
 
-    if (!topic) {
-      const error = new Error('Tema no encontrado')
+    if (!topic || topic.status !== 'PUBLISHED') {
+      const error = new Error('Tema no disponible para practica')
       error.statusCode = 404
       throw error
     }
@@ -58,7 +58,7 @@ router.post('/', requireAuth, async (request, response, next) => {
     })
 
     if (questions.length === 0) {
-      const error = new Error('No hay preguntas disponibles para esos filtros')
+      const error = new Error('No hay preguntas publicadas disponibles para esos filtros')
       error.statusCode = 400
       throw error
     }

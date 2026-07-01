@@ -9,6 +9,7 @@ function QbankNewSessionPage({ onNavigate, searchParams }) {
   const [difficulty, setDifficulty] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
@@ -20,10 +21,12 @@ function QbankNewSessionPage({ onNavigate, searchParams }) {
         if (isMounted) {
           setTopics(payload.topics)
           setTopicSlug((current) => current || payload.topics[0]?.slug || '')
+          setIsLoading(false)
         }
       } catch (loadError) {
         if (isMounted) {
           setError(loadError.message)
+          setIsLoading(false)
         }
       }
     }
@@ -65,13 +68,19 @@ function QbankNewSessionPage({ onNavigate, searchParams }) {
       <form className="new-session-form" onSubmit={handleSubmit}>
         <label className="new-session-field">
           <span>Tema</span>
-          <select value={topicSlug} onChange={(event) => setTopicSlug(event.target.value)} required>
-            {topics.map((topic) => (
-              <option key={topic.id} value={topic.slug}>
-                {topic.title}
-              </option>
-            ))}
-          </select>
+          {isLoading ? (
+            <div style={{ padding: '0.5rem', color: '#666' }}>Cargando temas...</div>
+          ) : topics.length === 0 ? (
+            <div style={{ padding: '0.5rem', color: '#e53e3e' }}>No hay temas publicados disponibles.</div>
+          ) : (
+            <select value={topicSlug} onChange={(event) => setTopicSlug(event.target.value)} required>
+              {topics.map((topic) => (
+                <option key={topic.id} value={topic.slug}>
+                  {topic.title}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
 
         <label className="new-session-field">
