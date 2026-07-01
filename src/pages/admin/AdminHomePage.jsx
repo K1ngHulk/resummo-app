@@ -14,6 +14,17 @@ export default function AdminHomePage({ onNavigate }) {
         <div
           className="admin-card"
           style={{ cursor: 'pointer', borderColor: 'var(--color-primary-muted)' }}
+          onClick={() => onNavigate('/admin/topics')}
+        >
+          <div className="admin-card__icon">📚</div>
+          <h2 className="admin-card__title">Temas</h2>
+          <p className="admin-card__desc">Gestiona los temas, sus colores, slugs y estados.</p>
+          <div className="admin-card__action" style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>Ver temas &rarr;</div>
+        </div>
+
+        <div
+          className="admin-card"
+          style={{ cursor: 'pointer', borderColor: 'var(--color-primary-muted)' }}
           onClick={() => onNavigate('/admin/articles')}
         >
           <div className="admin-card__icon">📄</div>
