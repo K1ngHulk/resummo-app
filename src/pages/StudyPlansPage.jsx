@@ -26,7 +26,11 @@ function StudyPlansPage({ onNavigate }) {
         <h2>{studyPlans.continueTitle}</h2>
         <div className="study-empty-card">
           <strong>{studyPlans.emptyTitle}</strong>
-          <button type="button" className="text-link">
+          <button
+            type="button"
+            className="text-link"
+            onClick={() => onNavigate('/learning/study-plans/new/step-1')}
+          >
             {studyPlans.emptyAction}
           </button>
         </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import resummoLogo from '../assets/brand/originals/logoguinda.png'
 import { useAuth } from '../context/AuthContext.jsx'
 
@@ -41,6 +41,7 @@ function QuestionSessionPage({ onNavigate, searchParams }) {
   const [showHint, setShowHint] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isInitialLoadRef = useRef(true)
 
   const loadSession = useCallback(async () => {
     if (!sessionId) {
@@ -52,7 +53,17 @@ function QuestionSessionPage({ onNavigate, searchParams }) {
     setError('')
 
     setActiveOrder((current) => {
-      if (current > 0 && current <= payload.session.questions.length) {
+      const isInitial = isInitialLoadRef.current
+      isInitialLoadRef.current = false
+
+      if (payload.session.status === 'COMPLETED') {
+        if (!isInitial && (current === 'summary' || (typeof current === 'number' && current > 0 && current <= payload.session.questions.length))) {
+          return current
+        }
+        return 'summary'
+      }
+
+      if (!isInitial && current > 0 && current <= payload.session.questions.length) {
         return current
       }
 
@@ -63,6 +74,7 @@ function QuestionSessionPage({ onNavigate, searchParams }) {
 
   useEffect(() => {
     let isMounted = true
+    isInitialLoadRef.current = true
 
     async function bootstrapSession() {
       if (!sessionId) {
@@ -91,6 +103,8 @@ function QuestionSessionPage({ onNavigate, searchParams }) {
     [activeOrder, session],
   )
   const allAnswered = session?.questions.every((question) => question.selectedOptionId) || false
+  const hasNextQuestion = typeof activeOrder === 'number' && session?.questions.some((q) => q.order > activeOrder)
+  const hasPrevQuestion = typeof activeOrder === 'number' && session?.questions.some((q) => q.order < activeOrder)
 
   const handleAnswer = async (optionId) => {
     if (!currentQuestion || currentQuestion.selectedOptionId) {
@@ -129,10 +143,21 @@ function QuestionSessionPage({ onNavigate, searchParams }) {
     }
   }
 
+  const handlePrev = () => {
+    const prevQuestion = session?.questions.slice().reverse().find((question) => question.order < activeOrder)
+
+    if (prevQuestion) {
+      setActiveOrder(prevQuestion.order)
+      setFeedback(null)
+      setShowHint(false)
+    }
+  }
+
   const handleFinish = async () => {
     try {
       await request(`/api/practice-sessions/${sessionId}/finish`, { method: 'POST' })
-      onNavigate('/learning/qbank')
+      setActiveOrder('summary')
+      await loadSession()
     } catch (finishError) {
       setError(finishError.message)
     }
@@ -142,7 +167,7 @@ function QuestionSessionPage({ onNavigate, searchParams }) {
     <section className="qs-page qs-page--neutral">
       {error ? <div className="app-feedback app-feedback--error qs-feedback">{error}</div> : null}
 
-      {session && currentQuestion ? (
+      {session ? (
         <div className="qs-shell">
           <aside className="qs-sidebar" aria-label="Lista de preguntas">
             <div className="qs-sidebar__head">
@@ -154,6 +179,24 @@ function QuestionSessionPage({ onNavigate, searchParams }) {
             </div>
 
             <ol className="qs-sidebar__list">
+              {session.status === 'COMPLETED' && (
+                <li
+                  className={`qs-sidebar-row ${activeOrder === 'summary' ? 'qs-sidebar-row--active' : ''}`}
+                  style={{ marginBottom: '0.25rem' }}
+                >
+                  <button
+                    type="button"
+                    className="qs-sidebar-row__button"
+                    onClick={() => setActiveOrder('summary')}
+                  >
+                    <span className="qs-status" style={{ backgroundColor: 'var(--color-primary)', display: 'grid', placeItems: 'center' }} aria-label="Resumen">
+                      📊
+                    </span>
+                    <strong>-</strong>
+                    <span className="qs-sidebar-row__title" style={{ fontWeight: 800 }}>Resumen general</span>
+                  </button>
+                </li>
+              )}
               {session.questions.map((question) => (
                 <li
                   key={question.sessionQuestionId}
@@ -171,65 +214,139 @@ function QuestionSessionPage({ onNavigate, searchParams }) {
           </aside>
 
           <main className="qs-question-panel">
-            <p className="qs-case-text">{currentQuestion.prompt}</p>
-
-            <div className="qs-tip-row" aria-label="Ayudas de la pregunta">
-              <button type="button" className="qs-tip-pill" onClick={() => setShowHint((current) => !current)}>
-                <span aria-hidden="true">?</span>
-                {showHint ? 'Ocultar pista' : 'Usar pista'}
-              </button>
-            </div>
-
-            {showHint && currentQuestion.hint ? (
-              <aside className="qs-hint-card" aria-label="Pista de la pregunta">
-                <div className="qs-hint-card__mascot">
-                  <img src={resummoLogo} alt="" aria-hidden="true" />
+            {activeOrder === 'summary' ? (
+              <div className="qs-completed-summary">
+                <div className="qs-summary-header">
+                  <span className="qs-summary-header__emoji" aria-hidden="true">🎉</span>
+                  <h2 className="qs-summary-header__title">¡Sesión Completada!</h2>
+                  <p className="qs-summary-header__text">
+                    Has finalizado tu sesión de estudio para el tema: <strong>{session.topicTitle}</strong>
+                  </p>
                 </div>
-                <p>{currentQuestion.hint}</p>
-              </aside>
-            ) : null}
 
-            <div className="qs-answer-list" aria-label="Opciones de respuesta">
-              {currentQuestion.options.map((option) => {
-                const isSelected = option.id === currentQuestion.selectedOptionId
-                const isCorrect = option.id === currentQuestion.correctOptionId
-                const showCorrect = Boolean(currentQuestion.selectedOptionId) && isCorrect
-                const showIncorrect = Boolean(currentQuestion.selectedOptionId) && isSelected && !isCorrect
-
-                return (
-                  <div key={option.id} className={`qs-option-wrap ${showIncorrect ? 'qs-option-wrap--incorrect' : ''}`}>
-                    <button
-                      type="button"
-                      className={`qs-option ${showCorrect ? 'qs-option--correct' : ''} ${showIncorrect ? 'qs-option--incorrect' : ''}`}
-                      disabled={Boolean(currentQuestion.selectedOptionId) || isSubmitting}
-                      onClick={() => handleAnswer(option.id)}
-                    >
-                      <span className="qs-option__letter">{option.label}</span>
-                      <span className="qs-option__text">{option.text}</span>
-                    </button>
+                <div className="qs-summary-stats">
+                  <div className="qs-stat-card qs-stat-card--total">
+                    <div className="qs-stat-card__label">Preguntas</div>
+                    <div className="qs-stat-card__value">
+                      {session.progress.answered} / {session.progress.total}
+                    </div>
                   </div>
-                )
-              })}
-            </div>
 
-            {currentQuestion.selectedOptionId ? (
-              <div className="qs-inline-feedback qs-inline-feedback--static">
-                <p>{feedback?.explanation || currentQuestion.explanation}</p>
+                  <div className="qs-stat-card qs-stat-card--correct">
+                    <div className="qs-stat-card__label qs-stat-card__label--correct">Correctas</div>
+                    <div className="qs-stat-card__value qs-stat-card__value--correct">
+                      {session.correctCount}
+                    </div>
+                  </div>
+
+                  <div className="qs-stat-card qs-stat-card--incorrect">
+                    <div className="qs-stat-card__label qs-stat-card__label--incorrect">Incorrectas</div>
+                    <div className="qs-stat-card__value qs-stat-card__value--incorrect">
+                      {session.incorrectCount}
+                    </div>
+                  </div>
+
+                  <div className="qs-stat-card qs-stat-card--hinted">
+                    <div className="qs-stat-card__label qs-stat-card__label--hinted">Con Pista</div>
+                    <div className="qs-stat-card__value qs-stat-card__value--hinted">
+                      {session.hintedCorrectCount}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="qs-summary-actions">
+                  <button type="button" className="primary-button" onClick={() => onNavigate('/learning/qbank')}>
+                    Volver al QBank
+                  </button>
+                  {session.questions.length > 0 && (
+                    <button type="button" className="outline-pill-button" onClick={() => setActiveOrder(1)}>
+                      Revisar Preguntas
+                    </button>
+                  )}
+                </div>
               </div>
-            ) : null}
+            ) : currentQuestion ? (
+              <>
+                <p className="qs-case-text">{currentQuestion.prompt}</p>
 
-            <div className="qs-actions-row">
-              {currentQuestion.selectedOptionId && !allAnswered ? (
-                <button type="button" className="primary-button" onClick={handleNext}>
-                  Siguiente pregunta
-                </button>
-              ) : null}
-              {allAnswered ? (
-                <button type="button" className="primary-button" onClick={handleFinish}>
-                  Terminar sesion
-                </button>
-              ) : null}
-            </div>
+                <div className="qs-tip-row" aria-label="Ayudas de la pregunta">
+                  <button type="button" className="qs-tip-pill" onClick={() => setShowHint((current) => !current)}>
+                    <span aria-hidden="true">?</span>
+                    {showHint ? 'Ocultar pista' : 'Usar pista'}
+                  </button>
+                </div>
+
+                {showHint && currentQuestion.hint ? (
+                  <aside className="qs-hint-card" aria-label="Pista de la pregunta">
+                    <div className="qs-hint-card__mascot">
+                      <img src={resummoLogo} alt="" aria-hidden="true" />
+                    </div>
+                    <p>{currentQuestion.hint}</p>
+                  </aside>
+                ) : null}
+
+                <div className="qs-answer-list" aria-label="Opciones de respuesta">
+                  {currentQuestion.options.map((option) => {
+                    const isSelected = option.id === currentQuestion.selectedOptionId
+                    const isCorrect = option.id === currentQuestion.correctOptionId
+                    const showCorrect = Boolean(currentQuestion.selectedOptionId) && isCorrect
+                    const showIncorrect = Boolean(currentQuestion.selectedOptionId) && isSelected && !isCorrect
+
+                    return (
+                      <div key={option.id} className={`qs-option-wrap ${showIncorrect ? 'qs-option-wrap--incorrect' : ''}`}>
+                        <button
+                          type="button"
+                          className={`qs-option ${showCorrect ? 'qs-option--correct' : ''} ${showIncorrect ? 'qs-option--incorrect' : ''}`}
+                          disabled={Boolean(currentQuestion.selectedOptionId) || isSubmitting}
+                          onClick={() => handleAnswer(option.id)}
+                        >
+                          <span className="qs-option__letter">{option.label}</span>
+                          <span className="qs-option__text">{option.text}</span>
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {currentQuestion.selectedOptionId ? (
+                  <div className="qs-inline-feedback qs-inline-feedback--static">
+                    <p>{feedback?.explanation || currentQuestion.explanation}</p>
+                  </div>
+                ) : null}
+
+                <div className="qs-actions-row" style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                  {session.status === 'COMPLETED' && hasPrevQuestion ? (
+                    <button type="button" className="outline-pill-button" onClick={handlePrev}>
+                      Anterior
+                    </button>
+                  ) : null}
+
+                  {session.status === 'COMPLETED' && hasNextQuestion ? (
+                    <button type="button" className="primary-button" onClick={handleNext}>
+                      Siguiente
+                    </button>
+                  ) : null}
+
+                  {session.status === 'COMPLETED' && !hasNextQuestion ? (
+                    <button type="button" className="primary-button" onClick={() => setActiveOrder('summary')}>
+                      Ver Resumen
+                    </button>
+                  ) : null}
+
+                  {session.status !== 'COMPLETED' && currentQuestion.selectedOptionId && !allAnswered ? (
+                    <button type="button" className="primary-button" onClick={handleNext}>
+                      Siguiente pregunta
+                    </button>
+                  ) : null}
+
+                  {session.status !== 'COMPLETED' && allAnswered ? (
+                    <button type="button" className="primary-button" onClick={handleFinish}>
+                      Terminar sesion
+                    </button>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
           </main>
         </div>
       ) : null}

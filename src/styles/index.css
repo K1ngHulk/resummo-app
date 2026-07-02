@@ -4829,3 +4829,126 @@ input:focus {
   background: var(--color-primary);
   color: var(--color-surface);
 }
+
+/* Completed QBank Session Review State styling */
+.qs-completed-summary {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2.2rem 1.8rem;
+  display: grid;
+  gap: 1.75rem;
+  background: #fff;
+  border: 1px solid var(--color-primary-muted);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px var(--color-primary-shadow-soft);
+}
+
+.qs-summary-header {
+  text-align: center;
+}
+
+.qs-summary-header__emoji {
+  font-size: 3.2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.qs-summary-header__title {
+  font-size: 1.8rem;
+  color: var(--color-primary);
+  margin: 0;
+  font-weight: 800;
+}
+
+.qs-summary-header__text {
+  color: var(--color-text-soft);
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.qs-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+}
+
+.qs-stat-card {
+  background: #fcfcfc;
+  border: 1px solid #e3e3e3;
+  padding: 1.25rem 1rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.qs-stat-card--total {
+  border-color: #d6d6d6;
+}
+
+.qs-stat-card--correct {
+  background: rgba(12, 152, 46, 0.03);
+  border-color: rgba(12, 152, 46, 0.2);
+}
+
+.qs-stat-card--incorrect {
+  background: rgba(217, 29, 33, 0.03);
+  border-color: rgba(217, 29, 33, 0.2);
+}
+
+.qs-stat-card--hinted {
+  background: rgba(230, 126, 34, 0.03);
+  border-color: rgba(230, 126, 34, 0.2);
+}
+
+.qs-stat-card__label {
+  font-size: 0.8rem;
+  color: var(--color-text-soft);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.qs-stat-card__label--correct {
+  color: #0c982e;
+}
+
+.qs-stat-card__label--incorrect {
+  color: #d91d21;
+}
+
+.qs-stat-card__label--hinted {
+  color: #e67e22;
+}
+
+.qs-stat-card__value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #25201f;
+  margin-top: 0.35rem;
+}
+
+.qs-stat-card__value--correct {
+  color: #0c982e;
+}
+
+.qs-stat-card__value--incorrect {
+  color: #d91d21;
+}
+
+.qs-stat-card__value--hinted {
+  color: #e67e22;
+}
+
+.qs-summary-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .qs-summary-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
