@@ -1,0 +1,25 @@
+{
+  "titulo": "Dengue",
+  "slug": "dengue",
+  "tipo": "ficha_medica_final",
+  "estado_editorial": "aprobado",
+  "fecha_deposito": "2026-07-01",
+  "especialidad": "infectologia",
+  "subcategoria": "arbovirosis",
+  "ruta_final": "docs/articulos_finales/infectologia/arbovirosis/dengue/dengue__ficha_final__2026-07-01.md",
+  "ruta_origen": "docs/content-pipeline/fichas_generadas/dengue.md",
+  "formato": {
+    "estructura": "20_secciones",
+    "citas": "Vancouver con superindices",
+    "contexto": "Peru"
+  },
+  "palabras_clave": [
+    "dengue",
+    "arbovirosis",
+    "infectologia",
+    "MINSA",
+    "OPS",
+    "Peru",
+    "ficha_20_secciones"
+  ]
+}
