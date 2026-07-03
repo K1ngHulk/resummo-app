@@ -1,0 +1,552 @@
+{
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\articulos_finales\\infectologia\\arbovirosis\\dengue\\metadata.json": {
+    "mtime": 1783038775.9930978,
+    "ast_hash": "6a37831a0a87cc5d64f857637790687d",
+    "semantic_hash": "6a37831a0a87cc5d64f857637790687d"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\eslint.config.js": {
+    "mtime": 1782764168.8048954,
+    "ast_hash": "49373886620cf0b2f17d00481bd38a84",
+    "semantic_hash": "49373886620cf0b2f17d00481bd38a84"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\package.json": {
+    "mtime": 1782769783.8002522,
+    "ast_hash": "3b9d61ea6d80756b6f494f62aebb8ccf",
+    "semantic_hash": "3b9d61ea6d80756b6f494f62aebb8ccf"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\prisma.config.ts": {
+    "mtime": 1782764610.6906703,
+    "ast_hash": "846ca357b17f62813acb404e187e4d35",
+    "semantic_hash": "846ca357b17f62813acb404e187e4d35"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\prisma\\migrations\\20260629203403_add_editor_admin_roles\\migration.sql": {
+    "mtime": 1782765243.8181522,
+    "ast_hash": "c78117807aef1f3715d7b5aed077f4f1",
+    "semantic_hash": "c78117807aef1f3715d7b5aed077f4f1"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\prisma\\migrations\\20260629212248_add_content_status\\migration.sql": {
+    "mtime": 1782768690.0089033,
+    "ast_hash": "6e9827c905e176b21f9ee518b780003a",
+    "semantic_hash": "6e9827c905e176b21f9ee518b780003a"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\prisma\\migrations\\20260630033027_set_content_status_draft\\migration.sql": {
+    "mtime": 1782865066.2309966,
+    "ast_hash": "ccf910787cae3407db475e04fb70afcf",
+    "semantic_hash": "ccf910787cae3407db475e04fb70afcf"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\prisma\\migrations\\20260701000000_topic_status\\migration.sql": {
+    "mtime": 1782926909.8409839,
+    "ast_hash": "77ca32e1378df8def935ce0041ee4e80",
+    "semantic_hash": "77ca32e1378df8def935ce0041ee4e80"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\prisma\\seed.js": {
+    "mtime": 1782770958.238854,
+    "ast_hash": "65e30f744c94843b03d56e9f3c599052",
+    "semantic_hash": "65e30f744c94843b03d56e9f3c599052"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\scripts\\smoke-http-admin.mjs": {
+    "mtime": 1782924886.8164246,
+    "ast_hash": "1b6842f96bdf8fa838201073694895c6",
+    "semantic_hash": "1b6842f96bdf8fa838201073694895c6"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\scripts\\smoke-http-library.mjs": {
+    "mtime": 1782937764.8787613,
+    "ast_hash": "d1cb75f20c76a399768dd013f3026982",
+    "semantic_hash": "d1cb75f20c76a399768dd013f3026982"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\scripts\\smoke-http-qbank.mjs": {
+    "mtime": 1782936185.2531717,
+    "ast_hash": "b1c6269a1c8ff2dff28ad6e7d77f7e7e",
+    "semantic_hash": "b1c6269a1c8ff2dff28ad6e7d77f7e7e"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\index.js": {
+    "mtime": 1782871024.6794608,
+    "ast_hash": "69df49e04de6d2340a65727c28339d1f",
+    "semantic_hash": "69df49e04de6d2340a65727c28339d1f"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\lib\\auth.js": {
+    "mtime": 1782764168.8079076,
+    "ast_hash": "d4a2727f05a3ae7bfb56229e2aa1e029",
+    "semantic_hash": "d4a2727f05a3ae7bfb56229e2aa1e029"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\lib\\prisma.js": {
+    "mtime": 1782786654.491042,
+    "ast_hash": "bf2db9e02e347450ee706cbd5c04144b",
+    "semantic_hash": "bf2db9e02e347450ee706cbd5c04144b"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\middleware\\requireAuth.js": {
+    "mtime": 1782764168.809911,
+    "ast_hash": "ffacd04740e6159b09d3245d10230e17",
+    "semantic_hash": "ffacd04740e6159b09d3245d10230e17"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\middleware\\requireRole.js": {
+    "mtime": 1782764390.9101799,
+    "ast_hash": "b2c1b57a819ac06cdac87e720f94348e",
+    "semantic_hash": "b2c1b57a819ac06cdac87e720f94348e"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\routes\\adminContentRoutes.js": {
+    "mtime": 1782926909.8422935,
+    "ast_hash": "e3b2e61ebf325d6375d62f2211628028",
+    "semantic_hash": "e3b2e61ebf325d6375d62f2211628028"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\routes\\adminRoutes.js": {
+    "mtime": 1782764391.0213408,
+    "ast_hash": "3cb92539fd2d8d3bbd68f02d085d9a94",
+    "semantic_hash": "3cb92539fd2d8d3bbd68f02d085d9a94"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\routes\\articleRoutes.js": {
+    "mtime": 1782937764.879905,
+    "ast_hash": "ba4eec5930a5204796dcad41791417c2",
+    "semantic_hash": "ba4eec5930a5204796dcad41791417c2"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\routes\\authRoutes.js": {
+    "mtime": 1782764168.809911,
+    "ast_hash": "25a1f49a67d460fcb9d9a555aec46bc8",
+    "semantic_hash": "25a1f49a67d460fcb9d9a555aec46bc8"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\routes\\dashboardRoutes.js": {
+    "mtime": 1782768690.009923,
+    "ast_hash": "2d02c75822ee977aa8417112c36b8cba",
+    "semantic_hash": "2d02c75822ee977aa8417112c36b8cba"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\routes\\practiceSessionRoutes.js": {
+    "mtime": 1782936185.2536876,
+    "ast_hash": "2e5272ec44bde7b345019de93125820e",
+    "semantic_hash": "2e5272ec44bde7b345019de93125820e"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\routes\\progressRoutes.js": {
+    "mtime": 1782764168.8109102,
+    "ast_hash": "73073b08c37238802fa72da6a3c84ba9",
+    "semantic_hash": "73073b08c37238802fa72da6a3c84ba9"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\server\\routes\\topicRoutes.js": {
+    "mtime": 1782926909.8422935,
+    "ast_hash": "cb7ee441d64359b17223d130e884ee13",
+    "semantic_hash": "cb7ee441d64359b17223d130e884ee13"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\App.jsx": {
+    "mtime": 1782929290.8106778,
+    "ast_hash": "3e358dfe73e6199f4834c61833d7d3c8",
+    "semantic_hash": "3e358dfe73e6199f4834c61833d7d3c8"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\admin\\AdminHeader.jsx": {
+    "mtime": 1782785387.16792,
+    "ast_hash": "ec95aeadf48657ff150d7de5d212981b",
+    "semantic_hash": "ec95aeadf48657ff150d7de5d212981b"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\dashboard\\ContinueLearningCard.jsx": {
+    "mtime": 1782764168.8380601,
+    "ast_hash": "43aa0618831493e4a3fb61911efb8085",
+    "semantic_hash": "43aa0618831493e4a3fb61911efb8085"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\dashboard\\ProgressOverviewCard.jsx": {
+    "mtime": 1782764168.8380601,
+    "ast_hash": "f8ef44fb8cabbc266344d1dcc178de41",
+    "semantic_hash": "f8ef44fb8cabbc266344d1dcc178de41"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\dashboard\\QuestionSessionCard.jsx": {
+    "mtime": 1782764168.8380601,
+    "ast_hash": "af82f4709860fcb52ad9ea831cbc1fe4",
+    "semantic_hash": "af82f4709860fcb52ad9ea831cbc1fe4"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\dashboard\\RecentArticlesCard.jsx": {
+    "mtime": 1782764168.8390737,
+    "ast_hash": "ae72394a9401c4f8d04cfa85509507e6",
+    "semantic_hash": "ae72394a9401c4f8d04cfa85509507e6"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\layout\\AppHeader.jsx": {
+    "mtime": 1782785387.16792,
+    "ast_hash": "d85c804c3bfd242170e5a19f06234c6c",
+    "semantic_hash": "d85c804c3bfd242170e5a19f06234c6c"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\learning\\LearningItemCard.jsx": {
+    "mtime": 1782764168.8390737,
+    "ast_hash": "b2828db82d5754317aadad2932d7e98a",
+    "semantic_hash": "b2828db82d5754317aadad2932d7e98a"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\learning\\LearningMetricCard.jsx": {
+    "mtime": 1782764168.8390737,
+    "ast_hash": "138548ba0fb08ceae41a4dcf1abe6d34",
+    "semantic_hash": "138548ba0fb08ceae41a4dcf1abe6d34"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\learning\\LearningPageHeader.jsx": {
+    "mtime": 1782764168.8390737,
+    "ast_hash": "5657ee9a6d5174dbdc5a3511c9fce4cc",
+    "semantic_hash": "5657ee9a6d5174dbdc5a3511c9fce4cc"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\ui\\AppIcon.jsx": {
+    "mtime": 1782764168.8400948,
+    "ast_hash": "a965ac9c7e708fc21b8b7943a21c9a89",
+    "semantic_hash": "a965ac9c7e708fc21b8b7943a21c9a89"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\ui\\CircularProgress.jsx": {
+    "mtime": 1781062321.7763007,
+    "ast_hash": "8e2a3148d621a748a85ff08074bb1081",
+    "semantic_hash": "8e2a3148d621a748a85ff08074bb1081"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\ui\\DonutChart.jsx": {
+    "mtime": 1782764168.8400948,
+    "ast_hash": "f60f888b56a1c41041da72d7c3241a02",
+    "semantic_hash": "f60f888b56a1c41041da72d7c3241a02"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\components\\ui\\SearchBar.jsx": {
+    "mtime": 1781062321.7763007,
+    "ast_hash": "e44f12faf6b215a952768a4e89a4bbcd",
+    "semantic_hash": "e44f12faf6b215a952768a4e89a4bbcd"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\constants\\navigation.js": {
+    "mtime": 1782764168.8406677,
+    "ast_hash": "d24d7a08a9dcaee1130c89784c99c63f",
+    "semantic_hash": "d24d7a08a9dcaee1130c89784c99c63f"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\context\\AuthContext.jsx": {
+    "mtime": 1782764168.8406677,
+    "ast_hash": "16300496eb601d52052103314bcb29d6",
+    "semantic_hash": "16300496eb601d52052103314bcb29d6"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\data\\dashboardData.js": {
+    "mtime": 1782764168.8406677,
+    "ast_hash": "113bf38020ba2dd68e294531be2219ad",
+    "semantic_hash": "113bf38020ba2dd68e294531be2219ad"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\data\\libraryTree.js": {
+    "mtime": 1782764168.8406677,
+    "ast_hash": "aa0adf216306462fd7035308aa8bdc60",
+    "semantic_hash": "aa0adf216306462fd7035308aa8bdc60"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\main.jsx": {
+    "mtime": 1782764168.8417244,
+    "ast_hash": "af9b80387161f0517accdabc3f9e9578",
+    "semantic_hash": "af9b80387161f0517accdabc3f9e9578"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\mocks\\learningMockData.js": {
+    "mtime": 1782764168.8427248,
+    "ast_hash": "165ee387cac510865d4ee72862d6c034",
+    "semantic_hash": "165ee387cac510865d4ee72862d6c034"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\DashboardPage.jsx": {
+    "mtime": 1782764168.8427248,
+    "ast_hash": "bda8863ebe0703d92c34f9f8d4987422",
+    "semantic_hash": "bda8863ebe0703d92c34f9f8d4987422"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\LibraryArticlePage.jsx": {
+    "mtime": 1782764168.8432446,
+    "ast_hash": "44c8fc373bc8469cc027659e9aec39d5",
+    "semantic_hash": "44c8fc373bc8469cc027659e9aec39d5"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\LibraryPage.jsx": {
+    "mtime": 1782960868.4624038,
+    "ast_hash": "11d58c370adaa844fdf5777182649906",
+    "semantic_hash": "11d58c370adaa844fdf5777182649906"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\LoadingScreen.jsx": {
+    "mtime": 1782764168.8432446,
+    "ast_hash": "c26e74fe2c0fe952936db8e0d0542c86",
+    "semantic_hash": "c26e74fe2c0fe952936db8e0d0542c86"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\LoginPage.jsx": {
+    "mtime": 1782785280.625018,
+    "ast_hash": "cd6616f3e09568612fa8f8bf26560ae5",
+    "semantic_hash": "cd6616f3e09568612fa8f8bf26560ae5"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\QbankNewSessionPage.jsx": {
+    "mtime": 1782936185.254714,
+    "ast_hash": "107e8719eb24a04180716edcad84acfd",
+    "semantic_hash": "107e8719eb24a04180716edcad84acfd"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\QbankPage.jsx": {
+    "mtime": 1782764168.8442674,
+    "ast_hash": "1e3f697fb09f86d8015c0f8157512f10",
+    "semantic_hash": "1e3f697fb09f86d8015c0f8157512f10"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\QuestionSessionPage.jsx": {
+    "mtime": 1782948132.3958154,
+    "ast_hash": "0f41bad00653a47c725fd4fbeb53c7bb",
+    "semantic_hash": "0f41bad00653a47c725fd4fbeb53c7bb"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\StudyPlanCurrentPage.jsx": {
+    "mtime": 1782764168.8452902,
+    "ast_hash": "bff972c486a249fc2af2f5340597bad7",
+    "semantic_hash": "bff972c486a249fc2af2f5340597bad7"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\StudyPlanWizardPage.jsx": {
+    "mtime": 1782764168.8452902,
+    "ast_hash": "eccd1d04dd029dabbf6ad0bf7dcb523c",
+    "semantic_hash": "eccd1d04dd029dabbf6ad0bf7dcb523c"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\StudyPlansPage.jsx": {
+    "mtime": 1782950661.0335238,
+    "ast_hash": "1047a13c752d3afc3d9200fc73e81fa9",
+    "semantic_hash": "1047a13c752d3afc3d9200fc73e81fa9"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminAnkiImportPage.jsx": {
+    "mtime": 1782789011.593076,
+    "ast_hash": "95cde383b73d429046cbe6e6d094336e",
+    "semantic_hash": "95cde383b73d429046cbe6e6d094336e"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminArticleCreatePage.jsx": {
+    "mtime": 1782919209.5397604,
+    "ast_hash": "8cce7f9381dcce1ad4a01b93171bd98a",
+    "semantic_hash": "8cce7f9381dcce1ad4a01b93171bd98a"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminArticleReviewPage.jsx": {
+    "mtime": 1782870085.3823183,
+    "ast_hash": "e985e609d0cb66401dac1f36e57c6702",
+    "semantic_hash": "e985e609d0cb66401dac1f36e57c6702"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminArticlesPage.jsx": {
+    "mtime": 1782919209.5397604,
+    "ast_hash": "41bcd6d2aa2c44c6eacbec44162c7435",
+    "semantic_hash": "41bcd6d2aa2c44c6eacbec44162c7435"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminHomePage.jsx": {
+    "mtime": 1782929290.8116744,
+    "ast_hash": "5d01ed25c06d98fd70509205b0ac54ef",
+    "semantic_hash": "5d01ed25c06d98fd70509205b0ac54ef"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminQuestionCreatePage.jsx": {
+    "mtime": 1782922463.987215,
+    "ast_hash": "5f4d6aba6c38901f48ba3618575a8930",
+    "semantic_hash": "5f4d6aba6c38901f48ba3618575a8930"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminQuestionReviewPage.jsx": {
+    "mtime": 1782868860.720692,
+    "ast_hash": "a9f5b9d9e42c1bac88b2d2c554ba281a",
+    "semantic_hash": "a9f5b9d9e42c1bac88b2d2c554ba281a"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminQuestionsPage.jsx": {
+    "mtime": 1782922463.987215,
+    "ast_hash": "8c92136a838408ebd1e4e418c3e60174",
+    "semantic_hash": "8c92136a838408ebd1e4e418c3e60174"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminTopicCreatePage.jsx": {
+    "mtime": 1782929290.8116744,
+    "ast_hash": "6b635872bb91b60a311a047e8f4042a8",
+    "semantic_hash": "6b635872bb91b60a311a047e8f4042a8"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminTopicReviewPage.jsx": {
+    "mtime": 1782929290.8116744,
+    "ast_hash": "374aa5e03280a0e41d3519d606ba482d",
+    "semantic_hash": "374aa5e03280a0e41d3519d606ba482d"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\pages\\admin\\AdminTopicsPage.jsx": {
+    "mtime": 1782929290.8126712,
+    "ast_hash": "785b28d13aa7d2ca47238a52f11ac958",
+    "semantic_hash": "785b28d13aa7d2ca47238a52f11ac958"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\vite.config.js": {
+    "mtime": 1782764168.8463109,
+    "ast_hash": "1985aedd70b066f8d8c5f5348e622353",
+    "semantic_hash": "1985aedd70b066f8d8c5f5348e622353"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\.agents\\AGENTS.md": {
+    "mtime": 1782764168.7993305,
+    "ast_hash": "b1d589490cefaa0250dbe9c2b4d4e580",
+    "semantic_hash": "b1d589490cefaa0250dbe9c2b4d4e580"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\.agents\\AGENTS.proposed.md": {
+    "mtime": 1782764168.7993305,
+    "ast_hash": "b1d589490cefaa0250dbe9c2b4d4e580",
+    "semantic_hash": "b1d589490cefaa0250dbe9c2b4d4e580"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\.trae\\skills\\resummo-medical-copywriter\\SKILL.md": {
+    "mtime": 1783039618.274664,
+    "ast_hash": "42f01e18c05e2c20ea11809560ccce85",
+    "semantic_hash": "42f01e18c05e2c20ea11809560ccce85"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\AGENTS.md": {
+    "mtime": 1782764168.80038,
+    "ast_hash": "27fd7bbbafb49f4bfa301c7c103db567",
+    "semantic_hash": "27fd7bbbafb49f4bfa301c7c103db567"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\README.md": {
+    "mtime": 1781062321.7722013,
+    "ast_hash": "abfa161e3e5434e3e85394bf03d387a4",
+    "semantic_hash": "abfa161e3e5434e3e85394bf03d387a4"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docker-compose.yml": {
+    "mtime": 1782764168.80038,
+    "ast_hash": "7429effdb425e5dd9c2d9f372dd5082e",
+    "semantic_hash": "7429effdb425e5dd9c2d9f372dd5082e"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\00_project_brief.md": {
+    "mtime": 1782764168.80038,
+    "ast_hash": "8f133ab87ab3a06feb54047e5c610855",
+    "semantic_hash": "8f133ab87ab3a06feb54047e5c610855"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\01_prd_learning.md": {
+    "mtime": 1782764168.80038,
+    "ast_hash": "839c09da7f0bd506c29f0e4f09496380",
+    "semantic_hash": "839c09da7f0bd506c29f0e4f09496380"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\02_roadmap.md": {
+    "mtime": 1782764168.8013854,
+    "ast_hash": "514f8540a8b9b23ea7693cbc339146cc",
+    "semantic_hash": "514f8540a8b9b23ea7693cbc339146cc"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\03_scope_and_out_of_scope.md": {
+    "mtime": 1782764168.8013854,
+    "ast_hash": "8338cbf6e836753807f353d9e4cc5323",
+    "semantic_hash": "8338cbf6e836753807f353d9e4cc5323"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\04_content_operating_system.md": {
+    "mtime": 1782764168.8013854,
+    "ast_hash": "cdc24e19c612286dc08e27aa56303df8",
+    "semantic_hash": "cdc24e19c612286dc08e27aa56303df8"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\05_figma_to_frontend_plan.md": {
+    "mtime": 1782764168.8023856,
+    "ast_hash": "da70128926d3135ddc910dff92b43233",
+    "semantic_hash": "da70128926d3135ddc910dff92b43233"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\06_technical_plan.md": {
+    "mtime": 1782764168.8023856,
+    "ast_hash": "aa1a2f87291df716c53df339b1035d0d",
+    "semantic_hash": "aa1a2f87291df716c53df339b1035d0d"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\07_decisions_log.md": {
+    "mtime": 1782764168.8038843,
+    "ast_hash": "0bf33cde38c80aa8254c38d212975bc4",
+    "semantic_hash": "0bf33cde38c80aa8254c38d212975bc4"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\08_frontend_mvp_plan.md": {
+    "mtime": 1782764168.8038843,
+    "ast_hash": "9ea779070a58c27803ec4172a683e806",
+    "semantic_hash": "9ea779070a58c27803ec4172a683e806"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\09_learning_figma_flow_map.md": {
+    "mtime": 1782764168.8038843,
+    "ast_hash": "1cce1c40eaad411889249f5dec76f830",
+    "semantic_hash": "1cce1c40eaad411889249f5dec76f830"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\10_figma_update_study_plans_delta.md": {
+    "mtime": 1782764168.8038843,
+    "ast_hash": "bd54f4590bba28b4233c7502ae09c3d6",
+    "semantic_hash": "bd54f4590bba28b4233c7502ae09c3d6"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\11_amboss_library_navigation_audit.md": {
+    "mtime": 1782764168.8038843,
+    "ast_hash": "7cd8b75bdb41bc1243b124fff887fc18",
+    "semantic_hash": "7cd8b75bdb41bc1243b124fff887fc18"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\12_library_information_architecture_redesign.md": {
+    "mtime": 1782764168.8048954,
+    "ast_hash": "d961458c3648dc7ac524028b64496583",
+    "semantic_hash": "d961458c3648dc7ac524028b64496583"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\13_landing_public_plan.md": {
+    "mtime": 1782764168.8048954,
+    "ast_hash": "1ed2d02fe6135fd75b6d4864a1aff7f3",
+    "semantic_hash": "1ed2d02fe6135fd75b6d4864a1aff7f3"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\articulos_finales\\README.md": {
+    "mtime": 1783038758.9601588,
+    "ast_hash": "ab28e1e84c3968ef8891a587ae2d772e",
+    "semantic_hash": "ab28e1e84c3968ef8891a587ae2d772e"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\articulos_finales\\catalogo_articulos.md": {
+    "mtime": 1783038767.9720707,
+    "ast_hash": "09dcde17451dc927d8ee34348a2f9406",
+    "semantic_hash": "09dcde17451dc927d8ee34348a2f9406"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\articulos_finales\\infectologia\\arbovirosis\\dengue\\dengue__ficha_final__2026-07-01.md": {
+    "mtime": 1782962975.1168964,
+    "ast_hash": "98a467693f96e782f74a549d7aff3002",
+    "semantic_hash": "98a467693f96e782f74a549d7aff3002"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\README.md": {
+    "mtime": 1783039697.2215395,
+    "ast_hash": "1e2eb88a636e80c09658debf1076784a",
+    "semantic_hash": "1e2eb88a636e80c09658debf1076784a"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\debug\\pubmed-mcp-start.md": {
+    "mtime": 1782957859.6117864,
+    "ast_hash": "b301e8521a737d5aa40ea1ba31e0e309",
+    "semantic_hash": "b301e8521a737d5aa40ea1ba31e0e309"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\drafts\\fuentes_dengue.md": {
+    "mtime": 1782962349.5251424,
+    "ast_hash": "9837a97012567447e10b100894cf7104",
+    "semantic_hash": "9837a97012567447e10b100894cf7104"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\fichas_generadas\\dengue.md": {
+    "mtime": 1783040310.1074638,
+    "ast_hash": "482b1646e50ada2e5c5222bc70d12160",
+    "semantic_hash": "482b1646e50ada2e5c5222bc70d12160"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\prompts\\critic_agent_auditor.md": {
+    "mtime": 1783040150.8521323,
+    "ast_hash": "f035606e51fc4e0160b6702a18316b82",
+    "semantic_hash": "f035606e51fc4e0160b6702a18316b82"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\prompts\\estructura_20_secciones.md": {
+    "mtime": 1782958783.5501401,
+    "ast_hash": "bd6f66af8003a08d7356b713a7c58d01",
+    "semantic_hash": "bd6f66af8003a08d7356b713a7c58d01"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\prompts\\generador_fichas.md": {
+    "mtime": 1783040167.0557132,
+    "ast_hash": "8d6d050b1dc13b7dcaca6e87c0c623e8",
+    "semantic_hash": "8d6d050b1dc13b7dcaca6e87c0c623e8"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\prompts\\redactor_medico_high_yield.md": {
+    "mtime": 1783039689.0612986,
+    "ast_hash": "fe459cf973d22fe8ad4c12fee6d5095c",
+    "semantic_hash": "fe459cf973d22fe8ad4c12fee6d5095c"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\docs\\content-pipeline\\rules\\traerules.md": {
+    "mtime": 1783039903.0859618,
+    "ast_hash": "df525e298679804f2e691698c1007f08",
+    "semantic_hash": "df525e298679804f2e691698c1007f08"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\index.html": {
+    "mtime": 1782764168.8048954,
+    "ast_hash": "b6cb9266170680d11f2cdd978127b6a5",
+    "semantic_hash": "b6cb9266170680d11f2cdd978127b6a5"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\assets\\images\\README.md": {
+    "mtime": 1781062321.7742987,
+    "ast_hash": "17ad322b71dcb1da0036486f2706f153",
+    "semantic_hash": "17ad322b71dcb1da0036486f2706f153"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\public\\apple-touch-icon.png": {
+    "mtime": 1782764168.8079076,
+    "ast_hash": "22165f43d88fd16f62dcd82f1357cbb4",
+    "semantic_hash": "22165f43d88fd16f62dcd82f1357cbb4"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\public\\favicon-32x32.png": {
+    "mtime": 1782764168.8079076,
+    "ast_hash": "38d01992e16775585d3f12c915c79567",
+    "semantic_hash": "38d01992e16775585d3f12c915c79567"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\assets\\brand\\originals\\logobyn.png": {
+    "mtime": 1782764168.8147786,
+    "ast_hash": "bc89e1bed4808dc2f807285aa5f41183",
+    "semantic_hash": "bc89e1bed4808dc2f807285aa5f41183"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\assets\\brand\\originals\\logocrema fondo transparente.png": {
+    "mtime": 1782764168.8232217,
+    "ast_hash": "919fd602d172712e3dd310283025f572",
+    "semantic_hash": "919fd602d172712e3dd310283025f572"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\assets\\brand\\originals\\logofondorojo.png": {
+    "mtime": 1782764168.8278086,
+    "ast_hash": "aa5256bfd36cb07e58325b6997ddac2c",
+    "semantic_hash": "aa5256bfd36cb07e58325b6997ddac2c"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\assets\\brand\\originals\\logoguinda.png": {
+    "mtime": 1782764168.8324232,
+    "ast_hash": "786baf03df87359fa320c374a528484d",
+    "semantic_hash": "786baf03df87359fa320c374a528484d"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\assets\\brand\\originals\\logonegro.png": {
+    "mtime": 1782764168.8359756,
+    "ast_hash": "b956c29ea6995fb991a43ecf2d16b624",
+    "semantic_hash": "b956c29ea6995fb991a43ecf2d16b624"
+  },
+  "C:\\Users\\angel\\OneDrive\\Escritorio\\Empresa\\resummo-app\\src\\assets\\brand\\originals\\logorojo.png": {
+    "mtime": 1782764168.837041,
+    "ast_hash": "75c31d34ee3318934712a3e70d876b3d",
+    "semantic_hash": "75c31d34ee3318934712a3e70d876b3d"
+  }
+}

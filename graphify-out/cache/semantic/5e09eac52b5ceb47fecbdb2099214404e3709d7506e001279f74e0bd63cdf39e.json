@@ -1,0 +1,1 @@
+{"nodes": [], "edges": [{"source_id": "docs/content-pipeline/fichas_generadas/dengue.md", "target_ids": ["docs/articulos_finales/infectologia/arbovirosis/dengue/dengue__ficha_final__2026-07-01.md"], "relation": "draft_for", "confidence": "INFERRED", "confidence_score": 0.9, "source_file": "docs/content-pipeline/fichas_generadas/dengue.md"}], "hyperedges": []}

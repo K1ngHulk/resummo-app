@@ -1,0 +1,1 @@
+{"nodes": [{"id": "pages_qbankpage_qbankpage", "label": "QbankPage", "file_type": "code", "source_file": "src/pages/QbankPage.jsx"}], "edges": [{"source": "pages_qbankpage_qbankpage", "target": "context_authcontext_useauth", "relation": "calls", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "src/pages/QbankPage.jsx"}], "hyperedges": []}

@@ -1,0 +1,1 @@
+{"nodes": [], "edges": [{"source_id": "docs/content-pipeline/prompts/redactor_medico_high_yield.md", "target_ids": ["Concept:ContentPipeline"], "relation": "used_by", "confidence": "INFERRED", "confidence_score": 0.9, "source_file": "docs/content-pipeline/prompts/redactor_medico_high_yield.md"}], "hyperedges": []}

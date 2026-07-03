@@ -1,0 +1,1 @@
+{"nodes": [], "edges": [{"source_id": "docs/content-pipeline/rules/traerules.md", "target_ids": ["Concept:ContentPipeline"], "relation": "configures", "confidence": "INFERRED", "confidence_score": 0.9, "source_file": "docs/content-pipeline/rules/traerules.md"}], "hyperedges": []}

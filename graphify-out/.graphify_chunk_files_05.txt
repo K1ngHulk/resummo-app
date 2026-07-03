@@ -1,0 +1,22 @@
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\articulos_finales\README.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\articulos_finales\catalogo_articulos.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\articulos_finales\infectologia\arbovirosis\dengue\dengue__ficha_final__2026-07-01.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\README.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\debug\pubmed-mcp-start.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\drafts\fuentes_dengue.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\fichas_generadas\dengue.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\prompts\critic_agent_auditor.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\prompts\estructura_20_secciones.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\prompts\generador_fichas.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\prompts\redactor_medico_high_yield.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\docs\content-pipeline\rules\traerules.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\index.html
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\src\assets\images\README.md
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\public\apple-touch-icon.png
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\public\favicon-32x32.png
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\src\assets\brand\originals\logobyn.png
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\src\assets\brand\originals\logocrema fondo transparente.png
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\src\assets\brand\originals\logofondorojo.png
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\src\assets\brand\originals\logoguinda.png
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\src\assets\brand\originals\logonegro.png
+C:\Users\angel\OneDrive\Escritorio\Empresa\resummo-app\src\assets\brand\originals\logorojo.png
