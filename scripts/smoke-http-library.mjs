@@ -111,7 +111,11 @@ async function run() {
     if (!article.slug || !article.title || !article.topic?.slug || !Array.isArray(article.sections) || !Array.isArray(article.relatedArticles) || typeof article.relatedQuestionCount !== 'number') {
       throw new Error('Article detail response missing required fields')
     }
+    if (article.sections.length === 0 || article.sections.some(section => !Array.isArray(section.paragraphs))) {
+      throw new Error('Article sections are missing structured paragraphs')
+    }
     pass('loaded published article detail')
+    pass('article sections include structured paragraphs')
 
     const missingRes = await fetch(`${API_URL}/api/articles/missing-smoke-slug`, { headers: authHeaders })
     if (missingRes.status !== 404) {

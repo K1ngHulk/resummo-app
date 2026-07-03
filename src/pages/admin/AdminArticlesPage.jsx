@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import './AdminArticlesPage.css'
+
+const statusOptions = [
+  { value: '', label: 'Todos' },
+  { value: 'DRAFT', label: 'Borradores' },
+  { value: 'PUBLISHED', label: 'Publicados' },
+  { value: 'ARCHIVED', label: 'Archivados' },
+]
 
 function getHumanStatus(status) {
   if (status === 'DRAFT') return 'Borrador'
   if (status === 'PUBLISHED') return 'Publicado'
   if (status === 'ARCHIVED') return 'Archivado'
-  return status
+  return 'Estado desconocido'
 }
 
 export default function AdminArticlesPage({ onNavigate }) {
@@ -14,8 +21,7 @@ export default function AdminArticlesPage({ onNavigate }) {
   const [articles, setArticles] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const [filter, setFilter] = useState('') // '' means all
-  const [actionLoadingId, setActionLoadingId] = useState(null)
+  const [filter, setFilter] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -24,8 +30,7 @@ export default function AdminArticlesPage({ onNavigate }) {
       setIsLoading(true)
       setError('')
       try {
-        const qs = filter ? `?status=${filter}` : ''
-        const payload = await request(`/api/admin/content/articles${qs}`)
+        const payload = await request('/api/admin/content/articles')
         if (isMounted) setArticles(payload.articles || [])
       } catch (err) {
         if (isMounted) setError(err.message || 'Error al cargar artículos')
@@ -39,132 +44,114 @@ export default function AdminArticlesPage({ onNavigate }) {
     return () => {
       isMounted = false
     }
-  }, [request, filter])
+  }, [request])
 
-  const handleStatusChange = async (id, newStatus) => {
-    setActionLoadingId(id)
-    setError('')
-    try {
-      await request(`/api/admin/content/articles/${id}`, {
-        method: 'PATCH',
-        body: { status: newStatus },
-      })
-      // Actualizar localmente sin refetch para mejor UX
-      setArticles((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
-      )
-    } catch (err) {
-      setError(err.message || 'Error al actualizar el estado')
-    } finally {
-      setActionLoadingId(null)
-    }
-  }
+  const counts = useMemo(() => ({
+    total: articles.length,
+    draft: articles.filter((article) => article.status === 'DRAFT').length,
+    published: articles.filter((article) => article.status === 'PUBLISHED').length,
+    archived: articles.filter((article) => article.status === 'ARCHIVED').length,
+  }), [articles])
+  const visibleArticles = useMemo(
+    () => (filter ? articles.filter((article) => article.status === filter) : articles),
+    [articles, filter],
+  )
 
   return (
     <div className="admin-articles-page">
       <header className="admin-articles-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h1>Gestión de Artículos</h1>
-            <p>Revisa y cambia el estado editorial de los artículos (Borrador, Publicado, Archivado).</p>
-          </div>
-          <button
-            className="admin-action-btn admin-action-btn--publish"
-            onClick={() => onNavigate && onNavigate('/admin/articles/new')}
-          >
-            Nuevo artículo
-          </button>
+        <div>
+          <h1>Gestión de artículos</h1>
+          <p>Revisa la preparación editorial y controla qué contenido puede llegar a Biblioteca.</p>
         </div>
+        <button
+          type="button"
+          className="admin-action-btn admin-action-btn--publish"
+          onClick={() => onNavigate('/admin/articles/new')}
+        >
+          Nuevo artículo
+        </button>
       </header>
 
-      <div className="admin-filters">
-        <button
-          className={`admin-filter-btn ${filter === '' ? 'active' : ''}`}
-          onClick={() => setFilter('')}
-        >
-          Todos
-        </button>
-        <button
-          className={`admin-filter-btn ${filter === 'DRAFT' ? 'active' : ''}`}
-          onClick={() => setFilter('DRAFT')}
-        >
-          Borradores
-        </button>
-        <button
-          className={`admin-filter-btn ${filter === 'PUBLISHED' ? 'active' : ''}`}
-          onClick={() => setFilter('PUBLISHED')}
-        >
-          Publicados
-        </button>
-        <button
-          className={`admin-filter-btn ${filter === 'ARCHIVED' ? 'active' : ''}`}
-          onClick={() => setFilter('ARCHIVED')}
-        >
-          Archivados
-        </button>
+      <section className="admin-article-stats" aria-label="Resumen editorial">
+        <article>
+          <span>Total</span>
+          <strong>{counts.total}</strong>
+        </article>
+        <article>
+          <span>Borradores</span>
+          <strong>{counts.draft}</strong>
+        </article>
+        <article>
+          <span>Publicados</span>
+          <strong>{counts.published}</strong>
+        </article>
+        <article>
+          <span>Archivados</span>
+          <strong>{counts.archived}</strong>
+        </article>
+      </section>
+
+      <div className="admin-filters" aria-label="Filtrar artículos por estado">
+        {statusOptions.map((option) => (
+          <button
+            key={option.value || 'all'}
+            type="button"
+            className={`admin-filter-btn ${filter === option.value ? 'active' : ''}`}
+            onClick={() => setFilter(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
-      {error && <div className="app-feedback app-feedback--error" style={{ marginBottom: '1rem' }}>{error}</div>}
+      {error ? <div className="app-feedback app-feedback--error admin-articles-feedback">{error}</div> : null}
 
       {isLoading ? (
-        <p style={{ color: 'var(--color-text-soft)' }}>Cargando artículos...</p>
-      ) : articles.length === 0 ? (
+        <p className="admin-articles-loading">Cargando artículos...</p>
+      ) : visibleArticles.length === 0 ? (
         <div className="admin-empty-state">
           No hay artículos para mostrar en este filtro.
         </div>
       ) : (
         <div className="admin-articles-list">
-          {articles.map((a) => (
-            <div key={a.id} className="admin-article-item">
+          {visibleArticles.map((article) => (
+            <article key={article.id} className="admin-article-item">
               <div className="admin-article-item__header">
-                <p className="admin-article-item__title">{a.title}</p>
-                <span className={`admin-status-badge admin-status-badge--${a.status.toLowerCase()}`}>
-                  {getHumanStatus(a.status)}
+                <div>
+                  <p className="admin-article-item__title">{article.title}</p>
+                  <p className="admin-article-item__summary">{article.summary || 'Sin resumen editorial.'}</p>
+                </div>
+                <span className={`admin-status-badge admin-status-badge--${article.status.toLowerCase()}`}>
+                  {getHumanStatus(article.status)}
                 </span>
               </div>
               <div className="admin-article-item__meta">
-                <span>Tema: {a.topic?.title || 'Sin tema'}</span>
-                <span>Tiempo de lectura: {a.readTimeMinutes} min</span>
-                {a.tags && a.tags.length > 0 && (
-                  <span>Etiquetas: {a.tags.join(', ')}</span>
-                )}
+                <span>Tema: {article.topic?.title || 'Sin tema'}</span>
+                <span>{article.readTimeMinutes} min de lectura</span>
+                <span>{article.tags?.length || 0} etiquetas</span>
               </div>
               <div className="admin-article-item__actions">
                 <button
+                  type="button"
                   className="admin-action-btn admin-action-btn--draft"
-                  onClick={() => onNavigate && onNavigate(`/admin/articles/review?id=${a.id}`)}
+                  onClick={() => onNavigate(`/admin/articles/review?id=${article.id}`)}
                 >
                   Revisar
                 </button>
-                {a.status !== 'PUBLISHED' && (
+                {article.status === 'PUBLISHED' && article.topic?.status === 'PUBLISHED' ? (
                   <button
-                    className="admin-action-btn admin-action-btn--publish"
-                    disabled={actionLoadingId === a.id}
-                    onClick={() => handleStatusChange(a.id, 'PUBLISHED')}
+                    type="button"
+                    className="admin-action-btn admin-action-btn--library"
+                    onClick={() => onNavigate(`/learning/library/article?slug=${article.slug}`)}
                   >
-                    Publicar
+                    Ver en Biblioteca
                   </button>
-                )}
-                {a.status !== 'DRAFT' && (
-                  <button
-                    className="admin-action-btn admin-action-btn--draft"
-                    disabled={actionLoadingId === a.id}
-                    onClick={() => handleStatusChange(a.id, 'DRAFT')}
-                  >
-                    Volver a borrador
-                  </button>
-                )}
-                {a.status !== 'ARCHIVED' && (
-                  <button
-                    className="admin-action-btn admin-action-btn--archive"
-                    disabled={actionLoadingId === a.id}
-                    onClick={() => handleStatusChange(a.id, 'ARCHIVED')}
-                  >
-                    Archivar
-                  </button>
-                )}
+                ) : article.status === 'PUBLISHED' ? (
+                  <span className="admin-article-item__notice">No visible: el tema no está publicado</span>
+                ) : null}
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}

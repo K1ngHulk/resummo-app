@@ -1,18 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import './AdminArticleReviewPage.css'
+
+const pendingContentPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
 
 function getHumanStatus(status) {
   if (status === 'DRAFT') return 'Borrador'
   if (status === 'PUBLISHED') return 'Publicado'
   if (status === 'ARCHIVED') return 'Archivado'
-  return status
+  return 'Estado desconocido'
+}
+
+function buildEditorialChecklist(formData, topicStatus) {
+  return [
+    { id: 'title', label: 'Tiene un título claro', passed: Boolean(formData.title.trim()) },
+    { id: 'summary', label: 'Tiene un resumen editorial', passed: Boolean(formData.summary.trim()) },
+    { id: 'body', label: 'Tiene contenido en el cuerpo', passed: Boolean(formData.body.trim()) },
+    { id: 'sections', label: 'Incluye al menos una sección con ##', passed: /^##\s+\S.*$/m.test(formData.body) },
+    { id: 'read-time', label: 'Tiene un tiempo de lectura positivo', passed: Number(formData.readTimeMinutes) > 0 },
+    { id: 'pending', label: 'No contiene citas o pendientes editoriales', passed: !pendingContentPattern.test(formData.body) },
+    { id: 'topic', label: 'El tema asociado está publicado', passed: topicStatus === 'PUBLISHED' },
+  ]
 }
 
 export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
   const { request } = useAuth()
   const articleId = searchParams?.get('id')
-
   const [article, setArticle] = useState(null)
   const [formData, setFormData] = useState({
     title: '',
@@ -20,13 +33,17 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
     body: '',
     readTimeMinutes: 1,
     tags: '',
-    status: 'DRAFT'
+    status: 'DRAFT',
   })
-  
-  const [isLoading, setIsLoading] = useState(!!articleId)
+  const [isLoading, setIsLoading] = useState(Boolean(articleId))
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(articleId ? '' : 'No se encontró un artículo válido para revisar.')
   const [successMsg, setSuccessMsg] = useState('')
+  const checklist = useMemo(
+    () => buildEditorialChecklist(formData, article?.topic?.status),
+    [article?.topic?.status, formData],
+  )
+  const publicationReady = checklist.every((item) => item.passed)
 
   useEffect(() => {
     if (!articleId) return
@@ -45,7 +62,7 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
             body: payload.article.body || '',
             readTimeMinutes: payload.article.readTimeMinutes || 1,
             tags: payload.article.tags ? payload.article.tags.join(', ') : '',
-            status: payload.article.status || 'DRAFT'
+            status: payload.article.status || 'DRAFT',
           })
         }
       } catch (err) {
@@ -56,53 +73,48 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
     }
 
     fetchArticle()
-
     return () => {
       isMounted = false
     }
   }, [articleId, request])
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'readTimeMinutes' ? parseInt(value, 10) || 1 : value
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setFormData((current) => ({
+      ...current,
+      [name]: name === 'readTimeMinutes' ? Number(value) : value,
     }))
+    setSuccessMsg('')
   }
 
-  const handleSave = async (e, forceStatus = null) => {
-    if (e) e.preventDefault()
-    
+  const handleSave = async (event, forceStatus = null) => {
+    event?.preventDefault()
+    const statusToSave = forceStatus || formData.status
+
+    if (statusToSave === 'PUBLISHED' && !publicationReady) {
+      setError('Completa el checklist editorial antes de publicar. Puedes guardar o volver el artículo a borrador mientras corriges los pendientes.')
+      return
+    }
+
     setIsSaving(true)
     setError('')
     setSuccessMsg('')
-    
-    const statusToSave = forceStatus || formData.status
-
     try {
-      const tagsArray = formData.tags
-        .split(',')
-        .map(t => t.trim())
-        .filter(t => t.length > 0)
-
-      await request(`/api/admin/content/articles/${articleId}`, {
+      const payload = await request(`/api/admin/content/articles/${articleId}`, {
         method: 'PATCH',
         body: {
-          title: formData.title,
-          summary: formData.summary,
-          body: formData.body,
-          readTimeMinutes: formData.readTimeMinutes,
-          tags: tagsArray,
-          status: statusToSave
-        }
+          title: formData.title.trim(),
+          summary: formData.summary.trim(),
+          body: formData.body.trim(),
+          readTimeMinutes: Number(formData.readTimeMinutes),
+          tags: [...new Set(formData.tags.split(',').map((tag) => tag.trim()).filter(Boolean))],
+          status: statusToSave,
+        },
       })
-      
-      setSuccessMsg('Cambios guardados correctamente.')
-      setFormData(prev => ({ ...prev, status: statusToSave }))
-      setArticle(prev => ({ ...prev, status: statusToSave }))
-      
-      // Auto-hide success message
-      setTimeout(() => setSuccessMsg(''), 3000)
+
+      setSuccessMsg(statusToSave === 'PUBLISHED' ? 'Artículo publicado correctamente.' : 'Cambios guardados correctamente.')
+      setFormData((current) => ({ ...current, status: statusToSave }))
+      setArticle((current) => ({ ...current, ...payload.article, topic: current.topic }))
     } catch (err) {
       setError(err.message || 'Error al guardar los cambios')
     } finally {
@@ -116,20 +128,14 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
         <div className="admin-error-container">
           <h2>Error</h2>
           <p>{error}</p>
-          <button className="admin-btn admin-btn--secondary" onClick={() => onNavigate('/admin/articles')}>
-            Volver a Artículos
-          </button>
+          <button type="button" className="admin-btn admin-btn--secondary" onClick={() => onNavigate('/admin/articles')}>Volver a artículos</button>
         </div>
       </div>
     )
   }
 
   if (isLoading) {
-    return (
-      <div className="admin-review-page">
-        <p style={{ color: 'var(--color-text-soft)' }}>Cargando artículo...</p>
-      </div>
-    )
+    return <div className="admin-review-page"><p className="admin-review-loading">Cargando artículo...</p></div>
   }
 
   if (error && !article) {
@@ -138,9 +144,7 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
         <div className="admin-error-container">
           <h2>Error al cargar</h2>
           <p>{error}</p>
-          <button className="admin-btn admin-btn--secondary" onClick={() => onNavigate('/admin/articles')}>
-            Volver a Artículos
-          </button>
+          <button type="button" className="admin-btn admin-btn--secondary" onClick={() => onNavigate('/admin/articles')}>Volver a artículos</button>
         </div>
       </div>
     )
@@ -150,142 +154,96 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
     <div className="admin-review-page">
       <header className="admin-review-header">
         <div>
-          <h1 className="admin-review-title">Revisión de Artículo</h1>
-          <p className="admin-review-subtitle">
-            Estado actual: <strong>{getHumanStatus(article.status)}</strong>
-          </p>
+          <h1 className="admin-review-title">Revisión de artículo</h1>
+          <p className="admin-review-subtitle">Estado actual: <strong>{getHumanStatus(formData.status)}</strong></p>
         </div>
-        <button 
-          className="admin-back-btn"
-          onClick={() => onNavigate('/admin/articles')}
-        >
-          &larr; Volver a lista
-        </button>
+        <div className="admin-review-header__actions">
+          {formData.status === 'PUBLISHED' && article.topic?.status === 'PUBLISHED' ? (
+            <button type="button" className="admin-btn admin-btn--library" onClick={() => onNavigate(`/learning/library/article?slug=${article.slug}`)}>
+              Ver en Biblioteca
+            </button>
+          ) : null}
+          <button type="button" className="admin-back-btn" onClick={() => onNavigate('/admin/articles')}>&larr; Volver a lista</button>
+        </div>
       </header>
 
-      {error && <div className="app-feedback app-feedback--error" style={{ marginBottom: '1rem' }}>{error}</div>}
-      {successMsg && <div className="app-feedback app-feedback--success" style={{ marginBottom: '1rem', backgroundColor: '#dcfce7', color: '#166534', padding: '1rem', borderRadius: '8px' }}>{successMsg}</div>}
+      {error ? <div className="app-feedback app-feedback--error admin-review-feedback">{error}</div> : null}
+      {successMsg ? <div className="app-feedback app-feedback--success admin-review-feedback">{successMsg}</div> : null}
 
       <div className="admin-review-content">
         <form onSubmit={handleSave} className="admin-form-section">
-          <h2>Contenido Principal</h2>
-          
+          <h2>Contenido principal</h2>
+
           <div className="admin-form-group">
-            <label className="admin-form-label">Título</label>
-            <input 
-              type="text"
-              className="admin-form-input"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-            />
+            <label className="admin-form-label" htmlFor="article-title">Título</label>
+            <input id="article-title" type="text" className="admin-form-input" name="title" value={formData.title} onChange={handleChange} required />
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Resumen (Summary)</label>
-            <textarea 
-              className="admin-form-textarea"
-              style={{ minHeight: '60px' }}
-              name="summary"
-              value={formData.summary}
-              onChange={handleChange}
-            />
+            <label className="admin-form-label" htmlFor="article-summary">Resumen</label>
+            <textarea id="article-summary" className="admin-form-textarea admin-form-textarea--summary" name="summary" value={formData.summary} onChange={handleChange} />
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Cuerpo (Body - Markdown/HTML)</label>
-            <textarea 
-              className="admin-form-textarea"
-              style={{ minHeight: '300px' }}
-              name="body"
-              value={formData.body}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="admin-form-group">
-            <label className="admin-form-label">Tiempo de Lectura (minutos)</label>
-            <input 
-              type="number"
-              min="1"
-              className="admin-form-input"
-              name="readTimeMinutes"
-              value={formData.readTimeMinutes}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="admin-form-group">
-            <label className="admin-form-label">Etiquetas (separadas por comas)</label>
-            <input 
-              type="text"
-              className="admin-form-input"
-              name="tags"
-              value={formData.tags}
-              onChange={handleChange}
-              placeholder="ej: pediatría, vacunas, infectología"
-            />
+            <label className="admin-form-label" htmlFor="article-body">Cuerpo del artículo</label>
+            <textarea id="article-body" className="admin-form-textarea admin-form-textarea--body" name="body" value={formData.body} onChange={handleChange} required />
+            <small className="admin-form-help">Usa encabezados como <code>## Definición</code> y separa los párrafos con una línea vacía.</small>
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Tema Asociado</label>
-            <input 
-              type="text"
-              className="admin-form-input"
-              value={article.topic?.title || 'Sin tema asignado'}
-              disabled
-              title="Para cambiar el tema, usa la gestión de temas (próximamente)"
-            />
+            <label className="admin-form-label" htmlFor="article-read-time">Tiempo de lectura (minutos)</label>
+            <input id="article-read-time" type="number" min="1" className="admin-form-input" name="readTimeMinutes" value={formData.readTimeMinutes} onChange={handleChange} required />
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-form-label" htmlFor="article-tags">Etiquetas (separadas por comas)</label>
+            <input id="article-tags" type="text" className="admin-form-input" name="tags" value={formData.tags} onChange={handleChange} placeholder="Ej: pediatría, vacunas, infectología" />
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-form-label" htmlFor="article-topic">Tema asociado</label>
+            <input id="article-topic" type="text" className="admin-form-input" value={article.topic?.title || 'Sin tema asignado'} disabled />
           </div>
 
           <div className="admin-review-actions">
-            <button 
-              type="submit" 
-              className="admin-btn admin-btn--primary"
-              disabled={isSaving}
-            >
-              {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+            <button type="submit" className="admin-btn admin-btn--primary" disabled={isSaving}>
+              {isSaving ? 'Guardando...' : 'Guardar cambios'}
             </button>
-            
             <div className="admin-review-actions-group">
-              {formData.status !== 'DRAFT' && (
-                <button 
+              {formData.status !== 'DRAFT' ? (
+                <button type="button" className="admin-btn admin-btn--secondary" disabled={isSaving} onClick={(event) => handleSave(event, 'DRAFT')}>Volver a borrador</button>
+              ) : null}
+              {formData.status !== 'ARCHIVED' ? (
+                <button type="button" className="admin-btn admin-btn--archive" disabled={isSaving} onClick={(event) => handleSave(event, 'ARCHIVED')}>Archivar</button>
+              ) : null}
+              {formData.status !== 'PUBLISHED' ? (
+                <button
                   type="button"
-                  className="admin-btn admin-btn--secondary"
-                  disabled={isSaving}
-                  onClick={(e) => handleSave(e, 'DRAFT')}
+                  className="admin-btn admin-btn--publish"
+                  disabled={isSaving || !publicationReady}
+                  title={publicationReady ? 'Publicar artículo' : 'Completa el checklist editorial antes de publicar'}
+                  onClick={(event) => handleSave(event, 'PUBLISHED')}
                 >
-                  Volver a Borrador
+                  Publicar artículo
                 </button>
-              )}
-              {formData.status !== 'ARCHIVED' && (
-                <button 
-                  type="button"
-                  className="admin-btn admin-btn--secondary"
-                  disabled={isSaving}
-                  style={{ color: '#dc2626', borderColor: '#fca5a5' }}
-                  onClick={(e) => handleSave(e, 'ARCHIVED')}
-                >
-                  Archivar
-                </button>
-              )}
-              {formData.status !== 'PUBLISHED' && (
-                <button 
-                  type="button"
-                  className="admin-btn admin-btn--primary"
-                  disabled={isSaving}
-                  style={{ backgroundColor: '#16a34a' }}
-                  onClick={(e) => handleSave(e, 'PUBLISHED')}
-                >
-                  Publicar Artículo
-                </button>
-              )}
+              ) : null}
             </div>
           </div>
         </form>
+
+        <aside className={`admin-editorial-checklist ${publicationReady ? 'admin-editorial-checklist--ready' : ''}`}>
+          <span>Control editorial</span>
+          <h2>{publicationReady ? 'Listo para publicar' : 'Revisión pendiente'}</h2>
+          <p>{publicationReady ? 'El artículo cumple los requisitos mínimos de publicación.' : 'Puedes guardar el borrador, pero debes resolver estos puntos antes de publicar.'}</p>
+          <ul>
+            {checklist.map((item) => (
+              <li key={item.id} className={item.passed ? 'admin-check-pass' : 'admin-check-fail'}>
+                <span aria-hidden="true">{item.passed ? '✓' : '!'}</span>
+                {item.label}
+              </li>
+            ))}
+          </ul>
+        </aside>
       </div>
     </div>
   )

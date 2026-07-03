@@ -14,6 +14,20 @@ function validationError(message) {
   return error
 }
 
+const pendingArticleContentPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
+
+function getArticlePublicationIssues(article, topic) {
+  const issues = []
+  if (!article.title?.trim()) issues.push('falta el titulo')
+  if (!article.summary?.trim()) issues.push('falta el resumen')
+  if (!article.body?.trim()) issues.push('falta el cuerpo')
+  if (!/^##\s+\S.*$/m.test(article.body || '')) issues.push('falta al menos una seccion con encabezado ##')
+  if (!Number.isInteger(article.readTimeMinutes) || article.readTimeMinutes <= 0) issues.push('el tiempo de lectura no es valido')
+  if (pendingArticleContentPattern.test(article.body || '')) issues.push('el cuerpo contiene citas o pendientes editoriales')
+  if (topic?.status !== 'PUBLISHED') issues.push('el tema asociado no esta publicado')
+  return issues
+}
+
 router.use(requireAuth)
 router.use(requireRole('EDITOR', 'ADMIN'))
 router.get('/topics', async (request, response, next) => {
@@ -198,7 +212,7 @@ router.get('/articles', async (request, response, next) => {
         summary: true,
         status: true,
         topicId: true,
-        topic: { select: { title: true, slug: true } },
+        topic: { select: { title: true, slug: true, status: true } },
         readTimeMinutes: true,
         tags: true,
         createdAt: true,
@@ -218,7 +232,7 @@ router.get('/articles/:id', async (request, response, next) => {
     const article = await prisma.article.findUnique({
       where: { id: request.params.id },
       include: {
-        topic: { select: { id: true, title: true, slug: true } },
+        topic: { select: { id: true, title: true, slug: true, status: true } },
       },
     })
 
@@ -311,13 +325,13 @@ router.patch('/articles/:id', async (request, response, next) => {
       throw error
     }
 
-    if (parsed.topicId) {
-      const topic = await prisma.topic.findUnique({ where: { id: parsed.topicId } })
-      if (!topic) {
-        const error = new Error('Tema no encontrado')
-        error.statusCode = 404
-        throw error
-      }
+    const finalTopic = await prisma.topic.findUnique({
+      where: { id: parsed.topicId || existingArticle.topicId },
+    })
+    if (!finalTopic) {
+      const error = new Error('Tema no encontrado')
+      error.statusCode = 404
+      throw error
     }
 
     if (parsed.slug && parsed.slug !== existingArticle.slug) {
@@ -326,6 +340,15 @@ router.patch('/articles/:id', async (request, response, next) => {
         const error = new Error('Ya existe un articulo con este slug')
         error.statusCode = 409
         throw error
+      }
+    }
+
+    const finalArticle = { ...existingArticle, ...parsed }
+    const finalStatus = parsed.status || existingArticle.status
+    if (finalStatus === 'PUBLISHED') {
+      const publicationIssues = getArticlePublicationIssues(finalArticle, finalTopic)
+      if (publicationIssues.length > 0) {
+        throw validationError(`No se puede publicar el articulo: ${publicationIssues.join('; ')}`)
       }
     }
 

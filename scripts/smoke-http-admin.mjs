@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { setTimeout } from 'node:timers/promises';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const SMOKE_PORT = process.env.SMOKE_PORT || '3099';
 const BASE_URL = `http://localhost:${SMOKE_PORT}`;
@@ -42,12 +42,13 @@ async function waitForHealth() {
     } catch (err) {
       // ignore and retry
     }
-    await setTimeout(500);
+    await delay(500);
   }
   return false;
 }
 
 async function runChecks() {
+  let studentToken = '';
   try {
     // 1. Wait for health
     const isHealthy = await waitForHealth();
@@ -73,6 +74,7 @@ async function runChecks() {
 
     if (studentLogin.ok) {
       const data = await studentLogin.json();
+      studentToken = data.token;
       const studentTopics = await fetch(`${BASE_URL}/api/admin/content/topics`, {
         headers: { Authorization: `Bearer ${data.token}` }
       });
@@ -109,6 +111,50 @@ async function runChecks() {
       }
 
       console.log('[pass] editor admin topics returned 200');
+
+      const editorArticles = await fetch(`${BASE_URL}/api/admin/content/articles`, {
+        headers: { Authorization: `Bearer ${data.token}` }
+      });
+
+      if (!editorArticles.ok) {
+        throw new Error(`Expected 200 for editor on admin articles, got ${editorArticles.status}`);
+      }
+
+      const articlesData = await editorArticles.json();
+      const articleForGuardCheck = articlesData.articles?.[0];
+      if (articleForGuardCheck) {
+        const guardedPublish = await fetch(`${BASE_URL}/api/admin/content/articles/${articleForGuardCheck.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data.token}`
+          },
+          body: JSON.stringify({
+            status: 'PUBLISHED',
+            body: '## Revision editorial\n[FALTA CITA]'
+          })
+        });
+
+        if (guardedPublish.status !== 400) {
+          throw new Error(`Expected 400 when publishing article with editorial markers, got ${guardedPublish.status}`);
+        }
+        console.log('[pass] editorial guard rejected article with pending citation');
+      } else {
+        console.log('[skip] editorial publication guard: no article available');
+      }
+
+      const privateArticle = articlesData.articles?.find((article) => article.status !== 'PUBLISHED');
+      if (studentToken && privateArticle) {
+        const privateArticleResponse = await fetch(`${BASE_URL}/api/articles/${privateArticle.slug}`, {
+          headers: { Authorization: `Bearer ${studentToken}` }
+        });
+        if (privateArticleResponse.status !== 404) {
+          throw new Error(`Expected 404 for non-published article, got ${privateArticleResponse.status}`);
+        }
+        console.log('[pass] non-published article stayed hidden from student');
+      } else {
+        console.log('[skip] non-published visibility check: fixture unavailable');
+      }
     } else {
       console.log('[skip] editor admin-read check: seeded editor login unavailable');
     }
@@ -123,11 +169,12 @@ async function runChecks() {
 
 // Timeout to prevent hanging forever
 let isTimeout = false;
+let timeoutId;
 const timeoutPromise = new Promise((resolve) => {
-  setTimeout(30000).then(() => {
+  timeoutId = globalThis.setTimeout(() => {
     isTimeout = true;
     resolve(1);
-  });
+  }, 30000);
 });
 
 Promise.race([runChecks(), timeoutPromise])
@@ -138,6 +185,7 @@ Promise.race([runChecks(), timeoutPromise])
     process.exitCode = code;
   })
   .finally(() => {
+    globalThis.clearTimeout(timeoutId);
     if (serverProcess && !processExited) {
       serverProcess.kill('SIGTERM');
     }

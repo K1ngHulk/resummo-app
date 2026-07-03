@@ -5,19 +5,59 @@ import { requireAuth } from '../middleware/requireAuth.js'
 
 const router = express.Router()
 
-function parseArticleBody(body) {
-  return body
-    .split('## ')
-    .map((section) => section.trim())
+function createSectionId(title, index) {
+  const normalizedTitle = title
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+
+  return `${index + 1}-${normalizedTitle || 'seccion'}`
+}
+
+function splitParagraphs(content) {
+  return content
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.replace(/\s*\n\s*/g, ' ').trim())
     .filter(Boolean)
-    .map((section, index) => {
-      const [title, ...contentParts] = section.split('\n')
-      return {
-        id: `${index + 1}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-        title: title.trim(),
-        body: contentParts.join('\n').trim(),
+}
+
+export function parseArticleBody(body) {
+  const normalizedBody = String(body || '').replace(/\r\n/g, '\n').trim()
+  if (!normalizedBody) {
+    return [{ id: '1-contenido', title: 'Contenido del artículo', body: '', paragraphs: [] }]
+  }
+
+  const rawSections = []
+  let currentSection = { title: null, lines: [] }
+
+  for (const line of normalizedBody.split('\n')) {
+    const headingMatch = line.match(/^##\s+(.+?)\s*$/)
+    if (headingMatch) {
+      if (currentSection.title || currentSection.lines.some((currentLine) => currentLine.trim())) {
+        rawSections.push(currentSection)
       }
-    })
+      currentSection = { title: headingMatch[1].trim(), lines: [] }
+    } else {
+      currentSection.lines.push(line)
+    }
+  }
+
+  if (currentSection.title || currentSection.lines.some((line) => line.trim())) {
+    rawSections.push(currentSection)
+  }
+
+  return rawSections.map((section, index) => {
+    const title = section.title || (rawSections.length > 1 ? 'Introducción' : 'Contenido del artículo')
+    const sectionBody = section.lines.join('\n').trim()
+    return {
+      id: createSectionId(title, index),
+      title,
+      body: sectionBody,
+      paragraphs: splitParagraphs(sectionBody),
+    }
+  })
 }
 
 router.get('/:slug', requireAuth, async (request, response, next) => {
