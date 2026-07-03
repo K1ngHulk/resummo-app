@@ -277,27 +277,70 @@ export const qbankQuestionSession = {
 
 export const studyPlans = {
   title: 'Planes de Estudio',
+  subtitle: 'Define una meta, organiza tu rutina y retoma cada jornada desde un solo lugar.',
   heroTitle: '¿Estás por dar un examen pronto?',
   heroDescription:
-    'Obtén un plan de estudio personalizado basado en los patrones de los mejores puntajes y el aprendizaje automático, adaptado exactamente a tus necesidades y hábitos.',
+    'Configura un recorrido de estudio según tu objetivo, el tiempo disponible y los días que prefieres dedicar al aprendizaje.',
   heroAction: 'Crea un plan de estudio',
+  newPlanAction: 'Crear un plan nuevo',
   continueTitle: 'Continúa tu aprendizaje',
   emptyTitle: 'Aún no has empezado ningún plan de estudio',
-  emptyAction: 'Puedes crearlo dando clic aquí',
-  discoverTitle: 'Descubre todos los Planes de Estudio',
+  emptyDescription: 'Tu plan se guardará en este dispositivo para que puedas retomarlo después.',
+  emptyAction: 'Crear mi primer plan',
+  discoverTitle: 'Un recorrido claro para cada jornada',
+  discoverDescription: 'El plan reúne lecturas y práctica en una secuencia fácil de retomar.',
+  benefits: [
+    {
+      id: 'goal',
+      step: '01',
+      title: 'Define tu objetivo',
+      description: 'Elige el examen o área que orientará tu preparación.',
+    },
+    {
+      id: 'routine',
+      step: '02',
+      title: 'Ajusta tu rutina',
+      description: 'Selecciona tiempo disponible y días de estudio.',
+    },
+    {
+      id: 'progress',
+      step: '03',
+      title: 'Avanza por jornadas',
+      description: 'Consulta lecturas y sesiones relacionadas en cada día.',
+    },
+  ],
 }
 
 export const studyPlanWizard = {
   title: 'Crea un plan de estudio personalizado',
+  planDuration: 'Plan guiado de 7 jornadas',
   step1: {
     introTitle: 'Creamos en base a tus objetivos',
     intro:
-      'Y adaptamos el contenido para que coincida con ellos. Asegúrate de que tu información sea correcta porque hay muchos cálculos pasando tras bambalinas.',
+      'Selecciona una meta y las preferencias que quieres considerar en tu recorrido de estudio.',
     question: '¿Para qué estás estudiando?',
-    selectedExam: 'Pediatrics (ABP)',
+    objectives: [
+      { value: 'pediatrics-abp', label: 'Pediatría (ABP)' },
+      { value: 'basic-sciences', label: 'Ciencias básicas' },
+      { value: 'internal-medicine', label: 'Medicina interna' },
+    ],
     rows: [
-      { id: 'articles', label: 'Artículos', chip: 'Todos' },
-      { id: 'systems', label: 'Sistemas', chip: 'Todos' },
+      {
+        id: 'articles',
+        label: 'Artículos',
+        options: [
+          { value: 'all', label: 'Todos' },
+          { value: 'essential', label: 'Esenciales' },
+        ],
+      },
+      {
+        id: 'systems',
+        label: 'Áreas de estudio',
+        options: [
+          { value: 'all', label: 'Todas' },
+          { value: 'objective', label: 'Relacionadas con mi objetivo' },
+        ],
+      },
     ],
     statusTitle: 'Incluir preguntas con el siguiente estado:',
     statuses: [
@@ -311,11 +354,14 @@ export const studyPlanWizard = {
   step2: {
     introTitle: 'Establece una rutina de estudio',
     intro:
-      'Basado en tus objetivos, calculamos que necesitas estudiar 3 horas 30 minutos, 3 días una semana para terminar tu plan antes de la fecha límite establecida.',
+      'Elige una rutina que puedas sostener. Podrás consultar tus jornadas y ajustar el ritmo creando un plan nuevo cuando lo necesites.',
     hoursLabel: 'Horas por día',
-    hoursValue: '3h 30min',
+    defaultMinutes: 210,
+    minimumMinutes: 30,
+    maximumMinutes: 300,
+    minuteStep: 30,
     helper:
-      'Incluye el tiempo dedicado a responder preguntas y revisarlas. Asume un promedio de 20 preguntas por hora.',
+      'El tiempo incluye lectura y práctica. Esta configuración se guarda solo en este dispositivo.',
     daysTitle: 'Días de Estudio',
     days: [
       { id: 'monday', label: 'Lunes', checked: true },
@@ -332,41 +378,193 @@ export const studyPlanWizard = {
 
 export const studyPlanCurrent = {
   backAction: 'Volver a los planes',
-  title: 'Step 1 Prep Condensed',
-  subtitle: '30 Topics en 30 Days',
-  badge: 'Step Prep Condensed',
-  welcomeTitle: 'Welcome to the Step 1 Prep Condensed Study Plan!',
+  title: 'Plan intensivo de preparación',
+  subtitle: 'Plan guiado de 7 jornadas',
+  objectiveLabel: 'Ciencias básicas',
+  routineLabel: '3 días por semana · 3 h 30 min por jornada',
+  sidebarTitle: 'Jornadas del plan',
+  articlesTitle: 'Artículos',
+  sessionsTitle: 'Sesiones de preguntas',
+  welcomeTitle: 'Tu recorrido de estudio está listo',
   welcomeText:
-    'Whether you are making the most of a little extra study time or continuing your regular routine, this plan is the perfect way to learn the most important concepts from our most high-yield Articles for Step 1. The study plan presents one Article and one question session every day for 30 days. Each question session contains five questions. The Article and question session will reinforce one another, making the study plan an efficient and effective journey. Jump in and get started today!',
-  days: Array.from({ length: 7 }, (_, index) => ({
-    id: `day-${index + 1}`,
-    label: `Day ${index + 1}`,
-    title: 'Bacteria Overview',
-    articleProgress: '0/1 Articulo',
-    questionProgress: '0/5 Preguntas',
-    percent: 0,
-    percentLabel: '0% Completado',
-  })),
-  elements: {
-    articlesTitle: 'Articulos',
-    sessionsTitle: 'Sesiones',
-    articles: [
-      {
-        id: 'bacteria-description',
-        title: 'Descripcion general de las bacterias',
-        readLabel: 'Marcar como leido',
-      },
-    ],
-    sessions: [
-      {
-        id: 'bacteria-session',
-        title: 'High-Yield Step 1 - Day 1 - Bacteria Overview',
-        progress: '0/5 Preguntas',
-        percent: 0,
-        action: 'Continuar',
-      },
-    ],
-  },
+    'Cada jornada combina una lectura breve con una sesión de preguntas relacionada. El avance de lectura se conserva localmente en este dispositivo.',
+  days: [
+    {
+      id: 'day-1',
+      label: 'Día 1',
+      title: 'Fundamentos de bacteriología',
+      articles: [
+        {
+          id: 'article-bacteria-overview',
+          title: 'Descripción general de las bacterias',
+          readTime: '8 min de lectura',
+          readLabel: 'Marcar como leído',
+          path: '/learning/library/article?slug=bacteria-overview',
+        },
+      ],
+      sessions: [
+        {
+          id: 'session-microbiology-1',
+          title: 'Práctica de microbiología',
+          completedQuestions: 0,
+          totalQuestions: 5,
+          percent: 0,
+          action: 'Preparar sesión',
+          path: '/learning/qbank/new?topic=microbiologia',
+        },
+      ],
+    },
+    {
+      id: 'day-2',
+      label: 'Día 2',
+      title: 'Bacterias grampositivas',
+      articles: [
+        {
+          id: 'article-gram-positive-bacteria',
+          title: 'Bacterias grampositivas',
+          readTime: '10 min de lectura',
+          readLabel: 'Marcar como leído',
+          path: '/learning/library/article?slug=gram-positive-bacteria',
+        },
+      ],
+      sessions: [
+        {
+          id: 'session-microbiology-2',
+          title: 'Repaso de bacteriología',
+          completedQuestions: 0,
+          totalQuestions: 5,
+          percent: 0,
+          action: 'Preparar sesión',
+          path: '/learning/qbank/new?topic=microbiologia',
+        },
+      ],
+    },
+    {
+      id: 'day-3',
+      label: 'Día 3',
+      title: 'Tuberculosis',
+      articles: [
+        {
+          id: 'article-tuberculosis',
+          title: 'Tuberculosis',
+          readTime: '12 min de lectura',
+          readLabel: 'Marcar como leído',
+          path: '/learning/library/article?slug=tuberculosis',
+        },
+      ],
+      sessions: [
+        {
+          id: 'session-microbiology-3',
+          title: 'Práctica de microbiología',
+          completedQuestions: 0,
+          totalQuestions: 5,
+          percent: 0,
+          action: 'Preparar sesión',
+          path: '/learning/qbank/new?topic=microbiologia',
+        },
+      ],
+    },
+    {
+      id: 'day-4',
+      label: 'Día 4',
+      title: 'Síndrome coronario agudo',
+      articles: [
+        {
+          id: 'article-acute-coronary-syndrome',
+          title: 'Síndrome coronario agudo',
+          readTime: '11 min de lectura',
+          readLabel: 'Marcar como leído',
+          path: '/learning/library/article?slug=acute-coronary-syndrome',
+        },
+      ],
+      sessions: [
+        {
+          id: 'session-cardiology-1',
+          title: 'Práctica de cardiología',
+          completedQuestions: 0,
+          totalQuestions: 5,
+          percent: 0,
+          action: 'Preparar sesión',
+          path: '/learning/qbank/new?topic=cardiologia',
+        },
+      ],
+    },
+    {
+      id: 'day-5',
+      label: 'Día 5',
+      title: 'Hipertensión arterial',
+      articles: [
+        {
+          id: 'article-arterial-hypertension',
+          title: 'Hipertensión arterial',
+          readTime: '9 min de lectura',
+          readLabel: 'Marcar como leído',
+          path: '/learning/library/article?slug=arterial-hypertension',
+        },
+      ],
+      sessions: [
+        {
+          id: 'session-cardiology-2',
+          title: 'Repaso cardiovascular',
+          completedQuestions: 0,
+          totalQuestions: 5,
+          percent: 0,
+          action: 'Preparar sesión',
+          path: '/learning/qbank/new?topic=cardiologia',
+        },
+      ],
+    },
+    {
+      id: 'day-6',
+      label: 'Día 6',
+      title: 'Infecciones respiratorias agudas',
+      articles: [
+        {
+          id: 'article-acute-respiratory-infections',
+          title: 'Infecciones respiratorias agudas',
+          readTime: '8 min de lectura',
+          readLabel: 'Marcar como leído',
+          path: '/learning/library/article?slug=acute-respiratory-infections',
+        },
+      ],
+      sessions: [
+        {
+          id: 'session-pediatrics-1',
+          title: 'Práctica de pediatría',
+          completedQuestions: 0,
+          totalQuestions: 5,
+          percent: 0,
+          action: 'Preparar sesión',
+          path: '/learning/qbank/new?topic=pediatria',
+        },
+      ],
+    },
+    {
+      id: 'day-7',
+      label: 'Día 7',
+      title: 'Asma bronquial',
+      articles: [
+        {
+          id: 'article-bronchial-asthma',
+          title: 'Asma bronquial',
+          readTime: '9 min de lectura',
+          readLabel: 'Marcar como leído',
+          path: '/learning/library/article?slug=bronchial-asthma',
+        },
+      ],
+      sessions: [
+        {
+          id: 'session-pediatrics-2',
+          title: 'Repaso respiratorio',
+          completedQuestions: 0,
+          totalQuestions: 5,
+          percent: 0,
+          action: 'Preparar sesión',
+          path: '/learning/qbank/new?topic=pediatria',
+        },
+      ],
+    },
+  ],
 }
 
 export const library = {

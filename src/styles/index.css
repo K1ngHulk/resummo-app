@@ -782,12 +782,43 @@ input:focus {
     width: min(100%, calc(100% - 0.85rem));
   }
 
+  .app-header__top {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'brand'
+      'actions'
+      'search';
+  }
+
+  .brand-mark,
+  .app-header__actions,
+  .app-header__search {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .brand-mark__text {
     font-size: 0.98rem;
   }
 
   .brand-mark {
     gap: 0.55rem;
+  }
+
+  .app-header__actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    row-gap: 0.45rem;
+    width: 100%;
+  }
+
+  .app-header__admin-pill {
+    padding: 0.36rem 0.75rem;
+    font-size: 0.74rem;
+  }
+
+  .app-header__logout {
+    font-size: 0.78rem;
   }
 
   .search-bar {
@@ -1216,6 +1247,149 @@ input:focus {
 
 .study-empty-card strong {
   font-size: clamp(1rem, 1.2vw, 1.15rem);
+}
+
+.study-empty-card p {
+  max-width: 54ch;
+  margin: 0.35rem 0;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-small);
+}
+
+.study-plans-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.study-plans-header > div > span,
+.study-current-card__eyebrow {
+  color: var(--color-primary);
+  font-size: var(--font-size-label);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.study-plans-header p {
+  max-width: 62ch;
+  margin: 0.45rem 0 0;
+  color: var(--color-text-soft);
+  line-height: 1.5;
+}
+
+.study-current-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.38fr);
+  gap: clamp(1rem, 3vw, 2.5rem);
+  align-items: center;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: clamp(1.2rem, 2vw, 1.7rem);
+  box-shadow: 0 12px 30px var(--color-primary-shadow-soft);
+}
+
+.study-current-card h3 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.3rem, 1.8vw, 1.75rem);
+}
+
+.study-current-card p {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-soft);
+  font-weight: 600;
+}
+
+.study-current-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.study-current-card__meta span {
+  border-radius: 999px;
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  padding: 0.45rem 0.7rem;
+  font-size: var(--font-size-label);
+  font-weight: 700;
+}
+
+.study-current-card__progress {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.study-current-card__progress > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.study-current-card__progress strong {
+  color: var(--color-primary);
+  font-size: 1.6rem;
+}
+
+.study-current-card__progress span {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.study-current-card__track {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-primary-muted);
+}
+
+.study-current-card__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+.study-plan-benefits {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.6rem;
+}
+
+.study-plan-benefits > div:first-child h2,
+.study-plan-benefits article h3 {
+  margin: 0;
+}
+
+.study-plan-benefits > div:first-child p,
+.study-plan-benefits article p {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-soft);
+  line-height: 1.45;
+}
+
+.study-plan-benefits__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.study-plan-benefits article {
+  min-height: 9rem;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 1rem;
+}
+
+.study-plan-benefits article > span {
+  color: var(--color-primary);
+  font-size: var(--font-size-label);
+  font-weight: 900;
 }
 
 .figma-section-title {
@@ -3211,6 +3385,22 @@ input:focus {
   text-align: left;
 }
 
+.spw-filter-row select {
+  max-width: 12rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  padding: 0.42rem 0.8rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.spw-filter-row select option {
+  color: var(--color-text);
+}
+
 .spw-filter-row + .spw-filter-row {
   border-top: 1px solid rgba(255, 255, 255, 0.55);
 }
@@ -3299,6 +3489,65 @@ input:focus {
   font-weight: 800;
 }
 
+.spw-progress {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.spw-progress > span {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--font-size-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.spw-progress > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.spw-progress i {
+  height: 0.28rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.spw-progress i.spw-progress__complete {
+  background: #fff;
+}
+
+.spw-error {
+  margin: 0;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  padding: 0.65rem 0.75rem;
+  font-size: var(--font-size-small);
+  font-weight: 700;
+}
+
+.spw-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.spw-actions .spw-primary-action {
+  justify-self: auto;
+}
+
+.spw-secondary-action {
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 0.85rem;
+  color: #fff;
+  padding: 0.72rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
 .spw-form--routine {
   gap: 1.8rem;
 }
@@ -3315,6 +3564,12 @@ input:focus {
 }
 
 .spw-hours__head span {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.spw-hours__head label {
   color: #fff;
   font-size: 0.9rem;
   font-weight: 800;
@@ -3344,6 +3599,11 @@ input:focus {
   border-radius: 999px;
   background: #fff;
   transform: translate(-50%, -50%);
+}
+
+.spw-range {
+  width: 100%;
+  accent-color: #fff;
 }
 
 .spw-hours p {
@@ -3446,6 +3706,50 @@ input:focus {
   line-height: 1.45;
 }
 
+.spd-welcome-card > span,
+.spd-welcome-card small {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: var(--font-size-label);
+  font-weight: 800;
+}
+
+.spd-welcome-card > span {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.spd-days-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.spd-days-section__head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.spd-days-section__head h2,
+.spd-days-section__head p {
+  margin: 0;
+}
+
+.spd-days-section__head p {
+  margin-top: 0.3rem;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-small);
+}
+
+.spd-days-section__head > span {
+  border-radius: 999px;
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  padding: 0.45rem 0.75rem;
+  font-size: var(--font-size-label);
+  font-weight: 800;
+}
+
 .spd-day-list {
   display: grid;
   gap: 1.25rem;
@@ -3460,6 +3764,12 @@ input:focus {
   align-items: center;
   padding: 1.35rem 1.55rem;
   text-align: left;
+}
+
+.spd-day-card:hover,
+.spd-day-card:focus-visible {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
 }
 
 .spd-day-card strong,
@@ -3499,7 +3809,7 @@ input:focus {
 .spd-session-card__progress {
   height: 0.46rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.35);
   overflow: hidden;
 }
 
@@ -3575,6 +3885,12 @@ input:focus {
   font-weight: 500;
 }
 
+.spd-elements-day small {
+  color: var(--color-text-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .spd-elements-main {
   position: relative;
   min-width: 0;
@@ -3613,6 +3929,12 @@ input:focus {
   margin-bottom: 1.35rem;
 }
 
+.spd-active-day-title {
+  margin: -0.75rem 0 0;
+  color: var(--color-text-soft);
+  font-weight: 700;
+}
+
 .spd-elements-section {
   display: grid;
   gap: 0.85rem;
@@ -3624,6 +3946,19 @@ input:focus {
   color: #211c1b;
   font-size: 1.18rem;
   line-height: 1.2;
+}
+
+.spd-elements-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.spd-elements-section__head > span {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-label);
+  font-weight: 700;
 }
 
 .spd-elements-list {
@@ -3640,6 +3975,10 @@ input:focus {
   padding: 0.85rem 1rem;
 }
 
+.spd-element-card--complete {
+  background: var(--color-primary-dark);
+}
+
 .spd-element-card__icon {
   width: 1.45rem;
   height: 1.45rem;
@@ -3650,6 +3989,33 @@ input:focus {
   color: #fff;
   font-size: 0.75rem;
   font-weight: 900;
+}
+
+.spd-element-card__icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.spd-element-card__copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.spd-element-card__copy > span {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.spd-element-open {
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-primary);
+  padding: 0.44rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .spd-element-card strong,
@@ -3740,6 +4106,14 @@ input:focus {
     position: static;
     margin-bottom: 1rem;
   }
+
+  .study-current-card {
+    grid-template-columns: 1fr;
+  }
+
+  .study-plan-benefits__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -3747,6 +4121,25 @@ input:focus {
   .spd-elements-shell {
     width: min(100%, calc(100% - 1rem));
     padding-top: 1.5rem;
+  }
+
+  .study-plans-page,
+  .spd-page,
+  .spd-elements-shell {
+    overflow-x: clip;
+  }
+
+  .study-current-card,
+  .study-empty-card,
+  .study-plan-benefits article,
+  .spd-welcome-card,
+  .spd-day-card,
+  .spd-elements-sidebar,
+  .spd-elements-main,
+  .spd-element-card,
+  .spd-session-card {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .spd-welcome-card,
@@ -3761,9 +4154,28 @@ input:focus {
     grid-template-columns: 1fr;
   }
 
+  .spd-elements-section__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .spd-elements-day,
+  .spd-element-card strong,
+  .spd-session-card strong,
+  .spd-active-day-title {
+    overflow-wrap: anywhere;
+  }
+
   .spd-read-check,
-  .spd-session-card button {
+  .spd-session-card button,
+  .spd-element-open {
     justify-self: start;
+  }
+
+  .spd-days-section__head,
+  .study-plans-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
@@ -3849,6 +4261,25 @@ input:focus {
     grid-template-columns: 1fr;
     grid-template-rows: none;
     grid-auto-flow: row;
+  }
+
+  .spw-filter-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .spw-filter-row select {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+  }
+
+  .spw-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .spw-secondary-action {
+    width: 100%;
   }
 }
 
