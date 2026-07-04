@@ -14,11 +14,24 @@ const app = express()
 const port = Number(process.env.PORT || 3001)
 const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
 
+function isEnvFlagEnabled(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase())
+}
+
 app.use(cors({ origin: corsOrigin, credentials: true }))
 app.use(express.json())
 
 app.get('/api/health', (_request, response) => {
-  response.json({ ok: true, service: 'resummo-api' })
+  response.json({
+    ok: true,
+    service: 'resummo-api',
+    config: {
+      privateMvpAccess: isEnvFlagEnabled(process.env.PRIVATE_MVP_ACCESS),
+      showDemoCredentials:
+        process.env.NODE_ENV === 'development' &&
+        isEnvFlagEnabled(process.env.SHOW_DEMO_CREDENTIALS),
+    },
+  })
 })
 
 app.use('/api/auth', authRoutes)

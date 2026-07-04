@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import resummoLogo from '../assets/brand/originals/logoguinda.png'
 import { useAuth } from '../context/AuthContext.jsx'
 
@@ -9,17 +9,58 @@ const initialForm = {
   password: '',
 }
 
+const privateAccessFallback = {
+  privateMvpAccess: true,
+  showDemoCredentials: false,
+}
+
 function LoginPage({ onNavigate }) {
   const { login, register } = useAuth()
   const [mode, setMode] = useState('login')
   const [formValues, setFormValues] = useState(initialForm)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [accessConfig, setAccessConfig] = useState(privateAccessFallback)
+
+  const registrationEnabled = !accessConfig.privateMvpAccess
+  const showDemoCredentials = import.meta.env.DEV && accessConfig.showDemoCredentials
 
   const title = useMemo(
     () => (mode === 'login' ? 'Inicia sesion en Resummo' : 'Crea tu cuenta en Resummo'),
     [mode],
   )
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadAccessConfig() {
+      try {
+        const response = await fetch('/api/health')
+        const payload = await response.json()
+
+        if (!response.ok || !payload?.config || !isMounted) {
+          return
+        }
+
+        setAccessConfig({
+          privateMvpAccess: payload.config.privateMvpAccess !== false,
+          showDemoCredentials: payload.config.showDemoCredentials === true,
+        })
+
+        if (payload.config.privateMvpAccess !== false) {
+          setMode('login')
+        }
+      } catch {
+        // Keep the fail-closed private access fallback when configuration is unavailable.
+      }
+    }
+
+    loadAccessConfig()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -57,32 +98,45 @@ function LoginPage({ onNavigate }) {
           </div>
         </div>
 
-        <div className="auth-tabs" role="tablist" aria-label="Selecciona el tipo de acceso">
-          <button
-            type="button"
-            className={`auth-tab ${mode === 'login' ? 'auth-tab--active' : ''}`}
-            onClick={() => setMode('login')}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            className={`auth-tab ${mode === 'register' ? 'auth-tab--active' : ''}`}
-            onClick={() => setMode('register')}
-          >
-            Registro
-          </button>
-        </div>
+        {registrationEnabled ? (
+          <div className="auth-tabs" role="tablist" aria-label="Selecciona el tipo de acceso">
+            <button
+              type="button"
+              className={`auth-tab ${mode === 'login' ? 'auth-tab--active' : ''}`}
+              onClick={() => setMode('login')}
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              className={`auth-tab ${mode === 'register' ? 'auth-tab--active' : ''}`}
+              onClick={() => setMode('register')}
+            >
+              Registro
+            </button>
+          </div>
+        ) : (
+          <div className="auth-private-notice">Acceso privado por invitaci&oacute;n</div>
+        )}
 
         <header className="auth-card__header">
           <h1>{title}</h1>
-          <p>
-            Ingresa con la cuenta de estudiante demo <strong>(demo@resummo.app / Demo12345)</strong> o crea una nueva.
-          </p>
+          {showDemoCredentials ? (
+            <p>
+              Entorno local: usa <strong>demo@resummo.app / Demo12345</strong>
+              {registrationEnabled ? ' o crea una cuenta de prueba.' : '.'}
+            </p>
+          ) : (
+            <p>
+              {registrationEnabled
+                ? 'Ingresa con tu cuenta o crea una nueva.'
+                : 'Ingresa con la cuenta habilitada para tu invitaci\u00f3n.'}
+            </p>
+          )}
         </header>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          {mode === 'register' ? (
+          {registrationEnabled && mode === 'register' ? (
             <div className="auth-form__grid">
               <label className="auth-field">
                 <span>Nombre</span>

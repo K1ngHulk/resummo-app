@@ -6,6 +6,12 @@ import express from 'express'
 
 const router = express.Router()
 
+function isPrivateMvpAccessEnabled() {
+  return ['1', 'true', 'yes', 'on'].includes(
+    String(process.env.PRIVATE_MVP_ACCESS || '').trim().toLowerCase(),
+  )
+}
+
 const authSchema = z.object({
   firstName: z.string().trim().min(2).max(50).optional(),
   lastName: z.string().trim().min(2).max(50).optional(),
@@ -27,6 +33,12 @@ function sanitizeUser(user) {
 
 router.post('/register', async (request, response, next) => {
   try {
+    if (isPrivateMvpAccessEnabled()) {
+      return response.status(403).json({
+        message: 'El registro est\u00e1 cerrado. El acceso al MVP privado es solo por invitaci\u00f3n.',
+      })
+    }
+
     const parsed = authSchema.extend({
       firstName: z.string().trim().min(2).max(50),
       lastName: z.string().trim().min(2).max(50),
