@@ -26,6 +26,21 @@
   margin-bottom: 1.5rem;
 }
 
+.admin-question-create-page .admin-question-guidance {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 8px;
+  background: var(--color-primary-muted);
+  color: var(--color-text-strong);
+}
+
+.admin-question-create-page .admin-question-guidance p {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-soft);
+  font-size: 0.9rem;
+}
+
 .admin-question-create-page .admin-form-group label {
   display: block;
   font-weight: 500;
@@ -195,4 +210,77 @@
   margin-top: 2rem;
   padding-top: 2rem;
   border-top: 1px solid var(--color-border);
+}
+
+.admin-question-create-page .admin-question-draft-checklist {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.admin-question-create-page .admin-question-draft-checklist > span {
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-question-create-page .admin-question-draft-checklist h2 {
+  margin: 0.35rem 0;
+  font-size: 1.1rem;
+}
+
+.admin-question-create-page .admin-question-draft-checklist p {
+  margin: 0 0 0.9rem;
+  color: var(--color-text-soft);
+  font-size: 0.88rem;
+}
+
+.admin-question-create-page .admin-question-draft-checklist ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-question-create-page .admin-question-draft-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+}
+
+.admin-question-create-page .admin-question-draft-checklist li > span {
+  display: grid;
+  width: 1.3rem;
+  height: 1.3rem;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.admin-question-create-page .admin-check-pass > span {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-question-create-page .admin-check-fail > span {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+@media (max-width: 640px) {
+  .admin-question-create-page .admin-form-row,
+  .admin-question-create-page .admin-option-item,
+  .admin-question-create-page .admin-form-actions {
+    flex-direction: column;
+  }
+
+  .admin-question-create-page .admin-option-actions {
+    align-items: flex-start;
+    min-width: 0;
+  }
 }

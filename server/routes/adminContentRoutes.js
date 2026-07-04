@@ -14,7 +14,7 @@ function validationError(message) {
   return error
 }
 
-const pendingArticleContentPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
+const pendingEditorialContentPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
 
 function getArticlePublicationIssues(article, topic) {
   const issues = []
@@ -23,8 +23,46 @@ function getArticlePublicationIssues(article, topic) {
   if (!article.body?.trim()) issues.push('falta el cuerpo')
   if (!/^##\s+\S.*$/m.test(article.body || '')) issues.push('falta al menos una seccion con encabezado ##')
   if (!Number.isInteger(article.readTimeMinutes) || article.readTimeMinutes <= 0) issues.push('el tiempo de lectura no es valido')
-  if (pendingArticleContentPattern.test(article.body || '')) issues.push('el cuerpo contiene citas o pendientes editoriales')
+  if (pendingEditorialContentPattern.test(article.body || '')) issues.push('el cuerpo contiene citas o pendientes editoriales')
   if (topic?.status !== 'PUBLISHED') issues.push('el tema asociado no esta publicado')
+  return issues
+}
+
+function getQuestionPublicationIssues(question, topic, article, options = []) {
+  const issues = []
+
+  if (!question.prompt?.trim()) issues.push('falta el enunciado')
+  if (!question.explanation?.trim()) issues.push('falta la explicacion')
+  if (!Number.isInteger(question.difficulty) || question.difficulty < 1 || question.difficulty > 5) {
+    issues.push('la dificultad debe ser un entero entre 1 y 5')
+  }
+  if (options.length < 2) issues.push('se requieren al menos 2 opciones')
+  if (options.length > 5) issues.push('se permiten como maximo 5 opciones')
+  if (options.some((option) => !option.text?.trim())) issues.push('todas las opciones deben tener texto')
+  if (options.filter((option) => option.isCorrect).length !== 1) issues.push('debe haber exactamente 1 opcion correcta')
+
+  if (!topic) {
+    issues.push('el tema asociado no existe')
+  } else if (topic.status !== 'PUBLISHED') {
+    issues.push('el tema asociado no esta publicado')
+  }
+
+  if (question.articleId) {
+    if (!article) {
+      issues.push('el articulo asociado no existe')
+    } else {
+      if (article.topicId !== question.topicId) issues.push('el articulo asociado no pertenece al mismo tema')
+      if (article.status !== 'PUBLISHED') issues.push('el articulo asociado no esta publicado')
+    }
+  }
+
+  const pendingFields = []
+  if (pendingEditorialContentPattern.test(question.prompt || '')) pendingFields.push('el enunciado')
+  if (pendingEditorialContentPattern.test(question.explanation || '')) pendingFields.push('la explicacion')
+  if (pendingEditorialContentPattern.test(question.hint || '')) pendingFields.push('la pista')
+  if (options.some((option) => pendingEditorialContentPattern.test(option.text || ''))) pendingFields.push('las opciones')
+  if (pendingFields.length > 0) issues.push(`${pendingFields.join(', ')} contienen pendientes editoriales`)
+
   return issues
 }
 
@@ -403,8 +441,8 @@ router.get('/questions', async (request, response, next) => {
         hint: true,
         createdAt: true,
         updatedAt: true,
-        topic: { select: { title: true, slug: true } },
-        article: { select: { title: true, slug: true } },
+        topic: { select: { title: true, slug: true, status: true } },
+        article: { select: { title: true, slug: true, status: true } },
         _count: { select: { options: true } },
       },
       orderBy: { updatedAt: 'desc' },
@@ -421,8 +459,8 @@ router.get('/questions/:id', async (request, response, next) => {
     const question = await prisma.question.findUnique({
       where: { id: request.params.id },
       include: {
-        topic: { select: { id: true, title: true, slug: true } },
-        article: { select: { id: true, title: true, slug: true } },
+        topic: { select: { id: true, title: true, slug: true, status: true } },
+        article: { select: { id: true, title: true, slug: true, topicId: true, status: true } },
         options: { orderBy: { order: 'asc' } },
       },
     })
@@ -543,7 +581,10 @@ router.patch('/questions/:id', async (request, response, next) => {
     }
     const parsed = result.data
 
-    const existingQuestion = await prisma.question.findUnique({ where: { id: request.params.id } })
+    const existingQuestion = await prisma.question.findUnique({
+      where: { id: request.params.id },
+      include: { options: { orderBy: { order: 'asc' } } },
+    })
     if (!existingQuestion) {
       const error = new Error('Pregunta no encontrada')
       error.statusCode = 404
@@ -551,25 +592,43 @@ router.patch('/questions/:id', async (request, response, next) => {
     }
 
     const finalTopicId = parsed.topicId || existingQuestion.topicId
-
-    if (parsed.topicId) {
-      const topic = await prisma.topic.findUnique({ where: { id: parsed.topicId } })
-      if (!topic) {
-        const error = new Error('Tema no encontrado')
-        error.statusCode = 404
-        throw error
-      }
+    const finalTopic = await prisma.topic.findUnique({ where: { id: finalTopicId } })
+    if (!finalTopic) {
+      const error = new Error('Tema no encontrado')
+      error.statusCode = 404
+      throw error
     }
 
-    if (parsed.articleId) {
-      const article = await prisma.article.findUnique({ where: { id: parsed.articleId } })
-      if (!article) {
+    const finalArticleId = parsed.articleId === undefined ? existingQuestion.articleId : parsed.articleId
+    let finalArticle = null
+    if (finalArticleId) {
+      finalArticle = await prisma.article.findUnique({ where: { id: finalArticleId } })
+      if (!finalArticle) {
         const error = new Error('Articulo no encontrado')
         error.statusCode = 404
         throw error
       }
-      if (article.topicId !== finalTopicId) {
+      if (finalArticle.topicId !== finalTopicId) {
         throw validationError('El articulo no pertenece al tema indicado')
+      }
+    }
+
+    const finalQuestion = {
+      ...existingQuestion,
+      ...parsed,
+      topicId: finalTopicId,
+      articleId: finalArticleId,
+    }
+    const finalStatus = parsed.status || existingQuestion.status
+    if (finalStatus === 'PUBLISHED') {
+      const publicationIssues = getQuestionPublicationIssues(
+        finalQuestion,
+        finalTopic,
+        finalArticle,
+        existingQuestion.options,
+      )
+      if (publicationIssues.length > 0) {
+        throw validationError(`No se puede publicar la pregunta: ${publicationIssues.join('; ')}`)
       }
     }
 

@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import './AdminQuestionCreatePage.css'
+
+const pendingEditorialPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
 
 export default function AdminQuestionCreatePage({ onNavigate }) {
   const { request } = useAuth()
@@ -37,6 +39,26 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
   const [options, setOptions] = useState(generateInitialOptions())
   const [correctOptionId, setCorrectOptionId] = useState(null)
   const [nextOptionKey, setNextOptionKey] = useState(4) // for stable ids
+  const editorialChecklist = useMemo(() => {
+    const textToReview = [
+      formData.prompt,
+      formData.explanation,
+      formData.hint,
+      ...options.map((option) => option.text),
+    ].join(' ')
+
+    return [
+      { id: 'prompt', label: 'Enunciado presente', passed: Boolean(formData.prompt.trim()) },
+      { id: 'explanation', label: 'Explicación presente', passed: Boolean(formData.explanation.trim()) },
+      {
+        id: 'options',
+        label: 'Entre 2 y 5 opciones completas',
+        passed: options.length >= 2 && options.length <= 5 && options.every((option) => option.text.trim()),
+      },
+      { id: 'correct', label: 'Una opción correcta seleccionada', passed: Boolean(correctOptionId) },
+      { id: 'pending', label: 'Sin pendientes editoriales', passed: !pendingEditorialPattern.test(textToReview) },
+    ]
+  }, [correctOptionId, formData.explanation, formData.hint, formData.prompt, options])
 
   // Load Topics
   useEffect(() => {
@@ -188,6 +210,12 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
         </div>
       </header>
 
+      <section className="admin-question-guidance" aria-label="Ayuda editorial">
+        <strong>Flujo editorial</strong>
+        <p>La pregunta se crea como borrador. Solo una pregunta publicada puede aparecer en QBank.</p>
+        <p>No publiques contenido con <code>[FALTA CITA]</code>, TODO, PENDIENTE, placeholder o mock.</p>
+      </section>
+
       {error && <div className="app-feedback app-feedback--error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
       <form onSubmit={handleSubmit}>
@@ -230,7 +258,7 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
         </div>
 
         <div className="admin-form-group">
-          <label htmlFor="prompt">Pregunta (Prompt) *</label>
+          <label htmlFor="prompt">Enunciado *</label>
           <textarea
             id="prompt"
             name="prompt"
@@ -255,7 +283,7 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
 
         <div className="admin-form-row">
           <div className="admin-form-group">
-            <label htmlFor="difficulty">Dificultad (1-5) *</label>
+            <label htmlFor="difficulty">Dificultad *</label>
             <input
               type="number"
               id="difficulty"
@@ -269,7 +297,7 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
           </div>
 
           <div className="admin-form-group">
-            <label htmlFor="hint">Pista (Hint) (Opcional)</label>
+            <label htmlFor="hint">Pista opcional</label>
             <input
               type="text"
               id="hint"
@@ -342,6 +370,20 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
           </div>
         </div>
 
+        <aside className="admin-question-draft-checklist" aria-label="Resumen del borrador">
+          <span>Resumen editorial</span>
+          <h2>Preparación del borrador</h2>
+          <p>Los pendientes no impiden guardar; deberán resolverse antes de publicar.</p>
+          <ul>
+            {editorialChecklist.map((item) => (
+              <li key={item.id} className={item.passed ? 'admin-check-pass' : 'admin-check-fail'}>
+                <span aria-hidden="true">{item.passed ? '✓' : '!'}</span>
+                {item.label}
+              </li>
+            ))}
+          </ul>
+        </aside>
+
         <div className="admin-form-actions">
           <button
             type="button"
@@ -356,7 +398,7 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
             className="admin-btn admin-btn--primary"
             disabled={isSubmitting || isLoadingTopics}
           >
-            {isSubmitting ? 'Guardando...' : 'Guardar Pregunta'}
+            {isSubmitting ? 'Guardando...' : 'Guardar borrador'}
           </button>
         </div>
       </form>

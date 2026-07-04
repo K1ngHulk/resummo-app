@@ -1,12 +1,50 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import './AdminQuestionReviewPage.css'
+
+const pendingEditorialPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
 
 function getHumanStatus(status) {
   if (status === 'DRAFT') return 'Borrador'
   if (status === 'PUBLISHED') return 'Publicado'
   if (status === 'ARCHIVED') return 'Archivado'
-  return status
+  return 'Estado desconocido'
+}
+
+function buildEditorialChecklist(formData, question) {
+  const options = question?.options || []
+  const textToReview = [
+    formData.prompt,
+    formData.explanation,
+    formData.hint,
+    ...options.map((option) => option.text),
+  ].join(' ')
+
+  return [
+    { id: 'prompt', label: 'Enunciado presente', passed: Boolean(formData.prompt.trim()) },
+    { id: 'explanation', label: 'Explicación presente', passed: Boolean(formData.explanation.trim()) },
+    {
+      id: 'difficulty',
+      label: 'Dificultad válida entre 1 y 5',
+      passed: Number.isInteger(formData.difficulty) && formData.difficulty >= 1 && formData.difficulty <= 5,
+    },
+    { id: 'topic', label: 'Tema asociado publicado', passed: question?.topic?.status === 'PUBLISHED' },
+    {
+      id: 'article',
+      label: 'Artículo asociado publicado y en el mismo tema',
+      passed: !question?.article || (
+        question.article.status === 'PUBLISHED' && question.article.topicId === question.topicId
+      ),
+    },
+    { id: 'option-count', label: 'Entre 2 y 5 opciones', passed: options.length >= 2 && options.length <= 5 },
+    {
+      id: 'correct-option',
+      label: 'Exactamente una opción correcta',
+      passed: options.filter((option) => option.isCorrect).length === 1,
+    },
+    { id: 'option-text', label: 'Todas las opciones tienen texto', passed: options.every((option) => option.text?.trim()) },
+    { id: 'pending', label: 'Sin pendientes editoriales', passed: !pendingEditorialPattern.test(textToReview) },
+  ]
 }
 
 export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
@@ -25,6 +63,11 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(questionId ? '' : 'No se encontró una pregunta válida para revisar.')
   const [successMsg, setSuccessMsg] = useState('')
+  const editorialChecklist = useMemo(
+    () => buildEditorialChecklist(formData, question),
+    [formData, question],
+  )
+  const publicationReady = editorialChecklist.every((item) => item.passed)
 
   useEffect(() => {
     if (!questionId) return
@@ -69,28 +112,47 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
 
   const handleSave = async (e, forceStatus = null) => {
     if (e) e.preventDefault()
-    
+
+    const requestedStatus = forceStatus || formData.status
+    const returnToDraftOnSave = !forceStatus && requestedStatus === 'PUBLISHED' && !publicationReady
+    const statusToSave = returnToDraftOnSave ? 'DRAFT' : requestedStatus
+    if (forceStatus === 'PUBLISHED' && !publicationReady) {
+      setError('Completa el checklist editorial antes de publicar. Guardar, archivar o volver a borrador sigue disponible.')
+      return
+    }
+
     setIsSaving(true)
     setError('')
     setSuccessMsg('')
-    
-    const statusToSave = forceStatus || formData.status
 
     try {
       await request(`/api/admin/content/questions/${questionId}`, {
         method: 'PATCH',
         body: {
-          prompt: formData.prompt,
-          explanation: formData.explanation,
+          prompt: formData.prompt.trim(),
+          explanation: formData.explanation.trim(),
           difficulty: formData.difficulty,
-          hint: formData.hint,
+          hint: formData.hint.trim() || null,
           status: statusToSave
         }
       })
       
-      setSuccessMsg('Cambios guardados correctamente.')
+      setSuccessMsg(
+        returnToDraftOnSave
+          ? 'Cambios guardados como borrador porque la pregunta requiere revisión editorial.'
+          : statusToSave === 'PUBLISHED'
+            ? 'Pregunta publicada correctamente.'
+            : 'Cambios guardados correctamente.',
+      )
       setFormData(prev => ({ ...prev, status: statusToSave }))
-      setQuestion(prev => ({ ...prev, status: statusToSave }))
+      setQuestion(prev => ({
+        ...prev,
+        prompt: formData.prompt.trim(),
+        explanation: formData.explanation.trim(),
+        difficulty: formData.difficulty,
+        hint: formData.hint.trim() || null,
+        status: statusToSave,
+      }))
       
       // Auto-hide success message
       setTimeout(() => setSuccessMsg(''), 3000)
@@ -143,7 +205,7 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
         <div>
           <h1 className="admin-review-title">Revisión de Pregunta</h1>
           <p className="admin-review-subtitle">
-            Estado actual: <strong>{getHumanStatus(question.status)}</strong>
+            Estado actual: <strong>{getHumanStatus(formData.status)}</strong>
           </p>
         </div>
         <button 
@@ -162,7 +224,7 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
           <h2>Contenido Principal</h2>
           
           <div className="admin-form-group">
-            <label className="admin-form-label">Pregunta (Prompt)</label>
+            <label className="admin-form-label">Enunciado</label>
             <textarea 
               className="admin-form-textarea"
               name="prompt"
@@ -184,7 +246,7 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Pista (Hint)</label>
+            <label className="admin-form-label">Pista opcional</label>
             <input 
               type="text"
               className="admin-form-input"
@@ -195,7 +257,7 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Dificultad (1-5)</label>
+            <label className="admin-form-label">Dificultad</label>
             <select 
               className="admin-form-select"
               name="difficulty"
@@ -229,6 +291,24 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
               title="Para cambiar el artículo, usa la gestión de artículos (próximamente)"
             />
           </div>
+
+          <aside className={`admin-question-editorial-checklist ${publicationReady ? 'admin-question-editorial-checklist--ready' : ''}`}>
+            <span>Control editorial</span>
+            <h2>{publicationReady ? 'Lista para publicar' : 'Revisión pendiente'}</h2>
+            <p>
+              {publicationReady
+                ? 'La pregunta cumple los requisitos mínimos de publicación.'
+                : 'Puedes guardar el borrador, pero debes resolver estos puntos antes de publicar.'}
+            </p>
+            <ul>
+              {editorialChecklist.map((item) => (
+                <li key={item.id} className={item.passed ? 'admin-check-pass' : 'admin-check-fail'}>
+                  <span aria-hidden="true">{item.passed ? '✓' : '!'}</span>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </aside>
 
           <div className="admin-review-actions">
             <button 
@@ -265,11 +345,11 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
                 <button 
                   type="button"
                   className="admin-btn admin-btn--primary"
-                  disabled={isSaving}
-                  style={{ backgroundColor: '#16a34a' }}
+                  disabled={isSaving || !publicationReady}
+                  title={publicationReady ? 'Publicar pregunta' : 'Completa el checklist editorial antes de publicar'}
                   onClick={(e) => handleSave(e, 'PUBLISHED')}
                 >
-                  Publicar Pregunta
+                  Publicar pregunta
                 </button>
               )}
             </div>
