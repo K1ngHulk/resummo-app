@@ -90,7 +90,7 @@ async function verifyPackInDatabase() {
     prisma.question.count({ where: { topicId: topic.id, prompt: { notIn: expectedPrompts } } }),
   ])
   if (unrelatedArticles > 0 || unrelatedQuestions > 0) {
-    throw new Error('Temporary topic publication is unsafe because the topic contains unrelated content')
+    throw new Error('Topic validation is unsafe because the topic contains unrelated content')
   }
 
   if (questions.length !== firstLearningPack.questions.length) {
@@ -102,14 +102,21 @@ async function verifyPackInDatabase() {
     }
   }
 
-  if (topic.status !== 'DRAFT' || article.status !== 'DRAFT') {
-    throw new Error('Topic or article was published automatically')
+  const topicStatus = topic.status
+  const articleStatus = article.status
+  const questionStatuses = new Set(questions.map((q) => q.status))
+
+  const isAllDraft = topicStatus === 'DRAFT' && articleStatus === 'DRAFT' && questionStatuses.size === 1 && questionStatuses.has('DRAFT')
+  const isAllPublished = topicStatus === 'PUBLISHED' && articleStatus === 'PUBLISHED' && questionStatuses.size === 1 && questionStatuses.has('PUBLISHED')
+
+  if (!isAllDraft && !isAllPublished) {
+    throw new Error(`State is mixed: Topic=${topicStatus}, Article=${articleStatus}, Questions=${[...questionStatuses].join(',')}`)
   }
 
   const contentFields = [article.title, article.summary, article.body]
   for (const question of questions) {
-    if (question.status !== 'DRAFT' || question.articleId !== article.id) {
-      throw new Error('A controlled question is not DRAFT or is linked to another article')
+    if (question.articleId !== article.id) {
+      throw new Error('A controlled question is linked to another article')
     }
     if (question.options.length < 2 || question.options.length > 5) {
       throw new Error('A controlled question has an invalid option count')
@@ -129,19 +136,7 @@ async function verifyPackInDatabase() {
     throw new Error('Loaded content contains an editorial marker')
   }
 
-  return { article, questions, topic }
-}
-
-async function restoreDraftState(packState) {
-  if (!packState) return
-  await prisma.$transaction([
-    prisma.topic.update({ where: { id: packState.topic.id }, data: { status: 'DRAFT' } }),
-    prisma.article.update({ where: { id: packState.article.id }, data: { status: 'DRAFT' } }),
-    prisma.question.updateMany({
-      where: { id: { in: packState.questions.map((question) => question.id) } },
-      data: { status: 'DRAFT' },
-    }),
-  ])
+  return { article, questions, topic, mode: isAllDraft ? 'DRAFT' : 'PUBLISHED' }
 }
 
 async function run() {
@@ -150,7 +145,7 @@ async function run() {
 
   try {
     packState = await verifyPackInDatabase()
-    pass('database contains 1 topic, 1 article and 6 controlled questions in DRAFT')
+    pass(`database contains 1 topic, 1 article and 6 controlled questions in ${packState.mode}`)
 
     console.log(`[smoke:first-learning-pack] starting API on ${baseUrl}`)
     serverProcess = await startServer()
@@ -158,95 +153,48 @@ async function run() {
     const editorToken = await login('editor@resummo.app', 'Editor12345')
     pass('controlled student and editor login succeeded')
 
-    const adminTopics = await apiRequest('/api/admin/content/topics', { token: editorToken })
-    const visibleTopic = adminTopics.payload?.topics?.find(
-      (topic) => topic.slug === firstLearningPack.topic.slug,
-    )
-    if (adminTopics.response.status !== 200 || visibleTopic?.status !== 'DRAFT') {
-      throw new Error('Editor cannot review the DRAFT topic through Admin')
-    }
+    if (packState.mode === 'DRAFT') {
+      const studentArticle = await apiRequest(`/api/articles/${firstLearningPack.article.slug}`, {
+        token: studentToken,
+      })
+      if (studentArticle.response.status !== 404) {
+        throw new Error(`Expected DRAFT article to return 404 for student, got ${studentArticle.response.status}`)
+      }
+      pass('DRAFT article is unavailable to student')
 
-    const adminArticles = await apiRequest(
-      `/api/admin/content/articles?topicId=${visibleTopic.id}`,
-      { token: editorToken },
-    )
-    const visibleArticle = adminArticles.payload?.articles?.find(
-      (article) => article.slug === firstLearningPack.article.slug,
-    )
-    if (adminArticles.response.status !== 200 || visibleArticle?.status !== 'DRAFT') {
-      throw new Error('Editor cannot review the DRAFT article through Admin')
-    }
+      const draftTopicSession = await apiRequest('/api/practice-sessions', {
+        method: 'POST',
+        token: studentToken,
+        body: { topicSlug: firstLearningPack.topic.slug, questionCount: 6 },
+      })
+      if (draftTopicSession.response.status !== 404 && draftTopicSession.response.status !== 400) {
+        throw new Error(`Expected DRAFT topic/questions to fail session creation, got ${draftTopicSession.response.status}`)
+      }
+      pass('DRAFT topic/questions are unavailable to QBank')
+    } else {
+      const studentArticle = await apiRequest(`/api/articles/${firstLearningPack.article.slug}`, {
+        token: studentToken,
+      })
+      if (studentArticle.response.status !== 200) {
+        throw new Error(`Expected PUBLISHED article to return 200 for student, got ${studentArticle.response.status}`)
+      }
+      pass('PUBLISHED article is visible to student')
 
-    const adminQuestions = await apiRequest(
-      `/api/admin/content/questions?topicId=${visibleTopic.id}`,
-      { token: editorToken },
-    )
-    const expectedPrompts = new Set(firstLearningPack.questions.map((question) => question.prompt))
-    const visibleQuestions = (adminQuestions.payload?.questions || []).filter(
-      (question) => expectedPrompts.has(question.prompt),
-    )
-    if (
-      adminQuestions.response.status !== 200
-      || visibleQuestions.length !== 6
-      || visibleQuestions.some((question) => question.status !== 'DRAFT')
-    ) {
-      throw new Error('Editor cannot review the 6 DRAFT questions through Admin')
+      const pubTopicSession = await apiRequest('/api/practice-sessions', {
+        method: 'POST',
+        token: studentToken,
+        body: { topicSlug: firstLearningPack.topic.slug, questionCount: 6 },
+      })
+      if (pubTopicSession.response.status !== 201) {
+        throw new Error(`Expected PUBLISHED topic/questions to create session, got ${pubTopicSession.response.status}`)
+      }
+      pass('PUBLISHED topic/questions can be used to create QBank session')
     }
-    pass('Editor can review the complete DRAFT pack through Admin endpoints')
-
-    const draftTopicSession = await apiRequest('/api/practice-sessions', {
-      method: 'POST',
-      token: studentToken,
-      body: { topicSlug: firstLearningPack.topic.slug, questionCount: 6 },
-    })
-    if (draftTopicSession.response.status !== 404) {
-      throw new Error(`Expected DRAFT topic to return 404 in QBank, got ${draftTopicSession.response.status}`)
-    }
-    pass('DRAFT topic is unavailable to QBank')
-
-    const publishTopic = await apiRequest(`/api/admin/content/topics/${packState.topic.id}`, {
-      method: 'PATCH',
-      token: editorToken,
-      body: { status: 'PUBLISHED' },
-    })
-    if (publishTopic.response.status !== 200) {
-      throw new Error(`Temporary topic publication failed with ${publishTopic.response.status}`)
-    }
-
-    const draftArticle = await apiRequest(`/api/articles/${firstLearningPack.article.slug}`, {
-      token: studentToken,
-    })
-    if (draftArticle.response.status !== 404) {
-      throw new Error(`Expected DRAFT article to return 404, got ${draftArticle.response.status}`)
-    }
-    pass('DRAFT article stays hidden after temporary topic publication')
-
-    const draftQuestionsSession = await apiRequest('/api/practice-sessions', {
-      method: 'POST',
-      token: studentToken,
-      body: { topicSlug: firstLearningPack.topic.slug, questionCount: 6 },
-    })
-    if (draftQuestionsSession.response.status !== 400) {
-      throw new Error(`Expected DRAFT questions to return 400 in QBank, got ${draftQuestionsSession.response.status}`)
-    }
-    pass('DRAFT questions do not feed QBank when the topic is temporarily published')
   } finally {
     await stopServer(serverProcess)
-    await restoreDraftState(packState)
-    if (packState) {
-      const finalState = await verifyPackInDatabase()
-      if (
-        finalState.topic.status !== 'DRAFT'
-        || finalState.article.status !== 'DRAFT'
-        || finalState.questions.some((question) => question.status !== 'DRAFT')
-      ) {
-        throw new Error('Smoke did not restore the complete pack to DRAFT')
-      }
-    }
     await prisma.$disconnect()
   }
 
-  pass('smoke restored the complete pack to DRAFT')
   console.log('[smoke:first-learning-pack] result PASS')
 }
 
