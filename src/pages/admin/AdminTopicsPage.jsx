@@ -40,69 +40,70 @@ export default function AdminTopicsPage({ onNavigate }) {
 
   return (
     <div className="admin-topics-page">
-      <header className="admin-topics-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h1>Temas</h1>
-            <p>Gestiona los temas, colores, slugs y estados (Borrador, Publicado, Archivado).</p>
-          </div>
-          <button
-            className="admin-action-btn admin-action-btn--publish"
-            onClick={() => onNavigate && onNavigate('/admin/topics/new')}
-          >
-            Nuevo tema
-          </button>
+      <header className="admin-page__header-redesign">
+        <div className="admin-page-title-group">
+          <h1>Temas</h1>
+          <p>Gestiona los temas, colores, slugs y estados.</p>
         </div>
+        <button
+          className="admin-btn-primary"
+          onClick={() => onNavigate && onNavigate('/admin/topics/new')}
+        >
+          + Nuevo tema
+        </button>
       </header>
 
       {error && <div className="app-feedback app-feedback--error" style={{ marginBottom: '1rem' }}>{error}</div>}
 
       {isLoading ? (
-        <p style={{ color: 'var(--color-text-soft)' }}>Cargando temas...</p>
+        <div className="admin-loading-state">
+          <div className="admin-spinner"></div>
+          <p>Cargando temas...</p>
+        </div>
       ) : topics.length === 0 ? (
         <div className="admin-empty-state">
-          No hay temas para mostrar.
+          <div className="admin-empty-icon">📚</div>
+          <h3>No hay temas creados</h3>
+          <p>Comienza creando el primer tema para tu biblioteca.</p>
+          <button className="admin-btn-primary" onClick={() => onNavigate && onNavigate('/admin/topics/new')}>Crear tema</button>
         </div>
       ) : (
-        <div className="admin-topics-list">
+        <div className="admin-topics-grid">
           {topics.map((t) => {
             const counts = t.counts || t._count || {}
             return (
-            <div key={t.id || t.slug} className="admin-topic-item">
-              <div className="admin-topic-item__header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {t.color && (
-                    <div
-                      className="admin-topic-color-swatch"
-                      style={{ backgroundColor: t.color }}
-                      title={`Color: ${t.color}`}
-                    />
-                  )}
-                  <p className="admin-topic-item__title">{t.title}</p>
-                </div>
-                <span className={`admin-status-badge admin-status-badge--${t.status?.toLowerCase() || 'draft'}`}>
-                  {getHumanStatus(t.status)}
-                </span>
-              </div>
-              <div className="admin-topic-item__meta">
-                <span>Slug: {t.slug}</span>
-                <span>{t.summary}</span>
-                {(counts.articles !== undefined || counts.questions !== undefined) && (
-                  <div className="admin-topic-counts">
-                    {counts.articles !== undefined && <span>Artículos: {counts.articles}</span>}
-                    {counts.questions !== undefined && <span>Preguntas: {counts.questions}</span>}
+              <div key={t.id || t.slug} className="admin-topic-card" onClick={() => onNavigate && onNavigate(`/admin/topics/review?id=${t.id}`)}>
+                <div className="admin-topic-card__header">
+                  <div className="admin-topic-card__title-group">
+                    {t.color && (
+                      <div
+                        className="admin-topic-color-dot"
+                        style={{ backgroundColor: t.color, boxShadow: `0 0 10px ${t.color}80` }}
+                      />
+                    )}
+                    <h3 className="admin-topic-card__title">{t.title}</h3>
                   </div>
-                )}
+                  <span className={`admin-badge admin-badge--${t.status?.toLowerCase() || 'draft'}`}>
+                    {getHumanStatus(t.status)}
+                  </span>
+                </div>
+                
+                <p className="admin-topic-card__summary">{t.summary || 'Sin descripción'}</p>
+                
+                <div className="admin-topic-card__footer">
+                  <div className="admin-topic-card__slug">/{t.slug}</div>
+                  {(counts.articles !== undefined || counts.questions !== undefined) && (
+                    <div className="admin-topic-card__stats">
+                      {counts.articles !== undefined && (
+                        <div className="admin-stat" title="Artículos">📄 {counts.articles}</div>
+                      )}
+                      {counts.questions !== undefined && (
+                        <div className="admin-stat" title="Preguntas">❓ {counts.questions}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="admin-topic-item__actions">
-                <button
-                  className="admin-action-btn admin-action-btn--draft"
-                  onClick={() => onNavigate && onNavigate(`/admin/topics/review?id=${t.id}`)}
-                >
-                  Revisar
-                </button>
-              </div>
-            </div>
             )
           })}
         </div>

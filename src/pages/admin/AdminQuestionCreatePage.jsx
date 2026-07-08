@@ -22,6 +22,7 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
   const [formData, setFormData] = useState({
     topicId: '',
     articleId: '',
+    type: 'MULTIPLE_CHOICE', // Default
     prompt: '',
     explanation: '',
     difficulty: 3,
@@ -44,21 +45,29 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
       formData.prompt,
       formData.explanation,
       formData.hint,
-      ...options.map((option) => option.text),
+      ...(formData.type === 'MULTIPLE_CHOICE' ? options.map((option) => option.text) : []),
     ].join(' ')
 
-    return [
+    const checklist = [
       { id: 'prompt', label: 'Enunciado presente', passed: Boolean(formData.prompt.trim()) },
-      { id: 'explanation', label: 'Explicación presente', passed: Boolean(formData.explanation.trim()) },
-      {
-        id: 'options',
-        label: 'Entre 2 y 5 opciones completas',
-        passed: options.length >= 2 && options.length <= 5 && options.every((option) => option.text.trim()),
-      },
-      { id: 'correct', label: 'Una opción correcta seleccionada', passed: Boolean(correctOptionId) },
-      { id: 'pending', label: 'Sin pendientes editoriales', passed: !pendingEditorialPattern.test(textToReview) },
+      { id: 'explanation', label: 'Explicación presente', passed: Boolean(formData.explanation.trim()) }
     ]
-  }, [correctOptionId, formData.explanation, formData.hint, formData.prompt, options])
+
+    if (formData.type === 'MULTIPLE_CHOICE') {
+      checklist.push(
+        {
+          id: 'options',
+          label: 'Entre 2 y 5 opciones completas',
+          passed: options.length >= 2 && options.length <= 5 && options.every((option) => option.text.trim()),
+        },
+        { id: 'correct', label: 'Una opción correcta seleccionada', passed: Boolean(correctOptionId) }
+      )
+    }
+
+    checklist.push({ id: 'pending', label: 'Sin pendientes editoriales', passed: !pendingEditorialPattern.test(textToReview) })
+
+    return checklist
+  }, [correctOptionId, formData.explanation, formData.hint, formData.prompt, options, formData.type])
 
   // Load Topics
   useEffect(() => {
@@ -146,16 +155,18 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
       errors.difficulty = 'La dificultad debe ser entre 1 y 5'
     }
 
-    if (options.length < 2 || options.length > 5) {
-      errors.options = 'Debe haber entre 2 y 5 opciones'
-    }
+    if (formData.type === 'MULTIPLE_CHOICE') {
+      if (options.length < 2 || options.length > 5) {
+        errors.options = 'Debe haber entre 2 y 5 opciones'
+      }
 
-    if (options.some(opt => !opt.text.trim())) {
-      errors.optionsText = 'Todas las opciones deben tener texto'
-    }
+      if (options.some(opt => !opt.text.trim())) {
+        errors.optionsText = 'Todas las opciones deben tener texto'
+      }
 
-    if (!correctOptionId) {
-      errors.correctOption = 'Debe seleccionar exactamente 1 opción correcta'
+      if (!correctOptionId) {
+        errors.correctOption = 'Debe seleccionar exactamente 1 opción correcta'
+      }
     }
 
     setFieldErrors(errors)
@@ -175,15 +186,16 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
       const payload = {
         topicId: formData.topicId,
         articleId: formData.articleId || null,
+        type: formData.type,
         prompt: formData.prompt.trim(),
         explanation: formData.explanation.trim(),
         difficulty: parseInt(formData.difficulty, 10),
         hint: formData.hint.trim() || null,
-        options: options.map((opt, index) => ({
+        options: formData.type === 'MULTIPLE_CHOICE' ? options.map((opt, index) => ({
           label: getLabelForIndex(index),
           text: opt.text.trim(),
           isCorrect: opt.id === correctOptionId
-        }))
+        })) : []
       }
 
       const response = await request('/api/admin/content/questions', {
@@ -257,26 +269,52 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
           </div>
         </div>
 
+        <div className="admin-form-group" style={{ marginBottom: '1.5rem' }}>
+          <label>Tipo de Pregunta *</label>
+          <div style={{ display: 'flex', gap: '2rem', marginTop: '0.5rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input 
+                type="radio" 
+                name="type" 
+                value="MULTIPLE_CHOICE" 
+                checked={formData.type === 'MULTIPLE_CHOICE'} 
+                onChange={handleInputChange} 
+              />
+              Opción Múltiple (Qbank)
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input 
+                type="radio" 
+                name="type" 
+                value="FLASHCARD" 
+                checked={formData.type === 'FLASHCARD'} 
+                onChange={handleInputChange} 
+              />
+              Flashcard (Pregunta Directa)
+            </label>
+          </div>
+        </div>
+
         <div className="admin-form-group">
-          <label htmlFor="prompt">Enunciado *</label>
+          <label htmlFor="prompt">{formData.type === 'FLASHCARD' ? 'Frente (Pregunta) *' : 'Enunciado *'}</label>
           <textarea
             id="prompt"
             name="prompt"
             value={formData.prompt}
             onChange={handleInputChange}
-            placeholder="Escribe el enunciado de la pregunta..."
+            placeholder={formData.type === 'FLASHCARD' ? 'Escribe la pregunta directa...' : 'Escribe el enunciado de la pregunta...'}
           />
           {fieldErrors.prompt && <small style={{ color: '#dc2626' }}>{fieldErrors.prompt}</small>}
         </div>
 
         <div className="admin-form-group">
-          <label htmlFor="explanation">Explicación *</label>
+          <label htmlFor="explanation">{formData.type === 'FLASHCARD' ? 'Reverso (Respuesta) *' : 'Explicación *'}</label>
           <textarea
             id="explanation"
             name="explanation"
             value={formData.explanation}
             onChange={handleInputChange}
-            placeholder="Escribe la explicación de la respuesta..."
+            placeholder={formData.type === 'FLASHCARD' ? 'Escribe la respuesta esperada...' : 'Escribe la explicación de la respuesta...'}
           />
           {fieldErrors.explanation && <small style={{ color: '#dc2626' }}>{fieldErrors.explanation}</small>}
         </div>
@@ -309,66 +347,68 @@ export default function AdminQuestionCreatePage({ onNavigate }) {
           </div>
         </div>
 
-        <div className="admin-options-section">
-          <div className="admin-options-header">
-            <h2>Opciones</h2>
-            {options.length < 5 && (
-              <button
-                type="button"
-                className="admin-btn admin-btn--secondary"
-                onClick={handleAddOption}
-              >
-                + Añadir opción
-              </button>
-            )}
-          </div>
+        {formData.type === 'MULTIPLE_CHOICE' && (
+          <div className="admin-options-section">
+            <div className="admin-options-header">
+              <h2>Opciones</h2>
+              {options.length < 5 && (
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--secondary"
+                  onClick={handleAddOption}
+                >
+                  + Añadir opción
+                </button>
+              )}
+            </div>
 
-          {fieldErrors.options && <div style={{ color: '#dc2626', marginBottom: '1rem' }}>{fieldErrors.options}</div>}
-          {fieldErrors.optionsText && <div style={{ color: '#dc2626', marginBottom: '1rem' }}>{fieldErrors.optionsText}</div>}
-          {fieldErrors.correctOption && <div style={{ color: '#dc2626', marginBottom: '1rem' }}>{fieldErrors.correctOption}</div>}
+            {fieldErrors.options && <div style={{ color: '#dc2626', marginBottom: '1rem' }}>{fieldErrors.options}</div>}
+            {fieldErrors.optionsText && <div style={{ color: '#dc2626', marginBottom: '1rem' }}>{fieldErrors.optionsText}</div>}
+            {fieldErrors.correctOption && <div style={{ color: '#dc2626', marginBottom: '1rem' }}>{fieldErrors.correctOption}</div>}
 
-          <div className="admin-options-list">
-            {options.map((opt, index) => (
-              <div key={opt.id} className="admin-option-item">
-                <div className="admin-option-label">{getLabelForIndex(index)}</div>
+            <div className="admin-options-list">
+              {options.map((opt, index) => (
+                <div key={opt.id} className="admin-option-item">
+                  <div className="admin-option-label">{getLabelForIndex(index)}</div>
 
-                <div className="admin-option-content">
-                  <textarea
-                    value={opt.text}
-                    onChange={(e) => handleOptionChange(opt.id, e.target.value)}
-                    placeholder={`Texto de la opción ${getLabelForIndex(index)}`}
-                    style={{ minHeight: '60px' }}
-                  />
-                </div>
-
-                <div className="admin-option-actions">
-                  <label className="admin-option-correct-radio">
-                    <input
-                      type="radio"
-                      name="correctOption"
-                      checked={correctOptionId === opt.id}
-                      onChange={() => {
-                        setCorrectOptionId(opt.id)
-                        setFieldErrors(prev => ({ ...prev, correctOption: null }))
-                      }}
+                  <div className="admin-option-content">
+                    <textarea
+                      value={opt.text}
+                      onChange={(e) => handleOptionChange(opt.id, e.target.value)}
+                      placeholder={`Texto de la opción ${getLabelForIndex(index)}`}
+                      style={{ minHeight: '60px' }}
                     />
-                    Correcta
-                  </label>
+                  </div>
 
-                  {options.length > 2 && (
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--danger-outline"
-                      onClick={() => handleRemoveOption(opt.id)}
-                    >
-                      Eliminar
-                    </button>
-                  )}
+                  <div className="admin-option-actions">
+                    <label className="admin-option-correct-radio">
+                      <input
+                        type="radio"
+                        name="correctOption"
+                        checked={correctOptionId === opt.id}
+                        onChange={() => {
+                          setCorrectOptionId(opt.id)
+                          setFieldErrors(prev => ({ ...prev, correctOption: null }))
+                        }}
+                      />
+                      Correcta
+                    </label>
+
+                    {options.length > 2 && (
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--danger-outline"
+                        onClick={() => handleRemoveOption(opt.id)}
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <aside className="admin-question-draft-checklist" aria-label="Resumen del borrador">
           <span>Resumen editorial</span>

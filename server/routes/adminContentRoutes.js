@@ -752,7 +752,6 @@ export function validateAnkiRows(parsedTsv, referenceData) {
     if (!topicSlug) rowErrors.push('topicSlug es requerido')
     if (!prompt) rowErrors.push('prompt es requerido')
     if (!explanation) rowErrors.push('explanation es requerido')
-    if (!correctOption) rowErrors.push('correctOption es requerido')
 
     if (sourceStatus && sourceStatus.toUpperCase() !== 'DRAFT') {
       rowWarnings.push('La columna status se ignora; las preguntas siempre se crean como DRAFT')
@@ -770,11 +769,8 @@ export function validateAnkiRows(parsedTsv, referenceData) {
         order: index,
       }))
 
-    if (options.length < 2) {
-      rowErrors.push('Se requieren al menos 2 opciones no vacias')
-    } else if (options.filter(option => option.isCorrect).length !== 1) {
-      rowErrors.push('correctOption debe apuntar a exactamente 1 opcion no vacia')
-    }
+    // En modo Flashcard no exigimos opciones obligatorias.
+    // Solo las procesamos si vinieran (por retrocompatibilidad con TSVs viejos).
 
     const topic = topicsBySlug.get(topicSlug) ?? null
     if (topicSlug && !topic) {
@@ -837,6 +833,7 @@ export function validateAnkiRows(parsedTsv, referenceData) {
             hint: getColumn('hint') || null,
             tags: normalizeTags(tagsValue),
             status: 'DRAFT',
+            type: 'FLASHCARD',
             options,
           }
         : null,
@@ -872,6 +869,7 @@ export function mapValidPreviewItemToCreateData(item) {
     difficulty: item.question.difficulty,
     hint: item.question.hint,
     status: 'DRAFT',
+    type: 'FLASHCARD',
     options: {
       create: item.question.options.map((option, index) => ({
         label: option.label,

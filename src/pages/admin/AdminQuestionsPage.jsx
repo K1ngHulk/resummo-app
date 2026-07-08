@@ -134,7 +134,12 @@ export default function AdminQuestionsPage({ onNavigate }) {
           {visibleQuestions.map((q) => (
             <div key={q.id} className="admin-question-item">
               <div className="admin-question-item__header">
-                <p className="admin-question-item__prompt">{q.prompt}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <p className="admin-question-item__prompt" style={{ margin: 0 }}>{q.prompt}</p>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: q.type === 'FLASHCARD' ? '#8A342C' : '#64748b' }}>
+                    {q.type === 'FLASHCARD' ? '⚡ Flashcard' : '📝 Opción Múltiple'}
+                  </span>
+                </div>
                 <span className={`admin-status-badge admin-status-badge--${q.status.toLowerCase()}`}>
                   {getHumanStatus(q.status)}
                 </span>

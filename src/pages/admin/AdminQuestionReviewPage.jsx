@@ -13,14 +13,16 @@ function getHumanStatus(status) {
 
 function buildEditorialChecklist(formData, question) {
   const options = question?.options || []
+  const isFlashcard = question?.type === 'FLASHCARD'
+  
   const textToReview = [
     formData.prompt,
     formData.explanation,
     formData.hint,
-    ...options.map((option) => option.text),
+    ...(isFlashcard ? [] : options.map((option) => option.text)),
   ].join(' ')
 
-  return [
+  const checklist = [
     { id: 'prompt', label: 'Enunciado presente', passed: Boolean(formData.prompt.trim()) },
     { id: 'explanation', label: 'Explicación presente', passed: Boolean(formData.explanation.trim()) },
     {
@@ -36,15 +38,23 @@ function buildEditorialChecklist(formData, question) {
         question.article.status === 'PUBLISHED' && question.article.topicId === question.topicId
       ),
     },
-    { id: 'option-count', label: 'Entre 2 y 5 opciones', passed: options.length >= 2 && options.length <= 5 },
-    {
-      id: 'correct-option',
-      label: 'Exactamente una opción correcta',
-      passed: options.filter((option) => option.isCorrect).length === 1,
-    },
-    { id: 'option-text', label: 'Todas las opciones tienen texto', passed: options.every((option) => option.text?.trim()) },
-    { id: 'pending', label: 'Sin pendientes editoriales', passed: !pendingEditorialPattern.test(textToReview) },
   ]
+
+  if (!isFlashcard) {
+    checklist.push(
+      { id: 'option-count', label: 'Entre 2 y 5 opciones', passed: options.length >= 2 && options.length <= 5 },
+      {
+        id: 'correct-option',
+        label: 'Exactamente una opción correcta',
+        passed: options.filter((option) => option.isCorrect).length === 1,
+      },
+      { id: 'option-text', label: 'Todas las opciones tienen texto', passed: options.every((option) => option.text?.trim()) }
+    )
+  }
+
+  checklist.push({ id: 'pending', label: 'Sin pendientes editoriales', passed: !pendingEditorialPattern.test(textToReview) })
+
+  return checklist
 }
 
 export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
@@ -205,7 +215,7 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
         <div>
           <h1 className="admin-review-title">Revisión de Pregunta</h1>
           <p className="admin-review-subtitle">
-            Estado actual: <strong>{getHumanStatus(formData.status)}</strong>
+            Tipo: <strong>{question?.type === 'FLASHCARD' ? 'Flashcard' : 'Opción Múltiple'}</strong> | Estado actual: <strong>{getHumanStatus(formData.status)}</strong>
           </p>
         </div>
         <button 
@@ -224,7 +234,7 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
           <h2>Contenido Principal</h2>
           
           <div className="admin-form-group">
-            <label className="admin-form-label">Enunciado</label>
+            <label className="admin-form-label">{question?.type === 'FLASHCARD' ? 'Frente (Pregunta)' : 'Enunciado'}</label>
             <textarea 
               className="admin-form-textarea"
               name="prompt"
@@ -235,7 +245,7 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label">Explicación</label>
+            <label className="admin-form-label">{question?.type === 'FLASHCARD' ? 'Reverso (Respuesta)' : 'Explicación'}</label>
             <textarea 
               className="admin-form-textarea"
               name="explanation"
@@ -356,28 +366,30 @@ export default function AdminQuestionReviewPage({ onNavigate, searchParams }) {
           </div>
         </form>
 
-        <div className="admin-form-section">
-          <h2>Opciones (Solo Lectura)</h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--color-text-soft)', marginBottom: '1.25rem' }}>
-            Las opciones no se pueden editar para proteger el historial de respuestas de los estudiantes. Si hay un error en las opciones, archiva esta pregunta y crea una nueva.
-          </p>
-          
-          <div className="admin-options-list">
-            {question.options?.map((opt, idx) => (
-              <div key={opt.id || idx} className={`admin-option-item ${opt.isCorrect ? 'admin-option-item--correct' : ''}`}>
-                <div className="admin-option-indicator">
-                  {opt.label || String.fromCharCode(65 + idx)}
+        {question?.type === 'MULTIPLE_CHOICE' && (
+          <div className="admin-form-section">
+            <h2>Opciones (Solo Lectura)</h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--color-text-soft)', marginBottom: '1.25rem' }}>
+              Las opciones no se pueden editar para proteger el historial de respuestas de los estudiantes. Si hay un error en las opciones, archiva esta pregunta y crea una nueva.
+            </p>
+            
+            <div className="admin-options-list">
+              {question.options?.map((opt, idx) => (
+                <div key={opt.id || idx} className={`admin-option-item ${opt.isCorrect ? 'admin-option-item--correct' : ''}`}>
+                  <div className="admin-option-indicator">
+                    {opt.label || String.fromCharCode(65 + idx)}
+                  </div>
+                  <div className="admin-option-content">
+                    <p className="admin-option-text">{opt.text}</p>
+                  </div>
                 </div>
-                <div className="admin-option-content">
-                  <p className="admin-option-text">{opt.text}</p>
-                </div>
-              </div>
-            ))}
-            {(!question.options || question.options.length === 0) && (
-              <p style={{ color: 'var(--color-text-soft)' }}>Esta pregunta no tiene opciones registradas.</p>
-            )}
+              ))}
+              {(!question.options || question.options.length === 0) && (
+                <p style={{ color: 'var(--color-text-soft)' }}>Esta pregunta no tiene opciones registradas.</p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

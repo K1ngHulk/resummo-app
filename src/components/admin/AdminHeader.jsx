@@ -1,12 +1,22 @@
 import './AdminHeader.css'
 
-export default function AdminHeader({ onLogout, onNavigate, user }) {
+export default function AdminHeader({ onLogout, onNavigate, user, currentPath }) {
+  const isSubPage = currentPath && currentPath !== '/admin'
+
   return (
     <header className="admin-header">
       <div className="admin-header__brand">
         <div className="admin-header__logo" onClick={() => onNavigate('/admin')}>
           Resummo <span className="admin-header__badge">Admin</span>
         </div>
+        {isSubPage && (
+          <button 
+            className="admin-header__subpage-back" 
+            onClick={() => onNavigate('/admin')}
+          >
+            ← Panel Principal
+          </button>
+        )}
       </div>
       <div className="admin-header__actions">
         <div className="admin-header__user">

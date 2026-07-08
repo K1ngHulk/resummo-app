@@ -9,6 +9,7 @@ import practiceSessionRoutes from './routes/practiceSessionRoutes.js'
 import topicRoutes from './routes/topicRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import adminContentRoutes from './routes/adminContentRoutes.js'
+import flashcardRoutes from './routes/flashcardRoutes.js'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
@@ -40,6 +41,7 @@ app.use('/api/articles', articleRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/progress', progressRoutes)
 app.use('/api/practice-sessions', practiceSessionRoutes)
+app.use('/api/study/flashcards', flashcardRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/admin/content', adminContentRoutes)
 

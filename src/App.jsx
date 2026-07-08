@@ -13,6 +13,7 @@ import QbankPage from './pages/QbankPage'
 import StudyPlanCurrentPage from './pages/StudyPlanCurrentPage'
 import StudyPlanWizardPage from './pages/StudyPlanWizardPage'
 import StudyPlansPage from './pages/StudyPlansPage'
+import StudyFlashcardsPage from './pages/StudyFlashcardsPage'
 import AdminHomePage from './pages/admin/AdminHomePage'
 import AdminAnkiImportPage from './pages/admin/AdminAnkiImportPage'
 import AdminQuestionsPage from './pages/admin/AdminQuestionsPage'
@@ -24,7 +25,7 @@ import AdminQuestionCreatePage from './pages/admin/AdminQuestionCreatePage'
 import AdminTopicsPage from './pages/admin/AdminTopicsPage'
 import AdminTopicCreatePage from './pages/admin/AdminTopicCreatePage'
 import AdminTopicReviewPage from './pages/admin/AdminTopicReviewPage'
-import AdminHeader from './components/admin/AdminHeader'
+import AdminLayout from './components/admin/AdminLayout'
 
 const routeConfig = [
   { path: '/login', id: 'login', component: LoginPage, hideHeader: true },
@@ -48,6 +49,7 @@ const routeConfig = [
   },
   { path: '/learning/library', id: 'library', component: LibraryPage },
   { path: '/learning/library/article', id: 'library', component: LibraryArticlePage },
+  { path: '/learning/flashcards', id: 'library', component: StudyFlashcardsPage },
   { path: '/admin', id: 'admin', component: AdminHomePage, isAdmin: true },
   { path: '/admin/articles', id: 'admin-articles', component: AdminArticlesPage, isAdmin: true },
   { path: '/admin/articles/new', id: 'admin-article-new', component: AdminArticleCreatePage, isAdmin: true },
@@ -136,20 +138,28 @@ function App() {
 
   const ActivePage = activeRoute.component
 
+  if (activeRoute.isAdmin) {
+    return (
+      <AdminLayout currentPath={locationState.path} onNavigate={navigate}>
+        <ActivePage
+          currentUser={user}
+          onNavigate={navigate}
+          searchParams={new URLSearchParams(locationState.search)}
+        />
+      </AdminLayout>
+    )
+  }
+
   return (
     <main className={`dashboard-shell ${activeRoute.hideHeader ? 'dashboard-shell--loading' : ''}`}>
       {activeRoute.hideHeader || !isAuthenticated ? null : (
-        activeRoute.isAdmin ? (
-          <AdminHeader onLogout={logout} onNavigate={navigate} user={user} />
-        ) : (
-          <AppHeader
-            activeSection={activeRoute.id}
-            navigationItems={learningRoutes}
-            onLogout={logout}
-            onNavigate={navigate}
-            user={user}
-          />
-        )
+        <AppHeader
+          activeSection={activeRoute.id}
+          navigationItems={learningRoutes}
+          onLogout={logout}
+          onNavigate={navigate}
+          user={user}
+        />
       )}
       <ActivePage
         currentUser={user}
