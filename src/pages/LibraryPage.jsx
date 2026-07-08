@@ -242,6 +242,16 @@ function LibraryPage({ onNavigate }) {
               <span className="library-eyebrow">Tema</span>
               <h2 id="library-active-topic-heading">{activeTopic.title}</h2>
               <p>{activeTopic.description}</p>
+              <div style={{ marginTop: '1.5rem' }}>
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => onNavigate(`/learning/flashcards?topicId=${activeTopic.id}`)}
+                >
+                  <AppIcon name="lightning" />
+                  Repasar Flashcards ⚡
+                </button>
+              </div>
             </header>
 
             <div className="library-node-list">

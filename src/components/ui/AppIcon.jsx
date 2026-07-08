@@ -27,6 +27,7 @@ const iconMap = {
   chevronRight: <path d="m9 6 6 6-6 6" />,
   chevronLeft: <path d="m15 18-6-6 6-6" />,
   arrowRight: <path d="M6 12h12m-4.5-4.5L18 12l-4.5 4.5" />,
+  lightning: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
 }
 
 function AppIcon({ name, className = '' }) {
