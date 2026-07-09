@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import './Flashcard.css'
 import logo from '../../assets/brand/originals/logoguinda.png' // Logo de Resummo
 
@@ -11,6 +11,12 @@ export default function Flashcard({
 }) {
   // Allow internal flip state if not controlled externally
   const [internalFlipped, setInternalFlipped] = useState(false)
+  const [prevFrontContent, setPrevFrontContent] = useState(frontContent)
+
+  if (frontContent !== prevFrontContent) {
+    setPrevFrontContent(frontContent)
+    setInternalFlipped(false)
+  }
 
   const handleFlip = () => {
     if (onFlip) {
@@ -21,14 +27,6 @@ export default function Flashcard({
   }
 
   const flipped = isFlipped !== undefined ? isFlipped : internalFlipped
-
-  // Reset internal state when content changes
-  useEffect(() => {
-    if (isFlipped === undefined) {
-      setInternalFlipped(false)
-    }
-  }, [frontContent, isFlipped])
-
   return (
     <div className="flashcard-container">
       <div 
