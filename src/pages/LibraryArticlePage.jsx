@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import AppIcon from '../components/ui/AppIcon'
 import { useAuth } from '../context/AuthContext.jsx'
+import { getTopicLibraryPath } from '../data/libraryTree.js'
 
 function getSectionParagraphs(section) {
   if (Array.isArray(section.paragraphs)) return section.paragraphs
@@ -87,6 +89,10 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
     () => (article ? `/learning/qbank/new?topic=${article.topic.slug}` : '/learning/qbank/new'),
     [article],
   )
+  const articleLibraryPath = useMemo(
+    () => getTopicLibraryPath(article?.topic),
+    [article],
+  )
 
   const handleComplete = async () => {
     if (!article) return
@@ -136,10 +142,23 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
           <article className="library-article-content">
             <header className="library-article-header">
               <div>
-                <span className="library-eyebrow">{article.topic.title}</span>
-                <div className="library-article-path">Biblioteca / {article.topic.title}</div>
+                <nav className="library-article-breadcrumbs" aria-label="Ubicación del artículo">
+                  <button type="button" onClick={() => onNavigate('/learning/library')}>Biblioteca</button>
+                  {articleLibraryPath.map((label) => (
+                    <span key={label}>
+                      <AppIcon name="chevronRight" />
+                      <span>{label}</span>
+                    </span>
+                  ))}
+                </nav>
+                <span className="library-context-label">Artículo educativo</span>
                 <h1>{article.title}</h1>
                 <p>{article.summary}</p>
+                <div className="library-article-editorial-meta" aria-label="Información editorial">
+                  <span>{article.readTimeMinutes} min de lectura</span>
+                  <span>Contenido educativo</span>
+                  <span>Revisión editorial pendiente</span>
+                </div>
               </div>
               <button type="button" className={`library-save-button ${isCompleted ? 'library-save-button--active' : ''}`} onClick={handleComplete}>
                 {isCompleted ? 'Artículo completado' : 'Marcar como completado'}
@@ -148,7 +167,6 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
 
             <div className="library-article-meta" aria-label="Información del artículo">
               <span>{article.topic.title}</span>
-              <span>{article.readTimeMinutes} min de lectura</span>
               <span>{article.progress?.progressPercent || 0}% de avance</span>
             </div>
 
@@ -201,25 +219,23 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
               )}
             </section>
 
-            <section className="library-related-section" aria-labelledby="library-questions-heading">
-              <div className="library-qbank-cta">
-                <div>
-                  <h2 id="library-questions-heading">Preguntas relacionadas</h2>
-                  <p>
-                    {article.relatedQuestionCount > 0
-                      ? `${article.relatedQuestionCount} preguntas disponibles para practicar este tema.`
-                      : 'Todavía no hay preguntas vinculadas directamente con este artículo.'}
-                  </p>
+            {article.relatedQuestionCount > 0 ? (
+              <section className="library-related-section" aria-labelledby="library-questions-heading">
+                <div className="library-qbank-cta">
+                  <div>
+                    <h2 id="library-questions-heading">Preguntas relacionadas</h2>
+                    <p>{article.relatedQuestionCount} preguntas disponibles para practicar este tema.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => onNavigate(questionCtaPath)}
+                  >
+                    Practicar preguntas relacionadas
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={() => onNavigate(article.relatedQuestionCount > 0 ? questionCtaPath : '/learning/qbank')}
-                >
-                  {article.relatedQuestionCount > 0 ? 'Practicar preguntas relacionadas' : 'Explorar Banco de preguntas'}
-                </button>
-              </div>
-            </section>
+              </section>
+            ) : null}
           </article>
         </div>
       ) : null}
