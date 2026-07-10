@@ -62,7 +62,8 @@ function QbankPage({ onNavigate }) {
             <header>Sesion activa</header>
             <article className="session-history__row">
               <p>
-                <strong>Modo de estudio:</strong> {activeSession.topicTitle} ({activeSession.answeredQuestions}/{activeSession.totalQuestions})
+                <strong>Modo de estudio:</strong> {activeSession.topicTitle}
+                {' · '}{activeSession.answeredQuestions} respondidas de {activeSession.totalQuestions} disponibles
               </p>
               <button type="button" className="outline-pill-button" onClick={() => onNavigate(activeSession.path)}>
                 Continuar
@@ -80,7 +81,8 @@ function QbankPage({ onNavigate }) {
           {sessions.length > 0 ? sessions.map((session) => (
             <article key={session.id} className="session-history__row">
               <p>
-                <strong>{session.status === 'ACTIVE' ? 'Activa' : 'Completada'}:</strong> {session.topicTitle} ({session.answeredQuestions}/{session.totalQuestions})
+                <strong>{session.status === 'ACTIVE' ? 'Activa' : 'Completada'}:</strong> {session.topicTitle}
+                {' · '}{session.answeredQuestions} respondidas de {session.totalQuestions} disponibles
               </p>
               <button type="button" className="outline-pill-button" onClick={() => onNavigate(session.path)}>
                 Abrir

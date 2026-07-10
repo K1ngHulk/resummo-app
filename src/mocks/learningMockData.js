@@ -277,10 +277,10 @@ export const qbankQuestionSession = {
 
 export const studyPlans = {
   title: 'Planes de Estudio',
-  subtitle: 'Define una meta, organiza tu rutina y retoma cada jornada desde un solo lugar.',
-  heroTitle: '¿Estás por dar un examen pronto?',
+  subtitle: 'Define una meta y organiza una rutina que se guarda únicamente en este dispositivo.',
+  heroTitle: 'Organiza una rutina de estudio local',
   heroDescription:
-    'Configura un recorrido de estudio según tu objetivo, el tiempo disponible y los días que prefieres dedicar al aprendizaje.',
+    'Esta planificación está en beta. Configura una rutina local según tu objetivo, tiempo disponible y días de estudio.',
   heroAction: 'Crea un plan de estudio',
   newPlanAction: 'Crear un plan nuevo',
   continueTitle: 'Continúa tu aprendizaje',

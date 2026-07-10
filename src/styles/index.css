@@ -1868,6 +1868,175 @@ input:focus {
   color: #fff;
 }
 
+/* Demo readiness: intentional empty states and learning entry points. */
+.dashboard-start {
+  width: min(980px, calc(100% - 2rem));
+  margin: 0 auto 1.25rem;
+  padding: 1.15rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.dashboard-start > div:first-child {
+  max-width: 56ch;
+}
+
+.dashboard-start > div:first-child > span {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.dashboard-start h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.15rem;
+}
+
+.dashboard-start p {
+  margin: 0.3rem 0 0;
+  color: var(--color-text-soft);
+  font-size: 0.86rem;
+}
+
+.dashboard-start__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.library-flashcard-cta {
+  margin-top: 1.15rem;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border-radius: 12px;
+  background: var(--color-primary-muted);
+}
+
+.library-flashcard-cta__icon {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color-primary);
+}
+
+.library-flashcard-cta__icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.library-flashcard-cta > div {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.library-flashcard-cta > div > strong {
+  font-size: 0.9rem;
+}
+
+.library-flashcard-cta > div > span {
+  color: var(--color-text-soft);
+  font-size: 0.78rem;
+}
+
+.library-flashcard-cta .outline-pill-button {
+  margin-left: auto;
+  flex: none;
+  background: #fff;
+}
+
+.analysis-page {
+  min-height: 62vh;
+  display: grid;
+  place-items: center;
+}
+
+.analysis-coming-soon {
+  width: min(720px, 100%);
+  padding: clamp(2rem, 4vw, 3rem);
+  border: 1px solid var(--color-primary-border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.analysis-coming-soon__status {
+  display: inline-flex;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: var(--color-primary-muted);
+  color: var(--color-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.analysis-coming-soon h1 {
+  margin: 0.9rem 0 0;
+}
+
+.analysis-coming-soon p {
+  max-width: 64ch;
+  margin: 0.65rem 0 0;
+  color: var(--color-text-soft);
+  line-height: 1.6;
+}
+
+.analysis-coming-soon__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.4rem;
+}
+
+.analysis-coming-soon > small {
+  display: block;
+  margin-top: 1.25rem;
+  color: var(--color-text-soft);
+}
+
+.new-session-field small {
+  color: var(--color-text-soft);
+  font-size: 0.78rem;
+}
+
+.study-plans-header > div > span {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (max-width: 820px) {
+  .dashboard-start,
+  .library-flashcard-cta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-start__actions {
+    justify-content: flex-start;
+  }
+
+  .library-flashcard-cta .outline-pill-button {
+    margin-left: 0;
+  }
+
+  .analysis-coming-soon__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .auth-private-notice {
   border: 1px solid var(--color-primary-border);
   border-radius: 999px;

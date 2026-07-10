@@ -30,6 +30,13 @@ router.get('/', requireAuth, async (request, response, next) => {
             },
           },
         },
+        _count: {
+          select: {
+            questions: {
+              where: { status: 'PUBLISHED', type: 'MULTIPLE_CHOICE' },
+            },
+          },
+        },
       },
       orderBy: { title: 'asc' },
     })
@@ -58,6 +65,7 @@ router.get('/', requireAuth, async (request, response, next) => {
         description: topic.description,
         color: topic.color,
         articleCount: topic.articles.length,
+        availableQuestionCount: topic._count.questions,
         articles: topic.articles.map((article) => ({
           id: article.id,
           slug: article.slug,
@@ -84,7 +92,11 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
           orderBy: { title: 'asc' },
         },
         _count: {
-          select: { questions: { where: { status: 'PUBLISHED' } } },
+          select: {
+            questions: {
+              where: { status: 'PUBLISHED', type: 'MULTIPLE_CHOICE' },
+            },
+          },
         },
       },
     })

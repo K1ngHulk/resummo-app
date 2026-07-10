@@ -1,67 +1,52 @@
-import { useState } from 'react'
 import './Flashcard.css'
-import logo from '../../assets/brand/originals/logoguinda.png' // Logo de Resummo
 
 export default function Flashcard({ 
   frontContent, 
   backContent, 
   hint, 
-  isFlipped, 
+  isFlipped = false,
   onFlip 
 }) {
-  // Allow internal flip state if not controlled externally
-  const [internalFlipped, setInternalFlipped] = useState(false)
-  const [prevFrontContent, setPrevFrontContent] = useState(frontContent)
-
-  if (frontContent !== prevFrontContent) {
-    setPrevFrontContent(frontContent)
-    setInternalFlipped(false)
-  }
+  const flipped = Boolean(isFlipped)
 
   const handleFlip = () => {
-    if (onFlip) {
-      onFlip()
-    } else {
-      setInternalFlipped(!internalFlipped)
+    if (flipped) return
+    onFlip?.()
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleFlip()
     }
   }
 
-  const flipped = isFlipped !== undefined ? isFlipped : internalFlipped
   return (
     <div className="flashcard-container">
-      <div 
+      <div
         className={`flashcard-inner ${flipped ? 'is-flipped' : ''}`}
         onClick={handleFlip}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={flipped ? -1 : 0}
+        aria-label={flipped ? 'Respuesta visible' : 'Mostrar respuesta de la tarjeta'}
+        aria-pressed={flipped}
       >
-        {/* Frente de la tarjeta (Pregunta) */}
         <div className="flashcard-front">
-          <div className="flashcard-logo-container">
-            <img src={logo} alt="Resummo Logo" className="flashcard-logo" />
-          </div>
-          
+          <span className="flashcard-side-label">Pregunta</span>
           <div className="flashcard-content">
             <p className="flashcard-text">{frontContent}</p>
-            {hint && <div className="flashcard-hint">💡 {hint}</div>}
+            {hint ? <div className="flashcard-hint"><strong>Pista:</strong> {hint}</div> : null}
           </div>
-          
-          <div className="flashcard-footer">
-            Toca para girar
-          </div>
+          <div className="flashcard-footer">Haz clic o presiona Enter para ver la respuesta</div>
         </div>
 
-        {/* Reverso de la tarjeta (Respuesta) */}
         <div className="flashcard-back">
-          <div className="flashcard-logo-container">
-            <img src={logo} alt="Resummo Logo" className="flashcard-logo" />
-          </div>
-          
+          <span className="flashcard-side-label">Respuesta</span>
           <div className="flashcard-content">
             <p className="flashcard-text">{backContent}</p>
           </div>
-          
-          <div className="flashcard-footer">
-            Toca para girar
-          </div>
+          <div className="flashcard-footer">Elige cómo te resultó recordarla</div>
         </div>
       </div>
     </div>

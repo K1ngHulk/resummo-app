@@ -100,7 +100,7 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
     })
 
     const relatedQuestionCount = await prisma.question.count({
-      where: { articleId: article.id, status: 'PUBLISHED' },
+      where: { articleId: article.id, status: 'PUBLISHED', type: 'MULTIPLE_CHOICE' },
     })
 
     response.json({

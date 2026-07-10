@@ -1,0 +1,11 @@
+topicSlug	articleSlug	prompt	explanation	difficulty	hint
+cardiology-basics	lectura-sistematica-del-ecg	¿Qué representa el eje horizontal de un ECG?	Representa el paso del tiempo según la velocidad indicada en el registro.	1	Piensa en la dimensión temporal.
+cardiology-basics	lectura-sistematica-del-ecg	¿Qué representa el eje vertical de un ECG?	Representa amplitud eléctrica o voltaje según la calibración indicada.	1	Piensa en amplitud.
+cardiology-basics	lectura-sistematica-del-ecg	¿Qué significa describir un ritmo como regular?	Que los intervalos entre ciclos comparables mantienen una duración semejante en el tramo observado.	2	Compara distancias entre ciclos.
+cardiology-basics	lectura-sistematica-del-ecg	¿Qué es la despolarización?	Un cambio eléctrico de la membrana que participa en la activación de las células excitables.	2	Es un evento eléctrico.
+cardiology-basics	lectura-sistematica-del-ecg	¿Qué es la repolarización?	El proceso eléctrico por el que la membrana retorna hacia su estado previo después de activarse.	2	Ocurre después de la activación.
+cardiology-basics	presion-flujo-y-perfusion	¿Qué es un gradiente de presión?	La diferencia de presión entre dos puntos que puede impulsar un flujo.	1	Compara dos puntos.
+cardiology-basics	presion-flujo-y-perfusion	¿Cómo influye la resistencia sobre el flujo?	Para un mismo gradiente de presión, una resistencia mayor se asocia con un flujo menor.	2	La relación es inversa.
+cardiology-basics	presion-flujo-y-perfusion	¿Qué describe la perfusión?	El aporte de sangre a un tejido dentro de un contexto fisiológico determinado.	1	Se refiere al aporte sanguíneo.
+cardiology-basics	ciclo-cardiaco-conceptos-clave	¿Qué función general cumplen las válvulas cardíacas?	Favorecen que el flujo avance en una dirección durante las fases del ciclo cardíaco.	1	Organizan la dirección del flujo.
+cardiology-basics	ciclo-cardiaco-conceptos-clave	¿Qué relación existe entre actividad eléctrica y contracción?	La actividad eléctrica precede y coordina los cambios mecánicos, pero no es lo mismo que la contracción.	2	Distingue evento eléctrico de evento mecánico.

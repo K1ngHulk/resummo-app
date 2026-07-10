@@ -51,6 +51,7 @@ router.post('/', requireAuth, async (request, response, next) => {
       where: {
         topicId: topic.id,
         status: 'PUBLISHED',
+        type: 'MULTIPLE_CHOICE',
         ...(parsed.difficulty ? { difficulty: parsed.difficulty } : {}),
       },
       orderBy: [{ difficulty: 'asc' }, { createdAt: 'asc' }],

@@ -242,14 +242,20 @@ function LibraryPage({ onNavigate }) {
               <span className="library-eyebrow">Tema</span>
               <h2 id="library-active-topic-heading">{activeTopic.title}</h2>
               <p>{activeTopic.description}</p>
-              <div style={{ marginTop: '1.5rem' }}>
+              <div className="library-flashcard-cta">
+                <span className="library-flashcard-cta__icon" aria-hidden="true">
+                  <AppIcon name="lightning" />
+                </span>
+                <div>
+                  <strong>Flashcards del tema</strong>
+                  <span>Revisión rápida con tarjetas publicadas.</span>
+                </div>
                 <button
                   type="button"
-                  className="primary-button"
+                  className="outline-pill-button"
                   onClick={() => onNavigate(`/learning/flashcards?topicId=${activeTopic.id}`)}
                 >
-                  <AppIcon name="lightning" />
-                  Repasar Flashcards ⚡
+                  Repasar tarjetas
                 </button>
               </div>
             </header>
@@ -326,6 +332,8 @@ function LibraryPage({ onNavigate }) {
                         <span>{topic.summary}</span>
                         <small>
                           {topic.articleCount} {topic.articleCount === 1 ? 'artículo' : 'artículos'}
+                          {' · '}
+                          {topic.availableQuestionCount} {topic.availableQuestionCount === 1 ? 'pregunta QBank' : 'preguntas QBank'}
                         </small>
                       </div>
                       <div className="library-domain-card__action">

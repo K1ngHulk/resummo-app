@@ -36,14 +36,41 @@ function DashboardPage({ onNavigate }) {
     }
   }, [request])
 
+  const isEmpty = dashboard
+    && !dashboard.continueLearning
+    && !dashboard.questionSession
+    && dashboard.recentArticles.length === 0
+    && dashboard.progress.totalAnswered === 0
+
   return (
     <>
       <section className="dashboard-hero">
-        <h1>Complementa tus conocimientos medicos</h1>
+        <h1>Complementa tus conocimientos médicos</h1>
         <SearchBar placeholder="Buscar en Resummo" showAction className="dashboard-hero__search" />
       </section>
 
       {error ? <div className="app-feedback app-feedback--error">{error}</div> : null}
+
+      {isEmpty ? (
+        <section className="dashboard-start" aria-labelledby="dashboard-start-heading">
+          <div>
+            <span>Empieza por una actividad</span>
+            <h2 id="dashboard-start-heading">Tu espacio de estudio está listo</h2>
+            <p>Explora contenido publicado, crea una sesión o elige un tema para repasar tarjetas.</p>
+          </div>
+          <div className="dashboard-start__actions">
+            <button type="button" className="primary-button" onClick={() => onNavigate('/learning/library')}>
+              Ir a Biblioteca
+            </button>
+            <button type="button" className="outline-pill-button" onClick={() => onNavigate('/learning/qbank/new')}>
+              Iniciar QBank
+            </button>
+            <button type="button" className="text-link" onClick={() => onNavigate('/learning/library')}>
+              Revisar flashcards
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="dashboard-grid" aria-label="Resumen principal">
         <div className="dashboard-grid__column">

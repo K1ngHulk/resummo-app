@@ -29,7 +29,7 @@ function StudyPlansPage({ onNavigate }) {
     <section className="figma-page study-plans-page">
       <header className="study-plans-header">
         <div>
-          <span>Organiza tu aprendizaje</span>
+          <span>Planificación local en beta</span>
           <h1>{studyPlans.title}</h1>
           <p>{studyPlans.subtitle}</p>
         </div>

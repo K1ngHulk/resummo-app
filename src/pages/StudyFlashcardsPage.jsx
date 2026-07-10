@@ -19,6 +19,12 @@ export default function StudyFlashcardsPage({ onNavigate, searchParams }) {
   useEffect(() => {
     let isMounted = true
     const fetchFlashcards = async () => {
+      if (!topicId) {
+        setError('Selecciona un tema desde la Biblioteca para iniciar el repaso.')
+        setIsLoading(false)
+        return
+      }
+
       try {
         const payload = await request(`/api/study/flashcards/${topicId}`)
         if (isMounted) {
@@ -56,7 +62,6 @@ export default function StudyFlashcardsPage({ onNavigate, searchParams }) {
         body: { difficulty } // 1: Difícil, 2: Bien, 3: Fácil
       })
       
-      // Pasar a la siguiente
       if (currentIndex + 1 < flashcards.length) {
         setIsFlipped(false)
         setCurrentIndex(prev => prev + 1)
@@ -100,14 +105,14 @@ export default function StudyFlashcardsPage({ onNavigate, searchParams }) {
     return (
       <div className="study-flashcards-page" style={{ justifyContent: 'center' }}>
         <div className="study-flashcards-completed">
-          <h2>¡Sesión Completada! 🎉</h2>
-          <p>Has revisado todas las tarjetas programadas para hoy.</p>
-          <button 
-            className="admin-btn admin-btn--primary"
+          <span>Repaso finalizado</span>
+          <h2>Sesión completada</h2>
+          <p>No quedan tarjetas pendientes en este tema para la sesión actual.</p>
+          <button
+            className="primary-button"
             onClick={() => onNavigate('/learning/library')}
-            style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}
           >
-            Volver a la Biblioteca
+            Volver a Biblioteca
           </button>
         </div>
       </div>
@@ -117,8 +122,16 @@ export default function StudyFlashcardsPage({ onNavigate, searchParams }) {
   return (
     <div className="study-flashcards-page">
       <header className="study-flashcards-header">
-        <h1>Resummo Flashcards ⚡</h1>
-        <p>Tarjeta {currentIndex + 1} de {flashcards.length}</p>
+        <button type="button" className="text-link" onClick={() => onNavigate('/learning/library')}>
+          Volver a Biblioteca
+        </button>
+        <div>
+          <h1>Flashcards del tema</h1>
+          <p>Tarjeta {currentIndex + 1} de {flashcards.length}</p>
+        </div>
+        <div className="study-flashcards-progress" aria-label={`${currentIndex + 1} de ${flashcards.length} tarjetas`}>
+          <span style={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }} />
+        </div>
       </header>
 
       <div className="study-flashcards-area">
@@ -130,30 +143,35 @@ export default function StudyFlashcardsPage({ onNavigate, searchParams }) {
           onFlip={handleFlip}
         />
 
-        {isFlipped && (
-          <div className="study-flashcards-controls">
+        {isFlipped ? (
+          <div className="study-flashcards-controls" aria-label="Califica tu recuerdo">
             <button 
               className="flashcard-btn flashcard-btn--hard"
               onClick={() => handleReview(1)}
               disabled={isSubmitting}
             >
-              Difícil (Repetir pronto)
+              <strong>Difícil</strong>
+              <span>Repetir pronto</span>
             </button>
             <button 
               className="flashcard-btn flashcard-btn--good"
               onClick={() => handleReview(2)}
               disabled={isSubmitting}
             >
-              Bien
+              <strong>Bien</strong>
+              <span>Recordé con esfuerzo</span>
             </button>
             <button 
               className="flashcard-btn flashcard-btn--easy"
               onClick={() => handleReview(3)}
               disabled={isSubmitting}
             >
-              Fácil
+              <strong>Fácil</strong>
+              <span>Lo recordé rápido</span>
             </button>
           </div>
+        ) : (
+          <p className="study-flashcards-helper">Piensa tu respuesta antes de girar la tarjeta.</p>
         )}
       </div>
     </div>

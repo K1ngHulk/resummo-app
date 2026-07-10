@@ -20,7 +20,7 @@ function ContinueLearningCard({ item, onNavigate }) {
           <header className="dashboard-card__header-block">
             <h2>Continua donde lo dejaste</h2>
           </header>
-          <p className="dashboard-card__meta">Todavia no has abierto articulos en tu cuenta.</p>
+          <p className="dashboard-card__meta">Todavía no has abierto artículos en tu cuenta.</p>
         </div>
         <CircularProgress value={0} showScale />
       </article>
@@ -35,7 +35,7 @@ function ContinueLearningCard({ item, onNavigate }) {
         </header>
         <p className="dashboard-card__topic">{item.title}</p>
         <p className="dashboard-card__meta">
-          {item.topic} � Ultima actividad {formatDateLabel(item.updatedAt)}
+          {item.topic} · Última actividad {formatDateLabel(item.updatedAt)}
         </p>
         <button
           type="button"

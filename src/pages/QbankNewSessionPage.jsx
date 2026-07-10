@@ -10,6 +10,8 @@ function QbankNewSessionPage({ onNavigate, searchParams }) {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const practiceTopics = topics.filter((topic) => topic.availableQuestionCount > 0)
+  const selectedTopic = practiceTopics.find((topic) => topic.slug === topicSlug) || null
 
   useEffect(() => {
     let isMounted = true
@@ -19,8 +21,13 @@ function QbankNewSessionPage({ onNavigate, searchParams }) {
         const payload = await request('/api/topics')
 
         if (isMounted) {
+          const availableTopics = payload.topics.filter((topic) => topic.availableQuestionCount > 0)
           setTopics(payload.topics)
-          setTopicSlug((current) => current || payload.topics[0]?.slug || '')
+          setTopicSlug((current) => (
+            availableTopics.some((topic) => topic.slug === current)
+              ? current
+              : availableTopics[0]?.slug || ''
+          ))
           setIsLoading(false)
         }
       } catch (loadError) {
@@ -70,17 +77,20 @@ function QbankNewSessionPage({ onNavigate, searchParams }) {
           <span>Tema</span>
           {isLoading ? (
             <div style={{ padding: '0.5rem', color: '#666' }}>Cargando temas...</div>
-          ) : topics.length === 0 ? (
-            <div style={{ padding: '0.5rem', color: '#e53e3e' }}>No hay temas publicados disponibles.</div>
+          ) : practiceTopics.length === 0 ? (
+            <div style={{ padding: '0.5rem', color: '#e53e3e' }}>No hay temas con preguntas publicadas disponibles.</div>
           ) : (
             <select value={topicSlug} onChange={(event) => setTopicSlug(event.target.value)} required>
-              {topics.map((topic) => (
+              {practiceTopics.map((topic) => (
                 <option key={topic.id} value={topic.slug}>
-                  {topic.title}
+                  {topic.title} — {topic.availableQuestionCount} preguntas disponibles
                 </option>
               ))}
             </select>
           )}
+          {selectedTopic ? (
+            <small>{selectedTopic.availableQuestionCount} preguntas publicadas para este tema.</small>
+          ) : null}
         </label>
 
         <label className="new-session-field">

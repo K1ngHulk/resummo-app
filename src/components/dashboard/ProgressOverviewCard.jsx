@@ -28,7 +28,7 @@ function ProgressOverviewCard({ progress, onNavigate }) {
 
   return (
     <article className="dashboard-card dashboard-card--progress">
-      <h2>Analisis de tu progreso</h2>
+      <h2>Progreso de estudio</h2>
 
       <div className="progress-overview">
         <DonutChart
@@ -41,7 +41,7 @@ function ProgressOverviewCard({ progress, onNavigate }) {
           <p>
             {totalAnswered > 0
               ? `En general, respondiste ${totalAnswered} preguntas.`
-              : 'Todavia no hay preguntas respondidas en tu cuenta.'}
+              : 'Todavía no hay preguntas respondidas en tu cuenta.'}
           </p>
           <ul>
             {segments.map((segment) => (

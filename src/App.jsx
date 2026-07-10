@@ -3,6 +3,7 @@ import AppHeader from './components/layout/AppHeader'
 import { learningRoutes } from './constants/navigation'
 import { useAuth } from './context/AuthContext.jsx'
 import DashboardPage from './pages/DashboardPage'
+import AnalysisPage from './pages/AnalysisPage'
 import LibraryArticlePage from './pages/LibraryArticlePage'
 import LibraryPage from './pages/LibraryPage'
 import LoadingScreen from './pages/LoadingScreen'
@@ -34,6 +35,7 @@ const routeConfig = [
   { path: '/learning/qbank', id: 'qbank', component: QbankPage },
   { path: '/learning/qbank/new', id: 'qbank', component: QbankNewSessionPage },
   { path: '/learning/qbank/session', id: 'qbank', component: QuestionSessionPage },
+  { path: '/learning/analysis', id: 'analysis', component: AnalysisPage },
   { path: '/learning/study-plans', id: 'study-plans', component: StudyPlansPage },
   { path: '/learning/study-plans/new/step-1', id: 'study-plans', component: StudyPlanWizardPage },
   {

@@ -87,7 +87,13 @@ async function verifyPackInDatabase() {
 
   const [unrelatedArticles, unrelatedQuestions] = await Promise.all([
     prisma.article.count({ where: { topicId: topic.id, NOT: { id: article.id } } }),
-    prisma.question.count({ where: { topicId: topic.id, prompt: { notIn: expectedPrompts } } }),
+    prisma.question.count({
+      where: {
+        topicId: topic.id,
+        type: 'MULTIPLE_CHOICE',
+        prompt: { notIn: expectedPrompts },
+      },
+    }),
   ])
   if (unrelatedArticles > 0 || unrelatedQuestions > 0) {
     throw new Error('Topic validation is unsafe because the topic contains unrelated content')
