@@ -1,8 +1,9 @@
 @echo off
-setlocal
+setlocal EnableExtensions
 
 title Resummo Launcher
-cd /d "%~dp0"
+set "PROJECT_DIR=%~dp0"
+cd /d "%PROJECT_DIR%"
 
 echo.
 echo ========================================
@@ -12,16 +13,23 @@ echo.
 
 if not exist ".env" (
   echo [ERROR] No se encontro .env en:
-  echo %CD%\.env
+  echo %PROJECT_DIR%.env
   echo.
   echo Crea el archivo .env antes de iniciar Resummo.
   pause
   exit /b 1
 )
 
+where npm.cmd >nul 2>nul
+if errorlevel 1 (
+  echo [ERROR] No se encontro npm.cmd. Instala Node.js o revisa el PATH.
+  pause
+  exit /b 1
+)
+
 if not exist "node_modules" (
   echo [INFO] node_modules no existe. Instalando dependencias...
-  npm.cmd install
+  call npm.cmd install
   if errorlevel 1 (
     echo.
     echo [ERROR] npm install fallo.
@@ -31,8 +39,11 @@ if not exist "node_modules" (
 )
 
 echo [INFO] Revisando puertos requeridos...
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R /C:":3001 .*LISTENING"') do set BACKEND_PID=%%a
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R /C:":5173 .*LISTENING"') do set FRONTEND_PID=%%a
+set "BACKEND_PID="
+set "FRONTEND_PID="
+
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R /C:":3001 .*LISTENING"') do set "BACKEND_PID=%%a"
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R /C:":5173 .*LISTENING"') do set "FRONTEND_PID=%%a"
 
 if defined BACKEND_PID (
   echo [ERROR] El puerto 3001 ya esta ocupado por PID %BACKEND_PID%.
@@ -55,7 +66,7 @@ if defined FRONTEND_PID (
 )
 
 echo [INFO] Generando Prisma Client...
-npm.cmd run db:generate
+call npm.cmd run db:generate
 if errorlevel 1 (
   echo.
   echo [ERROR] Prisma generate fallo.
@@ -65,14 +76,14 @@ if errorlevel 1 (
 
 echo.
 echo [INFO] Iniciando backend en http://localhost:3001 ...
-start "Resummo API" cmd /k "cd /d ""%CD%"" && set ""PRIVATE_MVP_ACCESS=true"" && set ""SHOW_DEMO_CREDENTIALS=false"" && set ""NODE_ENV=production"" && set ""CORS_ORIGIN=http://localhost:5173"" && npm.cmd run dev:server"
+start "Resummo API" /D "%PROJECT_DIR%" cmd /k "set PRIVATE_MVP_ACCESS=true&& set SHOW_DEMO_CREDENTIALS=false&& set NODE_ENV=production&& set CORS_ORIGIN=http://localhost:5173&& npm.cmd run dev:server"
 
 echo [INFO] Iniciando frontend en http://localhost:5173 ...
-start "Resummo Web" cmd /k "cd /d ""%CD%"" && npm.cmd run dev:client"
+start "Resummo Web" /D "%PROJECT_DIR%" cmd /k "npm.cmd run dev:client"
 
 echo [INFO] Abriendo navegador en unos segundos...
 timeout /t 4 /nobreak >nul
-start http://localhost:5173
+start "" "http://localhost:5173"
 
 echo.
 echo ========================================
