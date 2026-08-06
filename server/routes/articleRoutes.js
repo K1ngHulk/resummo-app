@@ -2,6 +2,10 @@ import express from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/requireAuth.js'
+import {
+  getArticleEditorialMetadata,
+  parseArticleMarkdownDocument,
+} from '../lib/articleMarkdownImport.js'
 
 const router = express.Router()
 
@@ -103,6 +107,14 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
       where: { articleId: article.id, status: 'PUBLISHED', type: 'MULTIPLE_CHOICE' },
     })
 
+    let articleDocument = { body: article.body }
+    try {
+      articleDocument = parseArticleMarkdownDocument(article.body)
+    } catch {
+      // Legacy or malformed frontmatter must not make an already published article unreadable.
+    }
+    const editorial = getArticleEditorialMetadata(article.body)
+
     response.json({
       article: {
         id: article.id,
@@ -115,7 +127,8 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
         },
         readTimeMinutes: article.readTimeMinutes,
         tags: article.tags,
-        sections: parseArticleBody(article.body),
+        sections: parseArticleBody(articleDocument.body),
+        editorial,
         progress: article.progresses[0] || null,
         relatedArticles,
         relatedQuestionCount,

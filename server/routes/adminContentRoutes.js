@@ -3,6 +3,11 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/requireAuth.js'
 import { requireRole } from '../middleware/requireRole.js'
+import {
+  getArticleEditorialMetadata,
+  mapArticlePreviewToCreateData,
+  validateArticleMarkdownDocument,
+} from '../lib/articleMarkdownImport.js'
 
 const router = express.Router()
 
@@ -16,7 +21,7 @@ function validationError(message) {
 
 const pendingEditorialContentPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
 
-function getArticlePublicationIssues(article, topic) {
+export function getArticlePublicationIssues(article, topic) {
   const issues = []
   if (!article.title?.trim()) issues.push('falta el titulo')
   if (!article.summary?.trim()) issues.push('falta el resumen')
@@ -24,6 +29,21 @@ function getArticlePublicationIssues(article, topic) {
   if (!/^##\s+\S.*$/m.test(article.body || '')) issues.push('falta al menos una seccion con encabezado ##')
   if (!Number.isInteger(article.readTimeMinutes) || article.readTimeMinutes <= 0) issues.push('el tiempo de lectura no es valido')
   if (pendingEditorialContentPattern.test(article.body || '')) issues.push('el cuerpo contiene citas o pendientes editoriales')
+
+  const hasFrontmatter = String(article.body || '').trimStart().startsWith('---')
+  if (hasFrontmatter) {
+    const editorial = getArticleEditorialMetadata(article.body)
+    if (!editorial) {
+      issues.push('la metadata editorial del Markdown no es valida')
+    } else {
+      if (editorial.educationalOnly !== true) issues.push('el contenido no esta marcado como educativo')
+      if (editorial.reviewStatus !== 'APPROVED') issues.push('la revision editorial no esta aprobada')
+      if (!editorial.reviewer?.trim()) issues.push('falta el revisor responsable')
+      if (!editorial.lastReviewed) issues.push('falta la fecha de revision')
+      if (!editorial.evidenceCutoff) issues.push('falta la fecha de corte de evidencia')
+    }
+  }
+
   if (topic?.status !== 'PUBLISHED') issues.push('el tema asociado no esta publicado')
   return issues
 }
@@ -638,6 +658,106 @@ router.patch('/questions/:id', async (request, response, next) => {
     })
 
     response.json({ question })
+  } catch (error) {
+    next(error)
+  }
+})
+
+async function loadArticleImportReferenceData() {
+  const [topics, existingArticles] = await Promise.all([
+    prisma.topic.findMany({ select: { id: true, slug: true, title: true } }),
+    prisma.article.findMany({ select: { id: true, slug: true } }),
+  ])
+
+  return { topics, existingArticles }
+}
+
+function toPublicArticleImportPreview(preview) {
+  return {
+    status: preview.status,
+    errors: preview.errors,
+    warnings: preview.warnings,
+    duplicate: preview.duplicate,
+    article: preview.article
+      ? {
+          topicTitle: preview.article.topicTitle,
+          slug: preview.article.slug,
+          title: preview.article.title,
+          summary: preview.article.summary,
+          readTimeMinutes: preview.article.readTimeMinutes,
+          tags: preview.article.tags,
+          status: preview.article.status,
+          editorial: preview.article.editorial,
+        }
+      : null,
+  }
+}
+
+router.post('/import/articles/preview', async (request, response, next) => {
+  try {
+    const { format, content } = request.body ?? {}
+    if (format !== 'markdown') {
+      throw validationError('Solo se soporta formato Markdown en esta fase')
+    }
+
+    const referenceData = await loadArticleImportReferenceData()
+    const preview = validateArticleMarkdownDocument(content, referenceData)
+    response.json(toPublicArticleImportPreview(preview))
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/import/articles/confirm', async (request, response, next) => {
+  try {
+    const { format, content } = request.body ?? {}
+    if (format !== 'markdown') {
+      throw validationError('Solo se soporta formato Markdown en esta fase')
+    }
+
+    const referenceData = await loadArticleImportReferenceData()
+    const preview = validateArticleMarkdownDocument(content, referenceData)
+    if (preview.status !== 'VALID') {
+      return response.status(400).json(toPublicArticleImportPreview(preview))
+    }
+    if (preview.duplicate) {
+      return response.status(409).json(toPublicArticleImportPreview(preview))
+    }
+
+    const createData = mapArticlePreviewToCreateData(preview)
+    const article = await prisma.$transaction(async (transaction) => {
+      const existingArticle = await transaction.article.findUnique({
+        where: { slug: createData.slug },
+        select: { id: true },
+      })
+      if (existingArticle) {
+        const error = new Error('Ya existe un artículo con este slug')
+        error.statusCode = 409
+        throw error
+      }
+
+      return transaction.article.create({
+        data: createData,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          status: true,
+          topic: { select: { title: true } },
+        },
+      })
+    }, { isolationLevel: 'Serializable' })
+
+    response.status(201).json({
+      article: {
+        id: article.id,
+        slug: article.slug,
+        title: article.title,
+        status: article.status,
+        topicTitle: article.topic.title,
+      },
+      message: 'Artículo importado como borrador. Requiere revisión y publicación explícitas.',
+    })
   } catch (error) {
     next(error)
   }

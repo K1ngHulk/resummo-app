@@ -123,3 +123,26 @@ Consecuencias:
 Dudas abiertas:
 
 - Definir si el equipo quiere documentar una paleta completa de marca mas adelante.
+
+### 2026-08-06 - Biblioteca como producto vendible inicial
+
+Estado: decidido.
+
+Decision: La primera superficie comercial y demostrable de Resummo sera Library-first. Biblioteca concentra la navegacion, lectura, busqueda y flujo editorial. QBank y Flashcards quedan como extensiones secundarias; Analysis y Study Plans no son bloqueantes ni se presentan como capacidades terminadas.
+
+Motivo: El equipo puede producir y revisar articulos con mayor velocidad y consistencia que preguntas de alta calidad. La Biblioteca permite validar valor antes de ampliar practica, analitica o personalizacion.
+
+Consecuencias:
+
+- La ruta de entrada autenticada prioriza `/learning/library`.
+- La navegacion principal muestra Biblioteca primero y reduce el protagonismo de modulos incompletos.
+- El flujo editorial acepta Markdown exportado de Notion y crea siempre borradores.
+- Ningun importador publica automaticamente.
+- El contenido publicado debe distinguir alcance educativo, estado editorial y revision humana real.
+- La demo del domingo se clasifica como demo controlada, no produccion publica.
+
+Dudas abiertas:
+
+- Quien asumira la revision clinica y con que evidencia se registrara la aprobacion de cada articulo.
+- Cuando migrar el mapping temporal de carpetas a un modelo persistente de taxonomia.
+- Si el pipeline de Notion evolucionara a sincronizacion automatica o se mantendra como exportacion Markdown controlada.

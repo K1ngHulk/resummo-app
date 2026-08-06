@@ -3,6 +3,47 @@ import AppIcon from '../components/ui/AppIcon'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getTopicLibraryPath } from '../data/libraryTree.js'
 
+function formatEditorialDate(value) {
+  if (!value) return null
+  const date = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return null
+  return new Intl.DateTimeFormat('es-PE', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date)
+}
+
+function getEditorialSummary(editorial) {
+  if (editorial?.reviewStatus === 'APPROVED' && editorial.reviewer && editorial.lastReviewed) {
+    return {
+      status: 'Revisión editorial aprobada',
+      reviewer: editorial.reviewer,
+      reviewedAt: formatEditorialDate(editorial.lastReviewed),
+      evidenceCutoff: formatEditorialDate(editorial.evidenceCutoff),
+      approved: true,
+    }
+  }
+
+  if (editorial?.reviewStatus === 'CLINICAL_REVIEW') {
+    return {
+      status: 'En revisión clínica',
+      reviewer: editorial.reviewer || null,
+      reviewedAt: null,
+      evidenceCutoff: formatEditorialDate(editorial.evidenceCutoff),
+      approved: false,
+    }
+  }
+
+  return {
+    status: 'Revisión editorial pendiente',
+    reviewer: null,
+    reviewedAt: null,
+    evidenceCutoff: formatEditorialDate(editorial?.evidenceCutoff),
+    approved: false,
+  }
+}
+
 function getSectionParagraphs(section) {
   if (Array.isArray(section.paragraphs)) return section.paragraphs
   return String(section.body || '')
@@ -113,6 +154,7 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
 
   const sections = article?.sections || []
   const relatedArticles = article?.relatedArticles || []
+  const editorialSummary = getEditorialSummary(article?.editorial)
 
   return (
     <section className="library-article-page">
@@ -157,7 +199,16 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
                 <div className="library-article-editorial-meta" aria-label="Información editorial">
                   <span>{article.readTimeMinutes} min de lectura</span>
                   <span>Contenido educativo</span>
-                  <span>Revisión editorial pendiente</span>
+                  <span>{editorialSummary.status}</span>
+                  {editorialSummary.approved ? (
+                    <span>Revisado por {editorialSummary.reviewer}</span>
+                  ) : null}
+                  {editorialSummary.reviewedAt ? (
+                    <span>Última revisión: {editorialSummary.reviewedAt}</span>
+                  ) : null}
+                  {editorialSummary.evidenceCutoff ? (
+                    <span>Evidencia consultada hasta {editorialSummary.evidenceCutoff}</span>
+                  ) : null}
                 </div>
               </div>
               <button type="button" className={`library-save-button ${isCompleted ? 'library-save-button--active' : ''}`} onClick={handleComplete}>
@@ -198,6 +249,14 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
                 </section>
               )}
             </div>
+
+            <aside className="library-article-disclaimer" aria-label="Alcance del contenido">
+              <strong>Uso educativo</strong>
+              <p>
+                Este material apoya el estudio y no reemplaza la evaluación, el criterio clínico
+                ni las guías vigentes aplicables a una persona concreta.
+              </p>
+            </aside>
 
             <section className="library-related-section" aria-labelledby="library-related-heading">
               <h2 id="library-related-heading">Artículos relacionados</h2>

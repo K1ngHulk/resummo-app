@@ -1,35 +1,48 @@
-import AppIcon from '../ui/AppIcon'
+import { useState } from 'react'
 import SearchBar from '../ui/SearchBar'
 import resummoLogo from '../../assets/brand/originals/logoguinda.png'
 
+function formatHeaderRole(role) {
+  if (role === 'STUDENT') return 'Estudiante de medicina'
+  if (role === 'EDITOR') return 'Editor'
+  if (role === 'ADMIN') return 'Administrador'
+  return 'Usuario'
+}
+
 function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, user }) {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const handleLibrarySearch = () => {
+    const query = searchQuery.trim()
+    onNavigate(query ? `/learning/library?q=${encodeURIComponent(query)}` : '/learning/library')
+  }
+
   return (
     <header className="app-header">
       <div className="app-header__inner">
         <div className="app-header__top">
-          <button type="button" className="brand-mark" onClick={() => onNavigate('/learning')}>
+          <button type="button" className="brand-mark" onClick={() => onNavigate('/learning/library')}>
             <img src={resummoLogo} alt="Resummo" className="brand-logo" />
             <div className="brand-mark__text">RESUMMO</div>
           </button>
 
-          <SearchBar placeholder="Buscar en Resummo" compact className="app-header__search" />
+          <SearchBar
+            placeholder="Buscar en Biblioteca"
+            compact
+            className="app-header__search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            onSubmit={handleLibrarySearch}
+          />
 
           <div className="app-header__actions">
-            <button type="button" className="icon-button" aria-label="Guardados">
-              <AppIcon name="bookmark" className="icon-button__icon" />
-            </button>
-            <button type="button" className="icon-button icon-button--help" aria-label="Ayuda">
-              <span className="icon-button__help-mark" aria-hidden="true">
-                ?
-              </span>
-            </button>
-            <button type="button" className="profile-chip" aria-label="Perfil del usuario">
+            <div className="profile-chip" aria-label="Usuario actual">
               <span className="profile-chip__avatar">{user?.initials || 'R'}</span>
               <span className="profile-chip__text">
-                <strong>{user?.fullName || 'Resummo User'}</strong>
-                <small>{user?.role === 'STUDENT' ? 'Estudiante de medicina' : user?.role}</small>
+                <strong>{user?.fullName || 'Usuario de Resummo'}</strong>
+                <small>{formatHeaderRole(user?.role)}</small>
               </span>
-            </button>
+            </div>
             {user && (user.role === 'EDITOR' || user.role === 'ADMIN') && (
               <button
                 type="button"

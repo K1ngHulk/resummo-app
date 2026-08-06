@@ -74,6 +74,17 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo [INFO] Verificando conexión de base de datos...
+node scripts/check-database-connection.mjs
+if errorlevel 1 (
+  echo.
+  echo [ERROR] La base configurada en .env no está disponible.
+  echo Para una demo aislada usa: start-resummo-local-demo.bat
+  echo Ese launcher utiliza PostgreSQL local y no modifica Supabase.
+  pause
+  exit /b 1
+)
+
 echo.
 echo [INFO] Iniciando backend en http://localhost:3001 ...
 start "Resummo API" /D "%PROJECT_DIR%" cmd /k "set PRIVATE_MVP_ACCESS=true&& set SHOW_DEMO_CREDENTIALS=false&& set NODE_ENV=production&& set CORS_ORIGIN=http://localhost:5173&& npm.cmd run dev:server"
@@ -83,7 +94,7 @@ start "Resummo Web" /D "%PROJECT_DIR%" cmd /k "npm.cmd run dev:client"
 
 echo [INFO] Abriendo navegador en unos segundos...
 timeout /t 4 /nobreak >nul
-start "" "http://localhost:5173"
+start "" "http://localhost:5173/learning/library"
 
 echo.
 echo ========================================
@@ -91,7 +102,7 @@ echo  Resummo iniciado
 echo ========================================
 echo.
 echo Backend:  http://localhost:3001
-echo Frontend: http://localhost:5173
+echo Frontend: http://localhost:5173/learning/library
 echo.
 echo Usuarios seed:
 echo   Admin:   admin@resummo.app / Admin12345

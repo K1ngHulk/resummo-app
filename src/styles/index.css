@@ -5931,6 +5931,28 @@ input:focus {
   color: var(--color-primary);
 }
 
+.library-article-disclaimer {
+  margin-top: 2rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 0.75rem;
+  background: var(--color-primary-tint);
+  color: var(--color-text);
+}
+
+.library-article-disclaimer strong {
+  display: block;
+  color: var(--color-primary);
+  font-size: 0.88rem;
+}
+
+.library-article-disclaimer p {
+  max-width: 72ch;
+  margin: 0.35rem 0 0;
+  color: var(--color-text-soft);
+  line-height: 1.6;
+}
+
 @media (max-width: 980px) {
   .library-tree-shell {
     grid-template-columns: 1fr;

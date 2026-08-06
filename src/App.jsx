@@ -17,6 +17,7 @@ import StudyPlansPage from './pages/StudyPlansPage'
 import StudyFlashcardsPage from './pages/StudyFlashcardsPage'
 import AdminHomePage from './pages/admin/AdminHomePage'
 import AdminAnkiImportPage from './pages/admin/AdminAnkiImportPage'
+import AdminArticleImportPage from './pages/admin/AdminArticleImportPage'
 import AdminQuestionsPage from './pages/admin/AdminQuestionsPage'
 import AdminQuestionReviewPage from './pages/admin/AdminQuestionReviewPage'
 import AdminArticlesPage from './pages/admin/AdminArticlesPage'
@@ -62,12 +63,15 @@ const routeConfig = [
   { path: '/admin/questions', id: 'admin-questions', component: AdminQuestionsPage, isAdmin: true },
   { path: '/admin/questions/new', id: 'admin-question-new', component: AdminQuestionCreatePage, isAdmin: true },
   { path: '/admin/questions/review', id: 'admin-question-review', component: AdminQuestionReviewPage, isAdmin: true },
+  { path: '/admin/import/articles', id: 'admin-article-import', component: AdminArticleImportPage, isAdmin: true },
   { path: '/admin/import/anki', id: 'admin-anki', component: AdminAnkiImportPage, isAdmin: true },
 ]
 
+const defaultLearningRoute = routeConfig.find((route) => route.path === '/learning/library')
+
 function normalizePath(pathname) {
   if (pathname === '/') {
-    return '/learning'
+    return '/learning/library'
   }
 
   return pathname.replace(/\/$/, '') || '/learning'
@@ -108,7 +112,7 @@ function App() {
   }
 
   const requestedRoute = useMemo(
-    () => routeConfig.find((route) => route.path === locationState.path) || routeConfig[2],
+    () => routeConfig.find((route) => route.path === locationState.path) || defaultLearningRoute,
     [locationState.path],
   )
 
@@ -123,7 +127,7 @@ function App() {
   const activeRoute = !isAuthenticated
     ? routeConfig[0]
     : requestedRoute.path === '/login'
-      ? routeConfig[2]
+      ? defaultLearningRoute
       : requestedRoute
 
   if (activeRoute.isAdmin && user && user.role !== 'EDITOR' && user.role !== 'ADMIN') {
@@ -132,7 +136,7 @@ function App() {
         <div style={{ padding: '3rem', textAlign: 'center' }}>
           <h2>Acceso Restringido</h2>
           <p>No tienes permisos para ver esta página.</p>
-          <button onClick={() => navigate('/learning')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Volver al inicio</button>
+          <button onClick={() => navigate('/learning/library')} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Volver a Biblioteca</button>
         </div>
       </main>
     )

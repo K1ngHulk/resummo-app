@@ -1,0 +1,111 @@
+@import './AdminAnkiImportPage.css';
+
+.admin-article-import-page {
+  width: min(100%, 920px);
+}
+
+.admin-import-contract {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 0.75rem;
+  background: var(--color-primary-tint);
+}
+
+.admin-import-contract h2,
+.admin-article-import-preview h2,
+.admin-import-success h2 {
+  margin: 0;
+}
+
+.admin-import-contract p,
+.admin-article-import-preview p,
+.admin-import-success p {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-soft);
+  line-height: 1.55;
+}
+
+.admin-article-import-preview {
+  display: grid;
+  gap: 1.25rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.admin-article-import-preview > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-article-import-preview h2 {
+  margin-top: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.admin-article-import-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.admin-article-import-meta > div {
+  padding: 0.85rem 1rem;
+  border-radius: 0.65rem;
+  background: var(--color-card);
+}
+
+.admin-article-import-meta dt {
+  color: var(--color-text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-article-import-meta dd {
+  margin: 0.25rem 0 0;
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.admin-article-import-findings {
+  padding: 1rem 1.15rem;
+  border-radius: 0.65rem;
+  background: #fff8e8;
+  color: #6b4b00;
+}
+
+.admin-article-import-findings--error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.admin-article-import-findings h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.admin-article-import-findings ul {
+  margin: 0.65rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.admin-import-success {
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .admin-import-contract,
+  .admin-import-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-import-actions button {
+    width: 100%;
+  }
+}

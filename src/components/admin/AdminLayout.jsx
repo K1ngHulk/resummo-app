@@ -1,6 +1,12 @@
 import './AdminLayout.css'
 import { useAuth } from '../../context/AuthContext'
 
+function formatAdminRole(role) {
+  if (role === 'ADMIN') return 'Administrador'
+  if (role === 'EDITOR') return 'Editor'
+  return 'Usuario'
+}
+
 export default function AdminLayout({ children, currentPath, onNavigate }) {
   const { user, logout } = useAuth()
 
@@ -9,7 +15,8 @@ export default function AdminLayout({ children, currentPath, onNavigate }) {
     { id: 'topics', path: '/admin/topics', label: 'Temas', icon: '📚' },
     { id: 'articles', path: '/admin/articles', label: 'Artículos', icon: '📄' },
     { id: 'questions', path: '/admin/questions', label: 'Preguntas', icon: '❓' },
-    { id: 'import', path: '/admin/import/anki', label: 'Importar Anki', icon: '📥' },
+    { id: 'article-import', path: '/admin/import/articles', label: 'Importar artículos', icon: '📥' },
+    { id: 'anki-import', path: '/admin/import/anki', label: 'Importar Anki', icon: '🗂️' },
   ]
 
   // Get current section name for top bar
@@ -59,7 +66,7 @@ export default function AdminLayout({ children, currentPath, onNavigate }) {
             </div>
             <div className="admin-user-info">
               <span className="admin-user-name">{user?.firstName} {user?.lastName}</span>
-              <span className="admin-user-role">{user?.role?.toLowerCase()}</span>
+              <span className="admin-user-role">{formatAdminRole(user?.role)}</span>
             </div>
           </div>
           <button className="admin-logout-btn" onClick={logout}>

@@ -79,7 +79,7 @@ function LoginPage({ onNavigate }) {
         await register(formValues)
       }
 
-      onNavigate('/learning')
+      onNavigate('/learning/library')
     } catch (submitError) {
       setError(submitError.message)
     } finally {

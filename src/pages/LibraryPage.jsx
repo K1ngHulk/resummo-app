@@ -109,13 +109,20 @@ function ArticleRow({ node, nodes, onNavigate }) {
   )
 }
 
-function LibraryPage({ onNavigate }) {
+function LibraryPage({ onNavigate, searchParams }) {
   const { request } = useAuth()
+  const routedQuery = searchParams?.get('q') || ''
   const [topics, setTopics] = useState([])
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(routedQuery)
+  const [previousRoutedQuery, setPreviousRoutedQuery] = useState(routedQuery)
   const [activeNodeId, setActiveNodeId] = useState(readStoredNodeId)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+
+  if (routedQuery !== previousRoutedQuery) {
+    setPreviousRoutedQuery(routedQuery)
+    setQuery(routedQuery)
+  }
 
   useEffect(() => {
     let isMounted = true

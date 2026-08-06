@@ -1,36 +1,73 @@
-# Product
+# Resummo Product
 
 ## Register
 
 product
 
-## Users
+## Etapa objetivo
 
-Estudiantes de medicina que usan una app privada de escritorio para leer contenido educativo, practicar preguntas y repasar tarjetas. Su tarea principal es retomar una actividad de estudio sin interpretar la interfaz como una herramienta clínica.
+Demo controlada Library-first.
 
-## Product Purpose
+Resummo no se presenta todavía como producción pública ni como herramienta de soporte a decisiones clínicas. La superficie vendible inicial es la Biblioteca; QBank y Flashcards funcionan como extensiones de aprendizaje, mientras Analysis y Study Plans permanecen fuera del núcleo comercial.
 
-Resummo reúne una biblioteca médica introductoria, QBank, flashcards y planificación local para que una demo privada muestre un flujo de aprendizaje coherente. El éxito de esta etapa es que las superficies existentes se sientan pobladas, honestas y fáciles de recorrer, sin simular capacidades de producción que aún no existen.
+## Usuarios
 
-## Brand Personality
+Estudiantes de medicina que necesitan encontrar, leer y organizar contenido educativo estructurado dentro de una experiencia sobria y navegable.
 
-Sobria, didáctica y confiable. La voz debe ser directa y serena, con lenguaje educativo claro y sin promesas de resultados académicos o clínicos.
+El panel editorial está dirigido a personas con rol Editor o Administrador que preparan, revisan e importan contenido antes de publicarlo.
 
-## Anti-references
+## Problema principal
 
-- Interfaces infantiles, CTAs gigantes o iconografía decorativa que compita con la tarea.
-- Métricas, progreso, testimonios o persistencia de servidor inventados.
-- Copia que parezca consejo médico personalizado o prometa aprobar exámenes.
-- Estados vacíos que parezcan errores o módulos incompletos presentados como terminados.
+El contenido de estudio suele estar fragmentado entre apuntes, documentos y herramientas distintas. Resummo busca ofrecer una biblioteca médica educativa con navegación jerárquica, búsqueda, artículos estructurados y un flujo editorial controlado.
 
-## Design Principles
+## Propuesta de valor inicial
 
-- Hacer visible el siguiente paso útil en cada estado vacío.
-- Diferenciar con honestidad datos persistidos, datos locales y módulos próximos.
-- Priorizar densidad legible y consistencia sobre decoración.
-- Conectar lectura, QBank y flashcards sin exponer IDs o slugs en la interfaz.
-- Mantener el contenido médico introductorio y sujeto a revisión humana.
+- Explorar contenido por áreas y carpetas humanas.
+- Buscar artículos sin perder el contexto de navegación.
+- Leer artículos con índice, metadata editorial y alcance educativo explícito.
+- Importar artículos desde Markdown exportado de Notion.
+- Crear siempre borradores antes de una publicación explícita.
+- Mantener preguntas y flashcards como recursos secundarios vinculables al contenido.
 
-## Accessibility & Inclusion
+## Principios de producto
 
-Mantener contraste suficiente, foco visible, controles con nombres accesibles y soporte para reducción de movimiento. El contenido no debe depender solo del color para comunicar estado.
+- Library-first: la Biblioteca es el producto inicial, no una sección secundaria.
+- Educativo, no clínico: no diagnostica, prescribe ni recomienda para pacientes concretos.
+- Confianza verificable: no inventar fuentes, revisores, fechas, métricas ni aprobación médica.
+- Publicación controlada: ningún importador publica automáticamente.
+- Profundidad progresiva: carpeta, tema y artículo deben diferenciarse claramente.
+- Datos reales: la app consume el backend; los mocks no son una fuente paralela de la Biblioteca.
+- Presentación humana: no mostrar enums, UUIDs, slugs ni roles técnicos en la interfaz.
+
+## Personalidad
+
+Sobria, didáctica y confiable. La interfaz debe desaparecer dentro de la tarea: explorar, leer, revisar o publicar.
+
+## Anti-referencias
+
+- Interfaces infantiles o decorativas.
+- CTAs gigantes y acciones sin implementación.
+- Métricas, progreso, testimonios o social proof inventados.
+- Contenido clínico presentado como recomendación individual.
+- Árboles médicos enormes con carpetas vacías.
+- Copias literales de AMBOSS u otras plataformas propietarias.
+
+## Definición de éxito para la demo
+
+Una persona puede:
+
+1. iniciar sesión;
+2. entrar directamente a Biblioteca;
+3. navegar un árbol jerárquico;
+4. buscar y abrir artículos publicados;
+5. comprender su alcance educativo y estado editorial;
+6. entrar al panel editorial;
+7. previsualizar un Markdown exportado de Notion;
+8. importarlo como borrador;
+9. revisar el borrador antes de cualquier publicación.
+
+La demo no se considera cerrada si depende únicamente de una base remota inaccesible, muestra controles rotos o afirma revisión médica sin evidencia.
+
+## Accesibilidad
+
+Mantener contraste suficiente, foco visible, labels claros, navegación por teclado y soporte para reducción de movimiento. El contenido no debe depender solo del color para comunicar estado.
