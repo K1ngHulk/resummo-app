@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { resolveJwtSecret } from './runtimeConfig.js'
 
-const jwtSecret = process.env.JWT_SECRET || 'development-secret-change-me'
+const jwtSecret = resolveJwtSecret()
 const jwtExpiresIn = '7d'
 
 export function signToken(user) {

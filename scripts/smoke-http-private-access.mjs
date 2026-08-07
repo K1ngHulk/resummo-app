@@ -26,6 +26,7 @@ async function startServer(port, { nodeEnv, privateMvpAccess, showDemoCredential
       PORT: String(port),
       PRIVATE_MVP_ACCESS: String(privateMvpAccess),
       SHOW_DEMO_CREDENTIALS: String(showDemoCredentials),
+      JWT_SECRET: 'resummo-private-access-smoke-secret-with-40-characters',
     },
     stdio: 'ignore',
   })

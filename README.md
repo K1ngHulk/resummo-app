@@ -54,16 +54,22 @@ npm.cmd run dev:client
 
 ## Validación
 
+La batería completa se ejecuta con:
+
 ```powershell
-node --test src/data/libraryTree.test.mjs server/lib/articleMarkdownImport.test.mjs
-npm.cmd run lint
-npm.cmd run build
-node scripts/smoke-http-admin.mjs
-node scripts/smoke-http-library.mjs
-node scripts/smoke-http-demo-showcase.mjs
+npm.cmd run verify:ci
 ```
 
-Los smokes que usan datos reales requieren una base disponible y las cuentas controladas del entorno correspondiente.
+Incluye Prisma validate, tests, lint, acceso privado, readiness, Admin, Library, catálogo demo, importación Markdown, First Learning Pack, QBank y build.
+
+Los smokes que usan datos persistentes requieren una base aislada preparada y las cuentas controladas del entorno correspondiente. GitHub Actions reproduce ese entorno con PostgreSQL efímero en `.github/workflows/ci.yml`.
+
+Endpoints operativos:
+
+- `/api/health` — liveness de la API.
+- `/api/ready` — readiness de la base; devuelve `503` sin exponer la conexión cuando PostgreSQL no está disponible.
+
+En `NODE_ENV=production`, el servidor no inicia con un `JWT_SECRET` ausente, débil o de ejemplo.
 
 ## Superficies principales
 
@@ -92,6 +98,10 @@ Consulta `docs/demo/README.md` para:
 - archivo Anki TSV de muestra;
 - contrato de frontmatter;
 - pasos de demostración.
+
+## Estado de beta privada
+
+Consulta `docs/16_beta_private_readiness.md`. El estado vigente es `CANDIDATE_FOR_PRIVATE_BETA`: el gate técnico local y CI están preparados, pero todavía faltan base remota válida, despliegue/rollback, backups, rate limiting, observabilidad y revisión clínica humana.
 
 ## Alcance actual
 

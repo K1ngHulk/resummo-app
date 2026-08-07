@@ -1,0 +1,64 @@
+name: Resummo CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: resummo
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d resummo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/resummo
+      DIRECT_URL: postgresql://postgres:postgres@127.0.0.1:5432/resummo
+      JWT_SECRET: ci-test-secret-with-more-than-thirty-two-characters
+      NODE_ENV: test
+      PRIVATE_MVP_ACCESS: true
+      SHOW_DEMO_CREDENTIALS: false
+      CORS_ORIGIN: http://localhost:5173
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run db:generate
+
+      - name: Prepare isolated database
+        run: |
+          npm run db:push
+          npm run db:seed
+          node scripts/load-demo-showcase-content.mjs
+
+      - name: Verify beta baseline
+        run: npm run verify:ci

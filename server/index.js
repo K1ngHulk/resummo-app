@@ -1,6 +1,8 @@
 import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
+import { prisma } from './lib/prisma.js'
+import { resolveRuntimeConfig } from './lib/runtimeConfig.js'
 import authRoutes from './routes/authRoutes.js'
 import articleRoutes from './routes/articleRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
@@ -14,10 +16,7 @@ import flashcardRoutes from './routes/flashcardRoutes.js'
 const app = express()
 const port = Number(process.env.PORT || 3001)
 const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
-
-function isEnvFlagEnabled(value) {
-  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase())
-}
+const runtimeConfig = resolveRuntimeConfig()
 
 app.use(cors({ origin: corsOrigin, credentials: true }))
 app.use(express.json())
@@ -27,12 +26,27 @@ app.get('/api/health', (_request, response) => {
     ok: true,
     service: 'resummo-api',
     config: {
-      privateMvpAccess: isEnvFlagEnabled(process.env.PRIVATE_MVP_ACCESS),
-      showDemoCredentials:
-        process.env.NODE_ENV === 'development' &&
-        isEnvFlagEnabled(process.env.SHOW_DEMO_CREDENTIALS),
+      privateMvpAccess: runtimeConfig.privateMvpAccess,
+      showDemoCredentials: runtimeConfig.showDemoCredentials,
     },
   })
+})
+
+app.get('/api/ready', async (_request, response) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`
+    response.json({
+      ok: true,
+      service: 'resummo-api',
+      dependencies: { database: 'ready' },
+    })
+  } catch {
+    response.status(503).json({
+      ok: false,
+      service: 'resummo-api',
+      dependencies: { database: 'unavailable' },
+    })
+  }
 })
 
 app.use('/api/auth', authRoutes)
