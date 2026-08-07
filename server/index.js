@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
+import { normalizeHttpError } from './lib/httpErrors.js'
 import { prisma } from './lib/prisma.js'
 import { resolveRuntimeConfig } from './lib/runtimeConfig.js'
 import authRoutes from './routes/authRoutes.js'
@@ -19,7 +20,7 @@ const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
 const runtimeConfig = resolveRuntimeConfig()
 
 app.use(cors({ origin: corsOrigin, credentials: true }))
-app.use(express.json())
+app.use(express.json({ limit: '1mb' }))
 
 app.get('/api/health', (_request, response) => {
   response.json({
@@ -59,16 +60,30 @@ app.use('/api/study/flashcards', flashcardRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/admin/content', adminContentRoutes)
 
+app.use('/api', (_request, response) => {
+  response.status(404).json({ message: 'Ruta no encontrada.' })
+})
+
 app.use((error, _request, response, next) => {
-  console.error(error)
   void next
 
   if (response.headersSent) {
     return
   }
 
-  response.status(error.statusCode || 500).json({
-    message: error.message || 'Error interno del servidor',
+  const normalizedError = normalizeHttpError(error, runtimeConfig.nodeEnvironment)
+  if (normalizedError.shouldLog) {
+    if (runtimeConfig.nodeEnvironment === 'production') {
+      console.error('[resummo-api] unexpected server error', {
+        name: error?.name || 'Error',
+      })
+    } else {
+      console.error(error)
+    }
+  }
+
+  response.status(normalizedError.statusCode).json({
+    message: normalizedError.message,
   })
 })
 
