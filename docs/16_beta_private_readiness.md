@@ -18,13 +18,16 @@ La promoción a `PRIVATE_BETA_READY` requiere cerrar los P0 pendientes con evide
 
 | Control | Estado | Evidencia |
 |---|---|---|
-| Rama y entrega reproducible | PASS | `main`, commits trazables y CI en `.github/workflows/ci.yml` |
+| Rama y entrega reproducible | PASS | `main`, commits trazables y CI remota aprobada en `.github/workflows/ci.yml` |
 | Prisma schema | PASS | `npm run db:validate` |
 | Tests deterministas | PASS | `npm test` |
 | Lint | PASS | `npm run lint` |
 | Build | PASS | `npm run build` |
 | Acceso privado | PASS técnico | Registro bloqueado en modo privado; smoke por roles |
 | JWT de producción | PASS código | El servidor rechaza secretos ausentes, débiles o de ejemplo |
+| Superficie privada | PASS | 17 rutas verificadas con rechazo anónimo `401` |
+| Errores HTTP | PASS | Zod y JSON inválido devuelven `400`; errores inesperados no filtran detalle en producción |
+| Cabeceras y CORS | PASS | Sin `X-Powered-By`, cabeceras API básicas, auth `no-store` y origen configurado verificado |
 | Liveness | PASS | `/api/health` no depende de la DB |
 | Readiness | PASS | `/api/ready` devuelve `200` con DB y `503` sin DB |
 | Biblioteca y artículos | PASS | Smoke HTTP y QA desktop |
@@ -99,6 +102,7 @@ La beta necesita como mínimo:
 
 ## P1 después de cerrar los P0
 
+- Resolver la auditoría de dependencias: `npm audit --omit=dev` reporta 1 advisory alto y 5 moderados dentro del toolchain transitivo de Prisma. La actualización sugerida debe ejecutarse como bloque separado y conservarse solo después de repetir `npm run verify:ci`.
 - Sesiones revocables o estrategia de invalidación de JWT.
 - Política de eliminación y retención de cuentas/progreso.
 - Responsive validado en los tamaños que usará la beta.
@@ -116,7 +120,7 @@ Con PostgreSQL aislado y datos controlados preparados:
 npm run verify:ci
 ```
 
-El comando ejecuta Prisma validate, tests, lint, acceso privado, readiness, Admin, Library, catálogo demo, importador Markdown, First Learning Pack, QBank y build.
+El comando ejecuta Prisma validate, tests, lint, acceso privado, readiness, respuestas HTTP seguras, cobertura anónima de rutas privadas, Admin, Library, catálogo demo, importador Markdown, First Learning Pack, QBank y build.
 
 ## Regla de promoción
 

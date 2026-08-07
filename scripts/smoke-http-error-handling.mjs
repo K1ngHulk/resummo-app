@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 const root = join(fileURLToPath(new URL('.', import.meta.url)), '..')
 const port = Number(process.env.ERROR_HANDLING_SMOKE_PORT || 3111)
 const baseUrl = `http://localhost:${port}`
+const allowedOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
 
 function pass(message) {
   console.log(`[pass] ${message}`)
@@ -66,6 +67,29 @@ async function run() {
   try {
     processHandle = await startServer()
 
+    const securityResponse = await fetch(`${baseUrl}/api/health`, {
+      headers: { Origin: allowedOrigin },
+    })
+    if (
+      securityResponse.headers.has('x-powered-by') ||
+      securityResponse.headers.get('x-content-type-options') !== 'nosniff' ||
+      securityResponse.headers.get('referrer-policy') !== 'no-referrer' ||
+      securityResponse.headers.get('x-frame-options') !== 'DENY' ||
+      securityResponse.headers.get('access-control-allow-origin') !== allowedOrigin
+    ) {
+      throw new Error('API security or allowed-origin headers are incomplete')
+    }
+    pass('API security headers and configured CORS origin are enforced')
+
+    const disallowedOrigin = 'https://untrusted.example'
+    const disallowedCorsResponse = await fetch(`${baseUrl}/api/health`, {
+      headers: { Origin: disallowedOrigin },
+    })
+    if (disallowedCorsResponse.headers.get('access-control-allow-origin') === disallowedOrigin) {
+      throw new Error('Unconfigured CORS origin was authorized')
+    }
+    pass('unconfigured CORS origins are not authorized')
+
     const malformedJsonResponse = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -78,7 +102,10 @@ async function run() {
     ) {
       throw new Error('Malformed JSON did not return the safe 400 response')
     }
-    pass('malformed JSON returns a safe 400 response')
+    if (!String(malformedJsonResponse.headers.get('cache-control') || '').includes('no-store')) {
+      throw new Error('Authentication responses are missing Cache-Control: no-store')
+    }
+    pass('malformed JSON returns a safe 400 response without cacheable auth data')
 
     const invalidPayloadResponse = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',

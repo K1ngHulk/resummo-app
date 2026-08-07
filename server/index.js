@@ -19,6 +19,19 @@ const port = Number(process.env.PORT || 3001)
 const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
 const runtimeConfig = resolveRuntimeConfig()
 
+app.disable('x-powered-by')
+app.use((request, response, next) => {
+  response.setHeader('X-Content-Type-Options', 'nosniff')
+  response.setHeader('Referrer-Policy', 'no-referrer')
+  response.setHeader('X-Frame-Options', 'DENY')
+  response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+
+  if (request.path.startsWith('/api/auth')) {
+    response.setHeader('Cache-Control', 'no-store')
+  }
+
+  next()
+})
 app.use(cors({ origin: corsOrigin, credentials: true }))
 app.use(express.json({ limit: '1mb' }))
 
