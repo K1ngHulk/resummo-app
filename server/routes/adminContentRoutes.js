@@ -29,7 +29,7 @@ function validationError(message) {
   return error
 }
 
-const pendingEditorialContentPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
+const pendingEditorialContentPattern = /\[FALTA CITA\]|\[(?:TODO|PENDIENTE)\]|(?:^|\n)\s*(?:TODO|PENDIENTE)\s*:/im
 
 function hasArticleSection(article) {
   const structuredBlocks = Array.isArray(article.contentJson?.blocks) ? article.contentJson.blocks : []

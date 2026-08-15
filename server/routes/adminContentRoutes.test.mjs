@@ -130,6 +130,24 @@ test('blocks imported Markdown while editorial approval metadata is incomplete',
   assert.ok(issues.includes('falta la fecha de revision'))
 })
 
+test('does not treat normal Spanish uses of todo or pendiente as editorial markers', () => {
+  const issues = getArticlePublicationIssues({
+    ...baseArticle,
+    body: '## Contenido\n\nTodo paciente debe ser evaluado según el contexto y puede quedar pendiente de seguimiento clínico.',
+  }, topic)
+
+  assert.deepEqual(issues, [])
+})
+
+test('still blocks explicit TODO editorial markers', () => {
+  const issues = getArticlePublicationIssues({
+    ...baseArticle,
+    body: '## Contenido\n\nTODO: completar la revisión editorial.',
+  }, topic)
+
+  assert.ok(issues.includes('el cuerpo contiene citas o pendientes editoriales'))
+})
+
 test('accepts imported Markdown only with approved and complete editorial metadata', () => {
   const issues = getArticlePublicationIssues({
     ...baseArticle,
