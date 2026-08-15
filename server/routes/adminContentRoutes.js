@@ -14,6 +14,10 @@ import {
   importNotionExportBuffer,
 } from '../lib/notionExportImportService.js'
 import { getLocalDatabaseTarget } from '../lib/localEditorialReset.js'
+import {
+  approveImportedArticleSnapshots,
+  publishArticlesWithCurrentApproval,
+} from '../lib/editorialPublicationService.js'
 
 const router = express.Router()
 
@@ -44,7 +48,7 @@ function hasCurrentEditorialApproval(article) {
   )
 }
 
-export function getArticlePublicationIssues(article, topic) {
+export function getArticlePublicationIssues(article, topic, { ignoreEditorialApproval = false } = {}) {
   const issues = []
   if (!article.title?.trim()) issues.push('falta el titulo')
   if (!article.summary?.trim()) issues.push('falta el resumen')
@@ -52,7 +56,10 @@ export function getArticlePublicationIssues(article, topic) {
   if (!hasArticleSection(article)) issues.push('falta al menos una seccion estructurada')
   if (!Number.isInteger(article.readTimeMinutes) || article.readTimeMinutes <= 0) issues.push('el tiempo de lectura no es valido')
   if (pendingEditorialContentPattern.test(article.body || '')) issues.push('el cuerpo contiene citas o pendientes editoriales')
-  if (!hasCurrentEditorialApproval(article)) {
+  if (article.sourceType === 'NOTION_EXPORT' && (!article.sourceSnapshotHash || !Array.isArray(article.contentJson?.blocks) || article.contentJson.blocks.length === 0)) {
+    issues.push('el articulo importado no tiene un snapshot estructurado valido')
+  }
+  if (!ignoreEditorialApproval && !hasCurrentEditorialApproval(article)) {
     issues.push('el articulo importado desde Notion requiere aprobacion editorial explicita para el snapshot actual antes de publicar')
   }
 
@@ -344,22 +351,16 @@ router.post('/articles/bulk-action', async (request, response, next) => {
       }
 
       const importedArticles = articles.filter((article) => article.sourceType === 'NOTION_EXPORT')
-      const approvedAt = new Date()
-      if (importedArticles.length > 0) {
-        await prisma.$transaction(importedArticles.map((article) => prisma.article.update({
-          where: { id: article.id },
-          data: {
-            editorialApprovedAt: approvedAt,
-            editorialApprovedByUserId: request.user.id,
-            editorialApprovedSnapshotHash: article.sourceSnapshotHash,
-          },
-        })))
-      }
+      const approved = await approveImportedArticleSnapshots(
+        prisma,
+        importedArticles.map((article) => article.id),
+        request.user.id,
+      )
 
       response.json({
         action: 'APPROVE',
         selected: articles.length,
-        approved: importedArticles.length,
+        approved,
         alreadyApprovalFree: articles.length - importedArticles.length,
       })
       return
@@ -382,31 +383,11 @@ router.post('/articles/bulk-action', async (request, response, next) => {
         data: { status: 'PUBLISHED' },
       })
 
-      let published = 0
-      for (const article of articles) {
-        if (article.sourceType === 'NOTION_EXPORT') {
-          const update = await transaction.article.updateMany({
-            where: {
-              id: article.id,
-              sourceSnapshotHash: article.sourceSnapshotHash,
-              editorialApprovedAt: { not: null },
-              editorialApprovedByUserId: { not: null },
-              editorialApprovedSnapshotHash: article.sourceSnapshotHash,
-            },
-            data: { status: 'PUBLISHED' },
-          })
-          if (update.count !== 1) {
-            const error = new Error('La seleccion cambio durante la publicacion. Recarga la lista y vuelve a intentarlo.')
-            error.statusCode = 409
-            throw error
-          }
-        } else {
-          await transaction.article.update({
-            where: { id: article.id },
-            data: { status: 'PUBLISHED' },
-          })
-        }
-        published += 1
+      const published = await publishArticlesWithCurrentApproval(transaction, articleIds)
+      if (published !== articleIds.length) {
+        const error = new Error('La seleccion cambio durante la publicacion. Recarga la lista y vuelve a intentarlo.')
+        error.statusCode = 409
+        throw error
       }
 
       return { published }
@@ -417,6 +398,74 @@ router.post('/articles/bulk-action', async (request, response, next) => {
       selected: articles.length,
       published: publication.published,
       topicsPublished: topicIds.length,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/articles/publish-library', async (request, response, next) => {
+  try {
+    if (request.user.role !== 'ADMIN') {
+      const error = new Error('Solo un administrador puede publicar la biblioteca completa.')
+      error.statusCode = 403
+      throw error
+    }
+
+    const articles = await prisma.article.findMany({
+      where: {
+        sourceType: 'NOTION_EXPORT',
+        status: { not: 'ARCHIVED' },
+      },
+      include: { topic: true },
+      orderBy: { id: 'asc' },
+    })
+    if (articles.length === 0) throw validationError('No hay artículos importados desde Notion para publicar.')
+
+    const blocked = articles.map((article) => ({
+      article,
+      issues: getArticlePublicationIssues(
+        article,
+        { ...article.topic, status: 'PUBLISHED' },
+        { ignoreEditorialApproval: true },
+      ),
+    })).filter((item) => item.issues.length > 0)
+
+    if (blocked.length > 0) {
+      const sample = blocked.slice(0, 5).map((item) => `${item.article.title}: ${item.issues[0]}`).join(' | ')
+      throw validationError(`No se puede publicar la biblioteca: ${blocked.length} artículo(s) tienen bloqueos editoriales. ${sample}`)
+    }
+
+    const articleIds = articles.map((article) => article.id)
+    const topicIds = [...new Set(articles.map((article) => article.topicId))]
+    const publication = await prisma.$transaction(async (transaction) => {
+      const approved = await approveImportedArticleSnapshots(transaction, articleIds, request.user.id)
+      if (approved !== articleIds.length) {
+        const error = new Error('No se pudieron aprobar todos los snapshots actuales. Recarga e intenta nuevamente.')
+        error.statusCode = 409
+        throw error
+      }
+
+      const topicsPublished = await transaction.topic.updateMany({
+        where: { id: { in: topicIds } },
+        data: { status: 'PUBLISHED' },
+      })
+      const published = await publishArticlesWithCurrentApproval(transaction, articleIds)
+      if (published !== articleIds.length) {
+        const error = new Error('La biblioteca cambió durante la publicación. Recarga e intenta nuevamente.')
+        error.statusCode = 409
+        throw error
+      }
+
+      return { approved, published, topicsPublished: topicsPublished.count }
+    }, { isolationLevel: 'Serializable', timeout: 30000 })
+
+    response.json({
+      action: 'PUBLISH_LIBRARY',
+      selected: articleIds.length,
+      approved: publication.approved,
+      published: publication.published,
+      topicsPublished: publication.topicsPublished,
     })
   } catch (error) {
     next(error)

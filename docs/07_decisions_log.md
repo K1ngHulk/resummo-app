@@ -124,6 +124,25 @@ Dudas abiertas:
 
 - Definir si el equipo quiere documentar una paleta completa de marca mas adelante.
 
+### 2026-08-15 - Publicación de biblioteca como acción editorial de primer nivel
+
+Estado: decidido.
+
+Decision: El bootstrap y la publicación masiva de contenido importado no deben depender de seleccionar cientos de artículos y ejecutar cientos de updates. La superficie `/admin/articles` se presenta como `Biblioteca editorial` y ofrece a Admin una acción `Publicar biblioteca` que valida el snapshot actual, registra la aprobación editorial, publica las especialidades asociadas y publica los artículos importados mediante operaciones de conjunto.
+
+Motivo: El flujo anterior ocultaba las acciones hasta seleccionar filas y ejecutaba cientos de updates Prisma, lo que produjo errores de servidor con el corpus de 427 artículos. Además, el concepto funcional es biblioteca (especialidades + artículos), no solo una colección de artículos aislados.
+
+Consecuencias:
+
+- La revisión artículo por artículo y las acciones por lote siguen disponibles.
+- La aprobación/publicación masiva usa unas pocas operaciones de conjunto y conserva la validación editorial antes de hacer contenido visible a Student.
+- `Publicar biblioteca` requiere rol ADMIN y una confirmación explícita en UI.
+- Las especialidades necesarias se publican automáticamente junto con sus artículos.
+
+Dudas abiertas:
+
+- Definir más adelante si la publicación completa debe admitir selección por especialidad o release editorial versionado.
+
 ### 2026-08-15 - Resumen como entrada autenticada por defecto
 
 Estado: decidido.

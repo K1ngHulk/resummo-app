@@ -35,7 +35,7 @@
 
 .admin-article-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   border: 1px solid var(--color-primary-border);
   border-radius: 10px;
   overflow: hidden;
@@ -64,6 +64,37 @@
   color: #fff;
   font-size: 1.35rem;
   line-height: 1;
+}
+
+.admin-library-publish-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 10px;
+  background: var(--color-primary-tint);
+}
+
+.admin-library-publish-card > div:first-child {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-library-publish-card p {
+  max-width: 76ch;
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.admin-library-publish-card__actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .admin-articles-toolbar {
@@ -394,7 +425,8 @@
 @media (max-width: 900px) {
   .admin-articles-header,
   .admin-articles-toolbar,
-  .admin-bulk-confirm {
+  .admin-bulk-confirm,
+  .admin-library-publish-card {
     align-items: stretch;
     flex-direction: column;
   }
@@ -419,15 +451,16 @@
 
 @media (max-width: 640px) {
   .admin-article-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
-  .admin-article-stats article:nth-child(2) {
+  .admin-article-stats article {
     border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   }
 
-  .admin-article-stats article:nth-child(-n + 2) {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  .admin-article-stats article:last-child {
+    border-bottom: 0;
   }
 
   .admin-selection-bar,
@@ -449,13 +482,15 @@
 
   .admin-articles-header__actions,
   .admin-bulk-bar__actions,
-  .admin-bulk-confirm > div {
+  .admin-bulk-confirm > div,
+  .admin-library-publish-card__actions {
     width: 100%;
   }
 
   .admin-articles-header__actions .admin-action-btn,
   .admin-bulk-bar__actions .admin-action-btn,
-  .admin-bulk-confirm .admin-action-btn {
+  .admin-bulk-confirm .admin-action-btn,
+  .admin-library-publish-card .admin-action-btn {
     flex: 1 1 100%;
     width: 100%;
   }

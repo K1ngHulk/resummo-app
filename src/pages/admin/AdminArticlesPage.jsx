@@ -29,7 +29,7 @@ function getWorkflowStatus(article) {
 }
 
 export default function AdminArticlesPage({ onNavigate }) {
-  const { request } = useAuth()
+  const { request, user } = useAuth()
   const [articles, setArticles] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -39,6 +39,8 @@ export default function AdminArticlesPage({ onNavigate }) {
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [isBulkProcessing, setIsBulkProcessing] = useState(false)
   const [pendingPublishConfirmation, setPendingPublishConfirmation] = useState(false)
+  const [pendingLibraryPublish, setPendingLibraryPublish] = useState(false)
+  const [isLibraryPublishing, setIsLibraryPublishing] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -61,6 +63,7 @@ export default function AdminArticlesPage({ onNavigate }) {
   }, [request])
 
   const counts = useMemo(() => ({
+    topics: new Set(articles.map((article) => article.topic?.title).filter(Boolean)).size,
     total: articles.length,
     review: articles.filter((article) => article.status === 'DRAFT').length,
     approved: articles.filter((article) => article.status === 'DRAFT' && hasCurrentEditorialApproval(article)).length,
@@ -104,6 +107,26 @@ export default function AdminArticlesPage({ onNavigate }) {
     setPendingPublishConfirmation(false)
   }
 
+  const runPublishLibrary = async () => {
+    setIsLibraryPublishing(true)
+    setError('')
+    setSuccess('')
+    try {
+      const payload = await request('/api/admin/content/articles/publish-library', {
+        method: 'POST',
+      })
+      setSuccess(`Biblioteca publicada: ${payload.published || 0} artículo(s) y ${payload.topicsPublished || 0} especialidad(es) visibles para estudiantes.`)
+      setPendingLibraryPublish(false)
+      setSelectedIds(new Set())
+      const refreshed = await request('/api/admin/content/articles')
+      setArticles(refreshed.articles || [])
+    } catch (publishError) {
+      setError(publishError.message || 'No se pudo publicar la biblioteca.')
+    } finally {
+      setIsLibraryPublishing(false)
+    }
+  }
+
   const runBulkAction = async (action) => {
     if (selectedIds.size === 0) return
     setIsBulkProcessing(true)
@@ -134,25 +157,45 @@ export default function AdminArticlesPage({ onNavigate }) {
     <div className="admin-articles-page">
       <header className="admin-articles-header">
         <div>
-          <h1>Gestión de artículos</h1>
-          <p>Revisa, aprueba y publica contenido. Puedes trabajar artículo por artículo o por lote.</p>
+          <h1>Biblioteca editorial</h1>
+          <p>Gestiona especialidades y artículos importados. Puedes revisar contenido individualmente o publicar la biblioteca completa cuando el snapshot actual esté listo.</p>
         </div>
         <div className="admin-articles-header__actions">
           <button type="button" className="admin-action-btn admin-action-btn--secondary" onClick={() => onNavigate('/admin/import/articles')}>
             Importar contenido
           </button>
-          <button type="button" className="admin-action-btn admin-action-btn--publish" onClick={() => onNavigate('/admin/articles/new')}>
+          {user?.role === 'ADMIN' && counts.review > 0 ? (
+            <button type="button" className="admin-action-btn admin-action-btn--publish" onClick={() => setPendingLibraryPublish(true)}>
+              <AppIcon name="publish" />
+              Publicar biblioteca
+            </button>
+          ) : null}
+          <button type="button" className="admin-action-btn admin-action-btn--secondary" onClick={() => onNavigate('/admin/articles/new')}>
             Nuevo artículo
           </button>
         </div>
       </header>
 
       <section className="admin-article-stats" aria-label="Resumen editorial">
-        <article><span>Total</span><strong>{counts.total}</strong></article>
+        <article><span>Especialidades</span><strong>{counts.topics}</strong></article>
+        <article><span>Artículos</span><strong>{counts.total}</strong></article>
         <article><span>En revisión</span><strong>{counts.review}</strong></article>
         <article><span>Aprobados</span><strong>{counts.approved}</strong></article>
         <article><span>Publicados</span><strong>{counts.published}</strong></article>
       </section>
+
+      {pendingLibraryPublish ? (
+        <section className="admin-library-publish-card" role="alert">
+          <div>
+            <strong>Publicar la biblioteca completa</strong>
+            <p>Esta acción aprobará el snapshot actual de los artículos importados y publicará automáticamente las especialidades asociadas. El contenido pasará a ser visible para cuentas Student.</p>
+          </div>
+          <div className="admin-library-publish-card__actions">
+            <button type="button" className="admin-action-btn admin-action-btn--secondary" onClick={() => setPendingLibraryPublish(false)} disabled={isLibraryPublishing}>Cancelar</button>
+            <button type="button" className="admin-action-btn admin-action-btn--publish" onClick={runPublishLibrary} disabled={isLibraryPublishing}>{isLibraryPublishing ? 'Publicando biblioteca…' : `Confirmar publicación (${counts.review} en revisión)`}</button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="admin-articles-toolbar" aria-label="Buscar y filtrar artículos">
         <label className="admin-articles-search">

@@ -101,6 +101,24 @@ test('blocks publishing a NOTION_EXPORT article until the current snapshot has e
   assert.ok(!approved.some((issue) => issue.includes('requiere aprobacion editorial explicita')))
 })
 
+test('allows a library-level publication check to ignore only the pending snapshot approval', () => {
+  const article = {
+    ...baseArticle,
+    body: '# Título\n\nTexto importado.',
+    sourceType: 'NOTION_EXPORT',
+    sourceSnapshotHash: 'snapshot-current',
+    contentJson: {
+      blocks: [{ type: 'paragraph', children: [{ type: 'text', value: 'Texto importado.' }] }],
+      headings: [{ level: 2, anchor: 'h-section', text: 'Sección estructurada' }],
+    },
+  }
+
+  assert.deepEqual(
+    getArticlePublicationIssues(article, topic, { ignoreEditorialApproval: true }),
+    [],
+  )
+})
+
 test('blocks imported Markdown while editorial approval metadata is incomplete', () => {
   const issues = getArticlePublicationIssues({
     ...baseArticle,

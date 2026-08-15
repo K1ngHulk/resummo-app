@@ -14,7 +14,7 @@ export default function AdminLayout({ children, currentPath, onNavigate }) {
   const navItems = [
     { id: 'dashboard', path: '/admin', label: 'Panel', icon: 'dashboard' },
     { id: 'article-import', path: '/admin/import/articles', label: 'Importar contenido', icon: 'upload' },
-    { id: 'articles', path: '/admin/articles', label: 'Artículos', icon: 'article' },
+    { id: 'articles', path: '/admin/articles', label: 'Biblioteca editorial', icon: 'article' },
     { id: 'topics', path: '/admin/topics', label: 'Temas', icon: 'folder' },
     { id: 'questions', path: '/admin/questions', label: 'Preguntas', icon: 'question' },
     { id: 'anki-import', path: '/admin/import/anki', label: 'Importar Anki', icon: 'cards' },
