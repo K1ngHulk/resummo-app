@@ -109,7 +109,7 @@ test('allows a library-level publication check to ignore only the pending snapsh
     sourceSnapshotHash: 'snapshot-current',
     contentJson: {
       blocks: [{ type: 'paragraph', children: [{ type: 'text', value: 'Texto importado.' }] }],
-      headings: [{ level: 2, anchor: 'h-section', text: 'Sección estructurada' }],
+      headings: [],
     },
   }
 

@@ -13,14 +13,16 @@ function getHumanStatus(status) {
 }
 
 function buildEditorialChecklist(formData, topicStatus, contentJson, sourceType, hasCurrentApproval) {
+  const structuredBlocks = Array.isArray(contentJson?.blocks) ? contentJson.blocks : []
   const structuredHeadings = Array.isArray(contentJson?.headings) ? contentJson.headings : []
-  const hasSection = structuredHeadings.some((heading) => Number(heading?.level) >= 2)
-    || /^#{2,6}\s+\S.*$/m.test(formData.body)
+  const hasSection = sourceType === 'NOTION_EXPORT'
+    ? structuredBlocks.length > 0
+    : structuredHeadings.some((heading) => Number(heading?.level) >= 2) || /^#{2,6}\s+\S.*$/m.test(formData.body)
   return [
     { id: 'title', label: 'Tiene un título claro', passed: Boolean(formData.title.trim()) },
     { id: 'summary', label: 'Tiene un resumen editorial', passed: Boolean(formData.summary.trim()) },
     { id: 'body', label: 'Tiene contenido en el cuerpo', passed: Boolean(formData.body.trim()) },
-    { id: 'sections', label: 'Incluye al menos una sección estructurada', passed: hasSection },
+    { id: 'sections', label: sourceType === 'NOTION_EXPORT' ? 'Tiene contenido estructurado importado' : 'Incluye al menos una sección estructurada', passed: hasSection },
     { id: 'read-time', label: 'Tiene un tiempo de lectura positivo', passed: Number(formData.readTimeMinutes) > 0 },
     { id: 'pending', label: 'No contiene citas o pendientes editoriales', passed: !pendingContentPattern.test(formData.body) },
     { id: 'structured-approval', label: 'La importación estructurada tiene aprobación editorial explícita para este snapshot', passed: sourceType !== 'NOTION_EXPORT' || hasCurrentApproval },

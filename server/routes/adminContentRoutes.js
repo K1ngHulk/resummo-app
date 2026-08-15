@@ -32,6 +32,8 @@ function validationError(message) {
 const pendingEditorialContentPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
 
 function hasArticleSection(article) {
+  const structuredBlocks = Array.isArray(article.contentJson?.blocks) ? article.contentJson.blocks : []
+  if (article.sourceType === 'NOTION_EXPORT' && structuredBlocks.length > 0) return true
   const structuredHeadings = Array.isArray(article.contentJson?.headings) ? article.contentJson.headings : []
   return structuredHeadings.some((heading) => Number(heading?.level) >= 2)
     || /^#{2,6}\s+\S.*$/m.test(article.body || '')
