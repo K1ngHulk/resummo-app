@@ -2,6 +2,7 @@ import 'dotenv/config'
 import path from 'node:path'
 import cors from 'cors'
 import express from 'express'
+import { checkContentAssetStore, ensureContentAssetStore, loadContentAsset } from './lib/contentAssetStore.js'
 import { normalizeHttpError } from './lib/httpErrors.js'
 import { prisma } from './lib/prisma.js'
 import { resolveRuntimeConfig } from './lib/runtimeConfig.js'
@@ -35,10 +36,25 @@ app.use((request, response, next) => {
   next()
 })
 app.use(cors({ origin: corsOrigin, credentials: true }))
-app.use('/content-assets', express.static(
-  process.env.RESUMMO_CONTENT_ASSET_DIR || path.resolve(process.cwd(), '.runtime', 'content-assets'),
-  { dotfiles: 'deny', index: false, fallthrough: true, maxAge: runtimeConfig.nodeEnvironment === 'production' ? '1h' : 0 },
-))
+app.get('/content-assets/:fileName', async (request, response, next) => {
+  try {
+    const asset = await loadContentAsset(request.params.fileName)
+    if (!asset) {
+      response.status(404).end()
+      return
+    }
+    response.setHeader('Content-Type', asset.mimeType)
+    response.setHeader(
+      'Cache-Control',
+      runtimeConfig.nodeEnvironment === 'production'
+        ? 'public, max-age=31536000, immutable'
+        : 'no-cache',
+    )
+    response.send(asset.data)
+  } catch (error) {
+    next(error)
+  }
+})
 app.use(express.json({ limit: '1mb' }))
 
 app.get('/api/health', (_request, response) => {
@@ -53,20 +69,28 @@ app.get('/api/health', (_request, response) => {
 })
 
 app.get('/api/ready', async (_request, response) => {
+  const dependencies = { database: 'unavailable', storage: 'unavailable' }
+
   try {
     await prisma.$queryRaw`SELECT 1`
-    response.json({
-      ok: true,
-      service: 'resummo-api',
-      dependencies: { database: 'ready' },
-    })
+    dependencies.database = 'ready'
   } catch {
-    response.status(503).json({
-      ok: false,
-      service: 'resummo-api',
-      dependencies: { database: 'unavailable' },
-    })
+    // Keep the dependency unavailable without exposing connection details.
   }
+
+  try {
+    const storage = await checkContentAssetStore()
+    if (storage.ready) dependencies.storage = 'ready'
+  } catch {
+    // Keep the dependency unavailable without exposing bridge details.
+  }
+
+  const ready = dependencies.database === 'ready' && dependencies.storage === 'ready'
+  response.status(ready ? 200 : 503).json({
+    ok: ready,
+    service: 'resummo-api',
+    dependencies,
+  })
 })
 
 app.use('/api/auth', authRoutes)
@@ -131,6 +155,16 @@ app.use((error, _request, response, next) => {
   })
 })
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Resummo escuchando en el puerto ${port}`)
+async function startServer() {
+  await ensureContentAssetStore()
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Resummo escuchando en el puerto ${port}`)
+  })
+}
+
+startServer().catch((error) => {
+  console.error('[resummo-api] startup dependency failed', {
+    name: error?.name || 'Error',
+  })
+  process.exitCode = 1
 })

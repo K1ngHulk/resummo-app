@@ -964,9 +964,12 @@ function requireZipBody(request) {
   return request.body
 }
 
+export function assertNotionExportImportAllowed({ replaceEditorial = false, databaseUrl = process.env.DATABASE_URL } = {}) {
+  if (replaceEditorial) getLocalDatabaseTarget(databaseUrl)
+}
+
 router.post('/import/notion-export/preview', notionExportBody, async (request, response, next) => {
   try {
-    getLocalDatabaseTarget()
     const { preview } = await buildNotionExportPreview(requireZipBody(request), {
       archiveName: notionArchiveName(request),
       client: prisma,
@@ -979,8 +982,8 @@ router.post('/import/notion-export/preview', notionExportBody, async (request, r
 
 router.post('/import/notion-export/confirm', notionExportBody, async (request, response, next) => {
   try {
-    getLocalDatabaseTarget()
     const replaceEditorial = String(request.headers['x-resummo-replace-editorial'] || '').toLowerCase() === 'true'
+    assertNotionExportImportAllowed({ replaceEditorial })
     const result = await importNotionExportBuffer(requireZipBody(request), {
       archiveName: notionArchiveName(request),
       client: prisma,

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { getArticlePublicationIssues } from './adminContentRoutes.js'
+import { assertNotionExportImportAllowed, getArticlePublicationIssues } from './adminContentRoutes.js'
 
 const topic = { status: 'PUBLISHED' }
 const baseArticle = {
@@ -31,6 +31,23 @@ educational_only: ${metadata.educational_only}
 
 Texto educativo revisable.`
 }
+
+test('allows a normal Notion export import against a remote production database', () => {
+  assert.doesNotThrow(() => assertNotionExportImportAllowed({
+    replaceEditorial: false,
+    databaseUrl: 'postgresql://resummo_app.example:secret@pooler.supabase.com:5432/postgres',
+  }))
+})
+
+test('keeps destructive editorial replacement restricted to the local Resummo database', () => {
+  assert.throws(
+    () => assertNotionExportImportAllowed({
+      replaceEditorial: true,
+      databaseUrl: 'postgresql://resummo_app.example:secret@pooler.supabase.com:5432/postgres',
+    }),
+    (error) => error.code === 'LOCAL_DATABASE_REQUIRED',
+  )
+})
 
 test('keeps legacy articles publishable when their existing fields are complete', () => {
   const issues = getArticlePublicationIssues({

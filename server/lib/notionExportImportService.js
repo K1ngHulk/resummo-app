@@ -1,8 +1,11 @@
-import crypto from 'node:crypto'
-import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parseNotionExportZip } from './notionExportZip.js'
 import { buildNotionExportModel, toPublicNotionExportPreview } from './notionExportModel.js'
+import {
+  cleanupCreatedContentAssets,
+  findMissingContentAssets,
+  persistContentAssets,
+} from './contentAssetStore.js'
 import { createLocalDatabaseBackup, deleteEditorialContent, getEditorialContentCounts, getLocalDatabaseTarget } from './localEditorialReset.js'
 
 const SOURCE_TYPE = 'NOTION_EXPORT'
@@ -12,10 +15,6 @@ function validationError(message, code = 'INVALID_NOTION_EXPORT') {
   error.statusCode = 400
   error.code = code
   return error
-}
-
-function assetDirectory() {
-  return process.env.RESUMMO_CONTENT_ASSET_DIR || path.resolve(process.cwd(), '.runtime', 'content-assets')
 }
 
 async function existingImportState(client, model) {
@@ -52,40 +51,6 @@ export async function buildNotionExportPreview(buffer, { archiveName, client }) 
       existingContent,
     }),
   }
-}
-
-async function persistAssets(model) {
-  const directory = assetDirectory()
-  await fs.mkdir(directory, { recursive: true })
-  const created = []
-  const existing = []
-  const unique = new Map()
-  for (const asset of model.assets) unique.set(`${asset.checksum}${asset.extension}`, asset)
-
-  for (const asset of unique.values()) {
-    const fileName = `${asset.checksum}${asset.extension}`
-    const destination = path.join(directory, fileName)
-    try {
-      const current = await fs.readFile(destination)
-      const checksum = crypto.createHash('sha256').update(current).digest('hex')
-      if (current.length !== asset.sizeBytes || checksum !== asset.checksum) {
-        throw validationError('Un asset local existente no coincide con el contenido importado.', 'ASSET_COLLISION')
-      }
-      existing.push(fileName)
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error
-      await fs.writeFile(destination, asset.data, { flag: 'wx' })
-      created.push(fileName)
-    }
-  }
-  return { directory, created, existing, uniqueCount: unique.size }
-}
-
-async function cleanupNewAssets(assetResult) {
-  if (!assetResult) return
-  await Promise.all(assetResult.created.map(async (fileName) => {
-    try { await fs.unlink(path.join(assetResult.directory, fileName)) } catch { /* best effort */ }
-  }))
 }
 
 async function upsertTopic(transaction, topic) {
@@ -208,11 +173,7 @@ export async function validateNotionExportPersistence(client) {
   ])
   const emptyContentJson = rows.filter((row) => !row.contentJson || !Array.isArray(row.contentJson.blocks) || row.contentJson.blocks.length === 0).length
   const assetUrls = new Set(rows.flatMap((row) => collectAssetUrls(row.contentJson?.blocks || [])))
-  let missingAssetFiles = 0
-  for (const url of assetUrls) {
-    const fileName = path.basename(url)
-    try { await fs.access(path.join(assetDirectory(), fileName)) } catch { missingAssetFiles += 1 }
-  }
+  const missingAssetFiles = (await findMissingContentAssets([...assetUrls].map((url) => path.basename(url)))).length
   return {
     topics,
     articles,
@@ -239,7 +200,7 @@ export async function importNotionExportBuffer(buffer, { archiveName, client, re
   const backup = replaceEditorial ? await createLocalDatabaseBackup() : null
   let assetResult = null
   try {
-    assetResult = await persistAssets(model)
+    assetResult = await persistContentAssets(model.assets)
     const persistence = await persistModel(client, model, { replaceEditorial })
     const after = await getEditorialContentCounts(client)
     if (after.users !== before.users) throw new Error('La importación alteró la cantidad de usuarios; la operación no es válida.')
@@ -255,7 +216,7 @@ export async function importNotionExportBuffer(buffer, { archiveName, client, re
       validation,
     }
   } catch (error) {
-    await cleanupNewAssets(assetResult)
+    await cleanupCreatedContentAssets(assetResult)
     throw error
   }
 }

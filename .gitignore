@@ -20,6 +20,7 @@ output/antigravity/
 test-results/
 .runtime/
 backups/
+supabase/.temp/
 start-resummo-local-demo-improved-fixed.bat
 nul
 

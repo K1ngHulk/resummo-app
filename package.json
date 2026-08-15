@@ -8,9 +8,10 @@
     "dev:client": "vite",
     "dev:server": "node --watch server/index.js",
     "start": "node server/index.js",
+    "prebuild": "npm run db:generate",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "node --test server/lib/articleMarkdownImport.test.mjs server/lib/notionDocumentNormalizer.test.mjs server/lib/notionImportService.test.mjs server/lib/notionExportImport.test.mjs server/lib/localEditorialReset.test.mjs server/lib/httpErrors.test.mjs server/lib/runtimeConfig.test.mjs server/routes/adminContentRoutes.test.mjs src/data/libraryDataCache.test.mjs src/data/libraryTree.test.mjs",
+    "test": "node --test server/lib/articleMarkdownImport.test.mjs server/lib/contentAssetStore.test.mjs server/lib/notionDocumentNormalizer.test.mjs server/lib/notionImportService.test.mjs server/lib/notionExportImport.test.mjs server/lib/localEditorialReset.test.mjs server/lib/httpErrors.test.mjs server/lib/runtimeConfig.test.mjs server/routes/adminContentRoutes.test.mjs src/data/libraryDataCache.test.mjs src/data/libraryTree.test.mjs",
     "smoke:private-access": "node scripts/smoke-http-private-access.mjs",
     "smoke:readiness": "node scripts/smoke-http-readiness.mjs",
     "smoke:error-handling": "node scripts/smoke-http-error-handling.mjs",
@@ -35,6 +36,9 @@
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+  },
+  "engines": {
+    "node": "24.14.1"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

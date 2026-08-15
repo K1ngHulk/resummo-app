@@ -221,6 +221,16 @@ model RecentActivity {
   article    Article?      @relation(fields: [articleId], references: [id], onDelete: Cascade)
 }
 
+model StorageBridgeConfig {
+  id        String   @id
+  tokenHash String   @map("token_hash")
+  bucket    String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("storage_bridge_config")
+}
+
 model UserFlashcardProgress {
   id             String   @id @default(cuid())
   userId         String
