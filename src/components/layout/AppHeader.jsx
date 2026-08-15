@@ -11,6 +11,7 @@ function formatHeaderRole(role) {
 
 function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, routedSearchQuery = '', user }) {
   const [searchQuery, setSearchQuery] = useState(routedSearchQuery)
+  const [isLogoutConfirming, setIsLogoutConfirming] = useState(false)
 
   const handleLibrarySearch = () => {
     const query = searchQuery.trim()
@@ -52,9 +53,28 @@ function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, route
                 Panel editorial
               </button>
             )}
-            <button type="button" className="text-link app-header__logout" onClick={onLogout}>
-              Salir
-            </button>
+            {isLogoutConfirming ? (
+              <div className="app-header__logout-confirm" role="group" aria-label="Confirmar cierre de sesión">
+                <span>¿Cerrar sesión?</span>
+                <button type="button" className="text-link" onClick={() => setIsLogoutConfirming(false)}>
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="app-header__logout-confirm-action"
+                  onClick={() => {
+                    setIsLogoutConfirming(false)
+                    onLogout()
+                  }}
+                >
+                  Cerrar
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="text-link app-header__logout" onClick={() => setIsLogoutConfirming(true)}>
+                Cerrar sesión
+              </button>
+            )}
           </div>
         </div>
       </div>
