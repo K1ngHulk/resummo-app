@@ -1,4 +1,5 @@
-import { inflateRawSync } from 'node:zlib'
+import crypto from 'node:crypto'
+import { createInflateRaw, inflateRawSync } from 'node:zlib'
 
 const ZIP_SIGNATURES = new Set([0x04034b50, 0x06054b50, 0x08074b50])
 const EOCD_SIGNATURE = 0x06054b50
@@ -16,6 +17,7 @@ const DEFAULT_LIMITS = Object.freeze({
 
 const ignoredBasenames = new Set(['.DS_Store', 'Thumbs.db'])
 const supportedExtensions = new Set(['.md', '.markdown', '.csv', '.png', '.jpg', '.jpeg', '.gif', '.webp'])
+const lazyBinaryExtensions = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp'])
 
 function createImportError(message, code = 'INVALID_NOTION_EXPORT') {
   const error = new Error(message)
@@ -76,11 +78,22 @@ function getCrcTable() {
   return crcTable
 }
 
-function crc32(buffer) {
+function updateCrc32(value, buffer) {
   const table = getCrcTable()
+  let next = value
+  for (let index = 0; index < buffer.length; index += 1) {
+    next = table[(next ^ buffer[index]) & 0xff] ^ (next >>> 8)
+  }
+  return next
+}
+
+async function crc32(buffer) {
   let value = 0xffffffff
-  for (const byte of buffer) {
-    value = table[(value ^ byte) & 0xff] ^ (value >>> 8)
+  const yieldEveryBytes = 1024 * 1024
+  for (let start = 0; start < buffer.length; start += yieldEveryBytes) {
+    const end = Math.min(start + yieldEveryBytes, buffer.length)
+    value = updateCrc32(value, buffer.subarray(start, end))
+    if (end < buffer.length) await new Promise((resolve) => setImmediate(resolve))
   }
   return (value ^ 0xffffffff) >>> 0
 }
@@ -188,7 +201,7 @@ function parseCentralDirectory(buffer, limits) {
   return entries
 }
 
-function inflateEntry(buffer, entry, limits) {
+async function inflateEntry(buffer, entry, limits) {
   if (entry.directory) return Buffer.alloc(0)
   const offset = entry.localHeaderOffset
   if (offset + 30 > buffer.length || buffer.readUInt32LE(offset) !== LOCAL_SIGNATURE) {
@@ -225,10 +238,91 @@ function inflateEntry(buffer, entry, limits) {
     throw createImportError('No se pudo descomprimir una entrada del ZIP.')
   }
 
-  if (data.length !== entry.uncompressedSize || crc32(data) !== entry.expectedCrc) {
+  if (data.length !== entry.uncompressedSize || await crc32(data) !== entry.expectedCrc) {
     throw createImportError('Una entrada del ZIP no superó la verificación de integridad.')
   }
   return data
+}
+
+async function inspectBinaryEntry(buffer, entry, limits) {
+  const offset = entry.localHeaderOffset
+  if (offset + 30 > buffer.length || buffer.readUInt32LE(offset) !== LOCAL_SIGNATURE) {
+    throw createImportError('El ZIP contiene una entrada local inválida.')
+  }
+
+  const fileNameLength = buffer.readUInt16LE(offset + 26)
+  const extraLength = buffer.readUInt16LE(offset + 28)
+  const dataStart = offset + 30 + fileNameLength + extraLength
+  const dataEnd = dataStart + entry.compressedSize
+  if (dataEnd > buffer.length) throw createImportError('El ZIP contiene datos truncados.')
+
+  const compressed = buffer.subarray(dataStart, dataEnd)
+  const hash = crypto.createHash('sha256')
+  const signature = Buffer.alloc(12)
+  let signatureBytes = 0
+  let totalBytes = 0
+  let crcValue = 0xffffffff
+
+  const consume = (chunk) => {
+    totalBytes += chunk.length
+    if (totalBytes > limits.maxEntryBytes || totalBytes > entry.uncompressedSize) {
+      throw createImportError('Una entrada del ZIP excede el tamaño descomprimido declarado o permitido.')
+    }
+    if (signatureBytes < signature.length) {
+      const copyBytes = Math.min(signature.length - signatureBytes, chunk.length)
+      chunk.copy(signature, signatureBytes, 0, copyBytes)
+      signatureBytes += copyBytes
+    }
+    hash.update(chunk)
+    crcValue = updateCrc32(crcValue, chunk)
+  }
+
+  if (entry.compressionMethod === 0) {
+    if (entry.compressedSize !== entry.uncompressedSize) {
+      throw createImportError('Una entrada sin compresión declara un tamaño descomprimido inconsistente.')
+    }
+    const chunkSize = 1024 * 1024
+    for (let start = 0; start < compressed.length; start += chunkSize) {
+      consume(compressed.subarray(start, Math.min(start + chunkSize, compressed.length)))
+      if (start + chunkSize < compressed.length) await new Promise((resolve) => setImmediate(resolve))
+    }
+  } else {
+    await new Promise((resolve, reject) => {
+      const inflater = createInflateRaw()
+      let settled = false
+      const fail = (error) => {
+        if (settled) return
+        settled = true
+        reject(error?.statusCode ? error : createImportError('No se pudo descomprimir una entrada del ZIP.'))
+      }
+      inflater.on('data', (chunk) => {
+        if (settled) return
+        try {
+          consume(chunk)
+        } catch (error) {
+          inflater.destroy()
+          fail(error)
+        }
+      })
+      inflater.once('error', fail)
+      inflater.once('end', () => {
+        if (settled) return
+        settled = true
+        resolve()
+      })
+      inflater.end(compressed)
+    })
+  }
+
+  const actualCrc = (crcValue ^ 0xffffffff) >>> 0
+  if (totalBytes !== entry.uncompressedSize || actualCrc !== entry.expectedCrc) {
+    throw createImportError('Una entrada del ZIP no superó la verificación de integridad.')
+  }
+
+  return {
+    checksum: hash.digest('hex'),
+    signature: Buffer.from(signature.subarray(0, signatureBytes)),
+  }
 }
 
 function isIgnoredEntry(filePath) {
@@ -236,12 +330,33 @@ function isIgnoredEntry(filePath) {
   return parts.some((part) => part === '__MACOSX') || ignoredBasenames.has(parts.at(-1))
 }
 
-function materializeArchive(buffer, limits) {
+async function materializeArchive(buffer, limits) {
   const centralEntries = parseCentralDirectory(buffer, limits)
-  return centralEntries.map((entry) => ({
-    ...entry,
-    data: entry.directory ? null : inflateEntry(buffer, entry, limits),
-  }))
+  const materialized = []
+  for (const entry of centralEntries) {
+    if (entry.directory) {
+      materialized.push({ ...entry, data: null })
+      continue
+    }
+
+    if (lazyBinaryExtensions.has(getExtension(entry.path))) {
+      const inspected = await inspectBinaryEntry(buffer, entry, limits)
+      materialized.push({
+        ...entry,
+        data: null,
+        checksum: inspected.checksum,
+        signature: inspected.signature,
+        loadData: () => inflateEntry(buffer, entry, limits),
+      })
+      continue
+    }
+
+    materialized.push({
+      ...entry,
+      data: await inflateEntry(buffer, entry, limits),
+    })
+  }
+  return materialized
 }
 
 function classifyEntries(entries) {
@@ -260,13 +375,19 @@ function classifyEntries(entries) {
   return { files, supported, ignored, nestedZip }
 }
 
-export function parseNotionExportZip(buffer, options = {}) {
-  if (!Buffer.isBuffer(buffer)) {
-    throw createImportError('El importador esperaba contenido ZIP binario.')
+async function materializeInputArchive(input, limits) {
+  if (Buffer.isBuffer(input)) return materializeArchive(input, limits)
+  if (input && Buffer.isBuffer(input.buffer)) {
+    const ownedBuffer = input.buffer
+    input.buffer = null
+    return materializeArchive(ownedBuffer, limits)
   }
+  throw createImportError('El importador esperaba contenido ZIP binario.')
+}
 
+export async function parseNotionExportZip(input, options = {}) {
   const limits = { ...DEFAULT_LIMITS, ...options.limits }
-  const outerEntries = materializeArchive(buffer, limits)
+  const outerEntries = await materializeInputArchive(input, limits)
   const outer = classifyEntries(outerEntries)
 
   if (outer.supported.length > 0) {
@@ -286,8 +407,15 @@ export function parseNotionExportZip(buffer, options = {}) {
   }
 
   if (outer.nestedZip.length === 1 && outer.files.length === 1 && limits.maxNestedDepth >= 1) {
-    const innerBuffer = outer.nestedZip[0].data
-    const innerEntries = materializeArchive(innerBuffer, limits)
+    const wrapperEntry = outer.nestedZip[0]
+    const wrapperPath = wrapperEntry.path
+    outerEntries.length = 0
+    outer.files.length = 0
+    outer.supported.length = 0
+    outer.nestedZip.length = 0
+
+    const innerEntries = await materializeArchive(wrapperEntry.data, limits)
+    wrapperEntry.data = null
     const inner = classifyEntries(innerEntries)
     if (inner.nestedZip.length > 0 && inner.supported.length === 0) {
       throw createImportError('El export contiene más niveles de ZIP anidado de los permitidos.')
@@ -298,7 +426,7 @@ export function parseNotionExportZip(buffer, options = {}) {
 
     return {
       wrapperDepth: 1,
-      wrapperPath: outer.nestedZip[0].path,
+      wrapperPath,
       entries: inner.supported,
       ignoredPaths: inner.ignored.concat(inner.nestedZip.map((entry) => entry.path)),
       archiveStats: {

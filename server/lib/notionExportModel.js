@@ -53,13 +53,15 @@ function buildPages(entries, warnings) {
       const actualId = sourceIdFromStem(stem)
       const noExtensionPath = entry.path.slice(0, -extension.length)
       if (!actualId) warnings.push({ code: 'MISSING_SOURCE_ID', message: 'Una página no incluye ID de Notion en el nombre; se derivó uno estable desde su ruta.' })
+      const markdown = entry.data.toString('utf8')
+      entry.data = null
       return {
         path: entry.path,
         noExtensionPath,
         folderAliasPath: actualId ? posix.join(posix.dirname(noExtensionPath), titleFromStem(stem)) : null,
         sourceId: actualId || crypto.createHash('sha256').update(`notion-export:${entry.path}`).digest('hex').slice(0, 32),
         title: titleFromStem(stem),
-        markdown: entry.data.toString('utf8'),
+        markdown,
         parentSourceId: null,
       }
     })
@@ -190,19 +192,20 @@ function walkBlocks(blocks, blockVisitor, inlineVisitor) {
 function buildAssetMap(entries, warnings) {
   const map = new Map()
   for (const entry of entries.filter((item) => imageExtensions.has(posix.extname(item.path).toLowerCase()))) {
-    const detected = detectImage(entry.data)
+    const detected = detectImage(entry.data || entry.signature)
     if (!detected) {
       warnings.push({ code: 'INVALID_ASSET_TYPE', message: 'Se ignoró un asset cuya firma binaria no corresponde a una imagen permitida.' })
       continue
     }
-    const checksum = crypto.createHash('sha256').update(entry.data).digest('hex')
+    const checksum = entry.checksum || crypto.createHash('sha256').update(entry.data).digest('hex')
     map.set(keyForPath(entry.path), {
       sourcePath: entry.path,
       checksum,
       extension: detected.extension,
       mimeType: detected.mimeType,
-      sizeBytes: entry.data.length,
-      data: entry.data,
+      sizeBytes: entry.uncompressedSize ?? entry.data?.length ?? 0,
+      data: entry.data || null,
+      loadData: entry.loadData || null,
       publicPath: `/content-assets/${checksum}${detected.extension}`,
       referencedBy: new Set(),
     })

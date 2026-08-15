@@ -65,7 +65,7 @@ The bridge token itself is not stored in this document or Git.
 
 After the Cloud V1 code changes:
 
-- `npm.cmd test` -> `55/55 PASS`
+- `npm.cmd test` -> `58/58 PASS` after the 2026-08-15 import incident hardening.
 - `npm.cmd run lint` -> PASS
 - `npm.cmd run build` -> PASS
 - build runs `prisma generate` through `prebuild`
@@ -92,21 +92,36 @@ A dedicated PostgreSQL role `resummo_app` now exists with login enabled and with
 
 Render service configuration is now:
 
-- build: `npm ci && npm run build`
+- build: `npm ci --include=dev && npm run build`
 - start: `npm run start`
 - health check: `/api/ready`
 
 The Notion ZIP routes were also corrected so a normal non-destructive import is allowed against the remote production database, while `replaceEditorial=true` remains restricted to the local `resummo` database.
 
-## Remaining execution block
+## 2026-08-15 import incident and hardening
 
-1. Review diff, stage only intended paths, commit and push `main`.
-2. Verify Render build/start logs and `/api/health` + `/api/ready`.
-3. Create temporary synthetic QA accounts without running the legacy demo seed.
-4. Verify auth/RBAC with Student vs Editor/Admin.
-5. Preview the original Notion ZIP and require the expected `35 Topics / 427 Articles / 386 assets / 462 internal links / 0 broken / 0 missing` gate.
-6. Only then confirm the real import; verify `0 PUBLISHED` immediately after import.
-7. Run representative Library/article/asset QA, remove temporary QA data if safe, and keep publication manual.
+The first manual production confirm of the audited Notion ZIP passed preview (`35 Topics / 427 Articles / 386 assets / 462 internal links / 0 critical issues`) but caused the Render web process to become unavailable before persistence completed. Render recorded `server_failed` with `/api/ready` receiving `connection reset by peer`; the instance restarted automatically. Remote verification after the incident showed `0 Topics`, `0 Articles`, `0 PUBLISHED` and `0` objects in the private Storage bucket, so no partial editorial state remained.
+
+A real-ZIP local baseline showed the previous parser/model path reaching approximately `461 MiB RSS` before Storage work. Hardening applied after the incident:
+
+- the raw request body is transferred to a consumable holder so the outer ZIP can be released before the inner model is built;
+- image entries are integrity-checked lazily/streaming (CRC32 + SHA-256 + binary signature) instead of keeping 386 uncompressed image buffers in the model;
+- image bytes are inflated only when that asset is uploaded, one at a time;
+- asset data and lazy loaders are released immediately after each Storage request;
+- persistence validation paginates Article `contentJson` in batches of 40 rather than loading every article at once;
+- heavy model arrays are released before the final persistence validation;
+- ZIP CRC work yields periodically so the Node event loop can continue servicing health checks;
+- normal cloud import remains idempotent and destructive replacement remains local-only.
+
+With the same audited ZIP, the post-hardening local simulation of parse + model + all 386 asset uploads peaked at approximately `435 MiB RSS` while preserving the exact expected corpus counts.
+
+## Current manual completion block
+
+1. Deploy the import hardening and verify `/api/health` + `/api/ready`.
+2. The operator manually uploads the original Notion ZIP and requires the expected `35 Topics / 427 Articles / 386 assets / 462 internal links / 0 broken / 0 missing` preview gate.
+3. The operator manually confirms the import.
+4. Verify remotely that the final corpus is `35 Topics / 427 Articles`, all imported editorial content remains `DRAFT`, `0 PUBLISHED`, Storage references resolve and there are no missing assets.
+5. Keep publication manual and subject to editorial approval.
 
 ## Protected local state
 

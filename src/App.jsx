@@ -69,7 +69,7 @@ const routeConfig = [
   { path: '/admin/import/anki', id: 'admin-anki', component: AdminAnkiImportPage, isAdmin: true },
 ]
 
-const defaultLearningRoute = routeConfig.find((route) => route.path === '/learning/library')
+const defaultLearningRoute = routeConfig.find((route) => route.path === '/learning')
 
 function RouteLoading() {
   return (
@@ -84,7 +84,7 @@ function RouteLoading() {
 
 function normalizePath(pathname) {
   if (pathname === '/') {
-    return '/learning/library'
+    return '/learning'
   }
 
   return pathname.replace(/\/$/, '') || '/learning'

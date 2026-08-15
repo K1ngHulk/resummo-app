@@ -38,7 +38,7 @@ async function existingImportState(client, model) {
 }
 
 export async function buildNotionExportPreview(buffer, { archiveName, client }) {
-  const archive = parseNotionExportZip(buffer)
+  const archive = await parseNotionExportZip(buffer)
   const model = buildNotionExportModel(archive.entries, { archiveName })
   const existingContent = client ? await existingImportState(client, model) : null
   return {
@@ -163,16 +163,42 @@ function collectAssetUrls(blocks, target = []) {
 }
 
 export async function validateNotionExportPersistence(client) {
-  const [topics, articles, published, emptyPlainText, duplicates, rows] = await Promise.all([
+  const [topics, articles, published, emptyPlainText, duplicates] = await Promise.all([
     client.topic.count({ where: { sourceType: SOURCE_TYPE } }),
     client.article.count({ where: { sourceType: SOURCE_TYPE } }),
     client.article.count({ where: { sourceType: SOURCE_TYPE, status: 'PUBLISHED' } }),
     client.article.count({ where: { sourceType: SOURCE_TYPE, OR: [{ plainText: null }, { plainText: '' }] } }),
     client.$queryRaw`SELECT COUNT(*)::int AS count FROM (SELECT "sourceId" FROM "Article" WHERE "sourceType" = 'NOTION_EXPORT' GROUP BY "sourceId" HAVING COUNT(*) > 1) duplicated`,
-    client.article.findMany({ where: { sourceType: SOURCE_TYPE }, select: { contentJson: true, slug: true, topicId: true } }),
   ])
-  const emptyContentJson = rows.filter((row) => !row.contentJson || !Array.isArray(row.contentJson.blocks) || row.contentJson.blocks.length === 0).length
-  const assetUrls = new Set(rows.flatMap((row) => collectAssetUrls(row.contentJson?.blocks || [])))
+
+  let cursor = null
+  let emptyContentJson = 0
+  let articlesWithoutTopic = 0
+  const assetUrls = new Set()
+  const pageSize = 40
+
+  while (true) {
+    const rows = await client.article.findMany({
+      where: { sourceType: SOURCE_TYPE },
+      orderBy: { id: 'asc' },
+      take: pageSize,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      select: { id: true, contentJson: true, topicId: true },
+    })
+    if (rows.length === 0) break
+
+    for (const row of rows) {
+      if (!row.contentJson || !Array.isArray(row.contentJson.blocks) || row.contentJson.blocks.length === 0) {
+        emptyContentJson += 1
+      }
+      if (!row.topicId) articlesWithoutTopic += 1
+      for (const url of collectAssetUrls(row.contentJson?.blocks || [])) assetUrls.add(url)
+    }
+
+    cursor = rows.at(-1).id
+    if (rows.length < pageSize) break
+  }
+
   const missingAssetFiles = (await findMissingContentAssets([...assetUrls].map((url) => path.basename(url)))).length
   return {
     topics,
@@ -181,7 +207,7 @@ export async function validateNotionExportPersistence(client) {
     emptyPlainText,
     emptyContentJson,
     duplicateSourceIds: Number(duplicates?.[0]?.count || 0),
-    articlesWithoutTopic: rows.filter((row) => !row.topicId).length,
+    articlesWithoutTopic,
     uniqueAssetFilesReferenced: assetUrls.size,
     missingAssetFiles,
   }
@@ -196,21 +222,34 @@ export async function importNotionExportBuffer(buffer, { archiveName, client, re
   if (model.stats.missingAssets > 0) throw validationError('El ZIP contiene assets referenciados que no están presentes.', 'MISSING_ASSETS')
   if (model.stats.emptyArticles > 0) throw validationError('El ZIP contiene artículos sin bloques importables después del título. Corrige la fuente antes de importar.', 'EMPTY_ARTICLES')
 
+  const source = { ...model.root }
+  const stats = { ...model.stats }
+  const wrapperDepth = archive.wrapperDepth
+  const ignoredFiles = archive.ignoredPaths.length
+  const logicalAssets = model.assets.length
+  archive.entries.length = 0
+
   const before = await getEditorialContentCounts(client)
   const backup = replaceEditorial ? await createLocalDatabaseBackup() : null
   let assetResult = null
   try {
-    assetResult = await persistContentAssets(model.assets)
+    assetResult = await persistContentAssets(model.assets, { releaseData: true })
     const persistence = await persistModel(client, model, { replaceEditorial })
+
+    model.assets.length = 0
+    model.allAssets.length = 0
+    model.articles.length = 0
+    model.topics.length = 0
+
     const after = await getEditorialContentCounts(client)
     if (after.users !== before.users) throw new Error('La importación alteró la cantidad de usuarios; la operación no es válida.')
     const validation = await validateNotionExportPersistence(client)
     return {
-      source: model.root,
-      stats: model.stats,
-      wrapperDepth: archive.wrapperDepth,
-      ignoredFiles: archive.ignoredPaths.length,
-      assets: { logical: model.assets.length, uniqueFiles: assetResult.uniqueCount, newlyWritten: assetResult.created.length },
+      source,
+      stats,
+      wrapperDepth,
+      ignoredFiles,
+      assets: { logical: logicalAssets, uniqueFiles: assetResult.uniqueCount, newlyWritten: assetResult.created.length },
       backup,
       deleted: persistence.deleted,
       validation,

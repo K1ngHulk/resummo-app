@@ -92,25 +92,25 @@ function corpusFiles() {
   ]
 }
 
-test('parses direct and single-wrapper Notion ZIP exports', () => {
+test('parses direct and single-wrapper Notion ZIP exports', async () => {
   const directZip = makeZip(corpusFiles())
-  const direct = parseNotionExportZip(directZip)
+  const direct = await parseNotionExportZip(directZip)
   assert.equal(direct.wrapperDepth, 0)
   assert.equal(direct.entries.length, corpusFiles().length)
 
   const wrapper = makeZip([{ name: 'ExportBlock-test.zip', data: directZip }])
-  const nested = parseNotionExportZip(wrapper)
+  const nested = await parseNotionExportZip(wrapper)
   assert.equal(nested.wrapperDepth, 1)
   assert.equal(nested.entries.length, corpusFiles().length)
 })
 
-test('rejects ZIP path traversal before extraction', () => {
+test('rejects ZIP path traversal before extraction', async () => {
   const malicious = makeZip([{ name: '../outside.md', data: '# no' }])
-  assert.throws(() => parseNotionExportZip(malicious), /salir de la carpeta de importación/)
+  await assert.rejects(parseNotionExportZip(malicious), /salir de la carpeta de importación/)
 })
 
-test('reconstructs root topics articles assets and internal links deterministically', () => {
-  const archive = parseNotionExportZip(makeZip(corpusFiles()))
+test('reconstructs root topics articles assets and internal links deterministically', async () => {
+  const archive = await parseNotionExportZip(makeZip(corpusFiles()))
   const model = buildNotionExportModel(archive.entries, { archiveName: 'resummo.zip' })
 
   assert.equal(model.root.title, 'RESUMMO MIR')
@@ -139,10 +139,10 @@ test('reconstructs root topics articles assets and internal links deterministica
   assert.ok(metabolism.contentJson.blocks.some((block) => block.type === 'image' && block.src.startsWith('/content-assets/')))
 })
 
-test('reconstructs real Notion file-with-id and folder-without-id hierarchy and links', () => {
+test('reconstructs real Notion file-with-id and folder-without-id hierarchy and links', async () => {
   const rootFolder = 'Private & Shared/RESUMMO MIR'
   const topicFolder = `${rootFolder}/Alergología`
-  const archive = parseNotionExportZip(makeZip([
+  const archive = await parseNotionExportZip(makeZip([
     {
       name: `Private & Shared/RESUMMO MIR ${ids.root}.md`,
       data: `# RESUMMO MIR\n\n[Alergología](RESUMMO%20MIR/Alergolog%C3%ADa%20${ids.bio}.md)`,
@@ -195,11 +195,11 @@ test('keeps unsafe HTML inert instead of rendering executable markup', () => {
   assert.ok(parsed.warnings.some((warning) => warning.code === 'UNSUPPORTED_HTML'))
 })
 
-test('counts references from root and Topic pages, not only Article bodies', () => {
+test('counts references from root and Topic pages, not only Article bodies', async () => {
   const rootDir = `RESUMMO MIR ${ids.root}`
   const topicDir = `${rootDir}/Bioquímica ${ids.bio}`
   const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(24, 2)])
-  const archive = parseNotionExportZip(makeZip([
+  const archive = await parseNotionExportZip(makeZip([
     { name: `RESUMMO MIR ${ids.root}.md`, data: `# RESUMMO MIR\n\n[Bioquímica](${encodeURIComponent(rootDir)}/Bioquímica%20${ids.bio}.md)` },
     { name: `${rootDir}/Bioquímica ${ids.bio}.md`, data: `# Bioquímica\n\n![Mapa](${encodeURIComponent(`Bioquímica ${ids.bio}`)}/assets/mapa.png)` },
     { name: `${topicDir}/Metabolismo ${ids.metabolismBio}.md`, data: '# Metabolismo\n\nContenido.' },
@@ -211,20 +211,20 @@ test('counts references from root and Topic pages, not only Article bodies', () 
   assert.equal(model.stats.orphanAssets, 0)
 })
 
-test('rejects suspicious high-ratio ZIP entries before inflation is trusted', () => {
+test('rejects suspicious high-ratio ZIP entries before inflation is trusted', async () => {
   const bombLike = makeZip([{ name: 'RESUMMO MIR aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md', data: Buffer.alloc(2 * 1024 * 1024, 0) }])
-  assert.throws(() => parseNotionExportZip(bombLike), /ratio de compresión sospechoso/)
+  await assert.rejects(parseNotionExportZip(bombLike), /ratio de compresión sospechoso/)
 })
 
-test('caps actual inflation when the ZIP lies about its uncompressed size', () => {
+test('caps actual inflation when the ZIP lies about its uncompressed size', async () => {
   const forged = makeZip([{
     name: 'RESUMMO MIR aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md',
     data: Buffer.alloc(4 * 1024 * 1024, 65),
     declaredUncompressedSize: 1024,
   }])
 
-  assert.throws(
-    () => parseNotionExportZip(forged, { limits: { maxCompressionRatio: 10_000 } }),
+  await assert.rejects(
+    parseNotionExportZip(forged, { limits: { maxCompressionRatio: 10_000 } }),
     /excede el tamaño descomprimido declarado o permitido/,
   )
 })

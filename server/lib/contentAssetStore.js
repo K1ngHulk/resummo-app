@@ -103,6 +103,17 @@ function uniqueAssets(assets) {
   return unique
 }
 
+async function readAssetData(asset) {
+  const loaded = asset.data ?? (typeof asset.loadData === 'function' ? await asset.loadData() : null)
+  if (!loaded) throw assetError('Un asset no contiene datos binarios disponibles.', 'INVALID_ASSET')
+  const data = Buffer.isBuffer(loaded) ? loaded : Buffer.from(loaded)
+  const checksum = crypto.createHash('sha256').update(data).digest('hex')
+  if (data.length !== asset.sizeBytes || checksum !== asset.checksum) {
+    throw assetError('Un asset no coincide con el hash o tamaño declarado.', 'ASSET_INTEGRITY_ERROR', 409)
+  }
+  return data
+}
+
 async function persistLocalAssets(assets, environment) {
   const directory = localAssetDirectory(environment)
   await fs.mkdir(directory, { recursive: true })
@@ -120,7 +131,8 @@ async function persistLocalAssets(assets, environment) {
       existing.push(fileName)
     } catch (error) {
       if (error.code !== 'ENOENT') throw error
-      await fs.writeFile(destination, asset.data, { flag: 'wx' })
+      const data = await readAssetData(asset)
+      await fs.writeFile(destination, data, { flag: 'wx' })
       created.push(fileName)
     }
   }
@@ -128,34 +140,42 @@ async function persistLocalAssets(assets, environment) {
   return { backend: 'local', directory, created, existing, uniqueCount: created.length + existing.length }
 }
 
-async function persistSupabaseAssets(assets, environment, fetchImpl) {
+async function persistSupabaseAssets(assets, environment, fetchImpl, { releaseData = false } = {}) {
   const created = []
   const existing = []
   const unique = uniqueAssets(assets)
 
   for (const [fileName, asset] of unique) {
-    const response = await bridgeRequest(`/objects/${encodeURIComponent(fileName)}`, {
-      environment,
-      fetchImpl,
-      method: 'PUT',
-      body: asset.data,
-      headers: {
-        'content-type': asset.mimeType,
-        'content-length': String(asset.sizeBytes),
-      },
-    })
-    if (response.status === 201) {
-      created.push(fileName)
-      continue
+    try {
+      const data = await readAssetData(asset)
+      const response = await bridgeRequest(`/objects/${encodeURIComponent(fileName)}`, {
+        environment,
+        fetchImpl,
+        method: 'PUT',
+        body: data,
+        headers: {
+          'content-type': asset.mimeType,
+          'content-length': String(asset.sizeBytes),
+        },
+      })
+      if (response.status === 201) {
+        created.push(fileName)
+        continue
+      }
+      if (response.status === 200) {
+        existing.push(fileName)
+        continue
+      }
+      if (response.status === 409) {
+        throw assetError('Un asset persistente existente no coincide con el contenido importado.', 'ASSET_COLLISION', 409)
+      }
+      throw assetError('No se pudo persistir un asset en el almacenamiento cloud.', 'ASSET_STORAGE_WRITE_FAILED', 503)
+    } finally {
+      if (releaseData) {
+        asset.data = null
+        asset.loadData = null
+      }
     }
-    if (response.status === 200) {
-      existing.push(fileName)
-      continue
-    }
-    if (response.status === 409) {
-      throw assetError('Un asset persistente existente no coincide con el contenido importado.', 'ASSET_COLLISION', 409)
-    }
-    throw assetError('No se pudo persistir un asset en el almacenamiento cloud.', 'ASSET_STORAGE_WRITE_FAILED', 503)
   }
 
   return { backend: 'supabase', created, existing, uniqueCount: unique.size }
@@ -164,9 +184,10 @@ async function persistSupabaseAssets(assets, environment, fetchImpl) {
 export async function persistContentAssets(assets, {
   environment = process.env,
   fetchImpl = globalThis.fetch,
+  releaseData = false,
 } = {}) {
   return resolveContentAssetBackend(environment) === 'supabase'
-    ? persistSupabaseAssets(assets, environment, fetchImpl)
+    ? persistSupabaseAssets(assets, environment, fetchImpl, { releaseData })
     : persistLocalAssets(assets, environment)
 }
 

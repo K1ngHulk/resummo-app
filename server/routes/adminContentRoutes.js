@@ -957,11 +957,13 @@ function notionArchiveName(request) {
   return safe || 'notion-export.zip'
 }
 
-function requireZipBody(request) {
-  if (!Buffer.isBuffer(request.body) || request.body.length === 0) {
+function consumeZipBody(request) {
+  const body = request.body
+  if (!Buffer.isBuffer(body) || body.length === 0) {
     throw validationError('Selecciona el ZIP original exportado desde Notion.')
   }
-  return request.body
+  request.body = null
+  return { buffer: body }
 }
 
 export function assertNotionExportImportAllowed({ replaceEditorial = false, databaseUrl = process.env.DATABASE_URL } = {}) {
@@ -970,7 +972,7 @@ export function assertNotionExportImportAllowed({ replaceEditorial = false, data
 
 router.post('/import/notion-export/preview', notionExportBody, async (request, response, next) => {
   try {
-    const { preview } = await buildNotionExportPreview(requireZipBody(request), {
+    const { preview } = await buildNotionExportPreview(consumeZipBody(request), {
       archiveName: notionArchiveName(request),
       client: prisma,
     })
@@ -984,7 +986,7 @@ router.post('/import/notion-export/confirm', notionExportBody, async (request, r
   try {
     const replaceEditorial = String(request.headers['x-resummo-replace-editorial'] || '').toLowerCase() === 'true'
     assertNotionExportImportAllowed({ replaceEditorial })
-    const result = await importNotionExportBuffer(requireZipBody(request), {
+    const result = await importNotionExportBuffer(consumeZipBody(request), {
       archiveName: notionArchiveName(request),
       client: prisma,
       replaceEditorial,

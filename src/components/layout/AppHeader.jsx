@@ -21,7 +21,7 @@ function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, route
     <header className="app-header">
       <div className="app-header__inner">
         <div className="app-header__top">
-          <button type="button" className="brand-mark" onClick={() => onNavigate('/learning/library')}>
+          <button type="button" className="brand-mark" onClick={() => onNavigate('/learning')}>
             <img src={resummoLogo} alt="Resummo" className="brand-logo" />
             <div className="brand-mark__text">RESUMMO</div>
           </button>

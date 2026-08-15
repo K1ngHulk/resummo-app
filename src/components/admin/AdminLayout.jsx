@@ -76,7 +76,7 @@ export default function AdminLayout({ children, currentPath, onNavigate }) {
           <div className="admin-topbar-actions">
             <button 
               className="admin-btn-outline" 
-              onClick={() => onNavigate('/learning/library')}
+              onClick={() => onNavigate('/learning')}
             >
               Ir a la App
             </button>

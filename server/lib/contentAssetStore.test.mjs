@@ -120,6 +120,25 @@ test('ensures the remote private bucket through the bridge', async () => {
   assert.deepEqual(result, { backend: 'supabase', ready: true, created: true })
 })
 
+test('releases remote asset buffers after upload when requested', async () => {
+  const environment = {
+    RESUMMO_CONTENT_ASSET_BACKEND: 'supabase',
+    RESUMMO_STORAGE_BRIDGE_URL: 'https://project.supabase.co/functions/v1/resummo-content-assets',
+    RESUMMO_STORAGE_BRIDGE_TOKEN: 'test-token',
+  }
+  const source = assetFrom('release-me')
+  const asset = { ...source, data: null, loadData: async () => source.data }
+  const fetchImpl = async (_url, options = {}) => {
+    assert.deepEqual(Buffer.from(options.body), source.data)
+    return new Response(null, { status: 201 })
+  }
+
+  await persistContentAssets([asset], { environment, fetchImpl, releaseData: true })
+
+  assert.equal(asset.data, null)
+  assert.equal(asset.loadData, null)
+})
+
 test('verifies remote bytes against the content-addressed filename', async () => {
   const expected = assetFrom('expected')
   const environment = {

@@ -124,6 +124,26 @@ Dudas abiertas:
 
 - Definir si el equipo quiere documentar una paleta completa de marca mas adelante.
 
+### 2026-08-15 - Resumen como entrada autenticada por defecto
+
+Estado: decidido.
+
+Decision: La entrada autenticada por defecto de Resummo vuelve a ser `Resumen` (`/learning`). Biblioteca sigue siendo la superficie principal de contenido, pero deja de ser el destino automático al entrar, iniciar sesión, pulsar la marca Resummo o volver desde el panel editorial.
+
+Motivo: El usuario debe aterrizar primero en una vista general de su actividad y acceder a Biblioteca como sección explícita, no quedar forzado directamente al repositorio de contenido.
+
+Consecuencias:
+
+- `/` normaliza a `/learning`.
+- El fallback de rutas Learning y el post-login apuntan a `/learning`.
+- El logo principal y “Ir a la App” desde admin vuelven a Resumen.
+- Las acciones específicas de búsqueda y navegación de Biblioteca conservan `/learning/library`.
+- Esta decisión reemplaza únicamente la parte de la decisión 2026-08-06 que priorizaba `/learning/library` como ruta de entrada autenticada; Biblioteca continúa siendo el producto de contenido principal.
+
+Dudas abiertas:
+
+- Ninguna para Cloud V1.
+
 ### 2026-08-06 - Biblioteca como producto vendible inicial
 
 Estado: decidido.
