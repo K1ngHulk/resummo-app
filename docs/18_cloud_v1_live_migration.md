@@ -65,7 +65,7 @@ The bridge token itself is not stored in this document or Git.
 
 After the Cloud V1 code changes:
 
-- `npm.cmd test` -> `62/62 PASS` after the 2026-08-15 import incident hardening.
+- `npm.cmd test` -> `61/61 PASS` after retiring the constrained runtime and adding the local cloud bootstrap gate.
 - `npm.cmd run lint` -> PASS
 - `npm.cmd run build` -> PASS
 - build runs `prisma generate` through `prebuild`
@@ -115,29 +115,46 @@ A real-ZIP local baseline showed the previous parser/model path reaching approxi
 
 With the same audited ZIP, the first post-hardening local simulation of parse + model + all 386 asset uploads peaked at approximately `435 MiB RSS` while preserving the exact expected corpus counts. A second manual production attempt still exceeded Render Free's 512 MB instance limit; Render explicitly reported `Ran out of memory (used over 512MB) while running your code` and restarted the instance.
 
-### Temporary constrained profile
+### Final bootstrap strategy: local executor, cloud destination
 
-Cloud V1 therefore uses a removable runtime profile rather than attempting the whole import in one request:
+The temporary constrained Render profile was retired after it correctly prevented OOM but repeatedly paused before phase 1 could start on the 512 MB free instance. The bootstrap was moved outside the web service instead of preserving runtime-specific limits.
 
-- Render env: `RESUMMO_IMPORT_PROFILE=constrained`;
-- hard RSS budget: `RESUMMO_IMPORT_MAX_RSS_MB=430`;
-- article batch size: `RESUMMO_IMPORT_ARTICLE_BATCH_SIZE=20`;
-- phase 1 parses the ZIP only far enough to validate and upload assets sequentially; content-addressed SHA-256 writes are resumable and deduplicated;
-- phase 2 reparses the same ZIP, requires every referenced asset to exist, then upserts Topics and Articles in small batches;
-- both phases are idempotent and `DRAFT`-only;
-- a memory-budget breach returns a controlled retryable response instead of allowing the process to approach the platform OOM limit;
-- the Admin UI automatically retries a memory-budget pause up to two times and otherwise surfaces the controlled error;
-- code default remains `standard`; removing the temporary Render env switches back to the combined path after infrastructure is upgraded and tested.
+Operational path:
 
-The real audited ZIP was then exercised end-to-end against simulated Storage and Prisma using the constrained two-phase path. It completed with `35 Topics / 427 Articles / 386 assets / 462 internal links / 0 broken / 0 missing / 0 published` and a sampled peak of approximately `409 MiB RSS`, below the configured 430 MB guard and the 512 MB Render ceiling. Unit coverage also verifies asset-phase deduplication on retry and refusal to persist content while assets are incomplete.
+- executor: the local Windows PC;
+- source: the audited Notion ZIP on the user's Desktop/OneDrive;
+- database destination: Supabase Resummo via the dedicated `resummo_app` runtime role;
+- asset destination: the private `resummo-content-assets` bucket through the authenticated Storage bridge;
+- CLI gate: exact audited corpus `35 Topics / 427 Articles / 386 assets / 462 internal links / 0 broken / 0 missing`;
+- database safety: bootstrap refuses to run unless editorial content is empty;
+- assets: uploaded in idempotent chunks using content-addressed SHA-256 names;
+- content: persisted only after all 386 required assets are confirmed present;
+- publication: all imported Topics/Articles remain `DRAFT` and automatic publication is forbidden.
 
-## Current manual completion block
+The local bootstrap encountered two DevSpace transport-level 502 interruptions while long-running operations were in progress. Those did not corrupt editorial state: asset uploads were resumable by hash, and the content write used one Prisma transaction. After completing the remaining asset chunks, Storage contained exactly `386` objects. The content transaction completed and the final independent verification returned:
 
-1. Deploy the import hardening and verify `/api/health` + `/api/ready`.
-2. The operator manually uploads the original Notion ZIP and requires the expected `35 Topics / 427 Articles / 386 assets / 462 internal links / 0 broken / 0 missing` preview gate.
-3. The operator manually confirms the import.
-4. Verify remotely that the final corpus is `35 Topics / 427 Articles`, all imported editorial content remains `DRAFT`, `0 PUBLISHED`, Storage references resolve and there are no missing assets.
-5. Keep publication manual and subject to editorial approval.
+- users: `3`;
+- Topics: `35`;
+- Articles: `427`;
+- Published Articles: `0`;
+- empty `plainText`: `0`;
+- empty `contentJson`: `0`;
+- duplicate source IDs: `0`;
+- Articles without Topic: `0`;
+- unique asset files referenced: `386`;
+- missing asset files: `0`.
+
+Render variables `RESUMMO_IMPORT_PROFILE`, `RESUMMO_IMPORT_MAX_RSS_MB` and `RESUMMO_IMPORT_ARTICLE_BATCH_SIZE` were removed. The Admin UI and HTTP import endpoint returned to the standard flow; no memory-budget limiter or automatic constrained retry remains in the production runtime.
+
+## Cloud V1 completion state
+
+1. Supabase schema and runtime role: complete.
+2. Private Storage + Edge Function bridge: complete.
+3. Render runtime/deploy: complete.
+4. Production auth/RBAC smoke: complete.
+5. RESUMMO MIR bootstrap: complete (`35 / 427 / 386 / 462 / 0 / 0`).
+6. Automatic publication: `0` — PASS.
+7. Publication remains manual and subject to editorial approval.
 
 ## Protected local state
 

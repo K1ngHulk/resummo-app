@@ -1,52 +1,54 @@
-const DEFAULT_CONSTRAINED_MAX_RSS_MB = 430
-const DEFAULT_CONSTRAINED_ARTICLE_BATCH_SIZE = 20
+const EXPECTED_CORPUS = Object.freeze({
+  topics: 35,
+  articles: 427,
+  assets: 386,
+  internalLinks: 462,
+  brokenInternalLinks: 0,
+  missingAssets: 0,
+  emptyArticles: 0,
+})
 
-function runtimeError(message, code, statusCode = 503) {
+function gateError(message, details) {
   const error = new Error(message)
-  error.code = code
-  error.statusCode = statusCode
+  error.code = 'NOTION_CORPUS_GATE_FAILED'
+  error.statusCode = 409
+  error.details = details
   return error
 }
 
-export function resolveNotionImportRuntime(environment = process.env) {
-  const configured = String(environment.RESUMMO_IMPORT_PROFILE || '').trim().toLowerCase()
-  const profile = configured === 'constrained' ? 'constrained' : 'standard'
-  const parsedMaxRss = Number(environment.RESUMMO_IMPORT_MAX_RSS_MB)
-  const parsedBatchSize = Number(environment.RESUMMO_IMPORT_ARTICLE_BATCH_SIZE)
+export const expectedNotionCorpus = EXPECTED_CORPUS
 
-  return {
-    profile,
-    maxRssMb: Number.isFinite(parsedMaxRss) && parsedMaxRss >= 256
-      ? parsedMaxRss
-      : DEFAULT_CONSTRAINED_MAX_RSS_MB,
-    articleBatchSize: Number.isInteger(parsedBatchSize) && parsedBatchSize >= 5 && parsedBatchSize <= 100
-      ? parsedBatchSize
-      : DEFAULT_CONSTRAINED_ARTICLE_BATCH_SIZE,
-  }
+export function compareNotionExportStats(stats, expected = EXPECTED_CORPUS) {
+  return Object.entries(expected)
+    .filter(([key, value]) => Number(stats?.[key]) !== value)
+    .map(([key, value]) => ({ key, expected: value, actual: Number(stats?.[key]) }))
 }
 
-export function currentRssMb() {
-  return process.memoryUsage().rss / (1024 * 1024)
+export function assertExpectedNotionExportStats(stats, expected = EXPECTED_CORPUS) {
+  const mismatches = compareNotionExportStats(stats, expected)
+  if (mismatches.length > 0) {
+    throw gateError('El export de Notion no coincide con el corpus auditado de RESUMMO MIR.', mismatches)
+  }
+  return true
 }
 
-export async function waitForImportMemoryBudget(stage, {
-  environment = process.env,
-  attempts = 6,
-  delayMs = 150,
-} = {}) {
-  const runtime = resolveNotionImportRuntime(environment)
-  if (runtime.profile !== 'constrained') return { ...runtime, rssMb: currentRssMb() }
-
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const rssMb = currentRssMb()
-    if (rssMb <= runtime.maxRssMb) return { ...runtime, rssMb }
-    if (typeof globalThis.gc === 'function') globalThis.gc()
-    await new Promise((resolve) => setTimeout(resolve, delayMs))
+export function assertExpectedNotionPersistence(validation, expected = EXPECTED_CORPUS) {
+  const required = {
+    topics: expected.topics,
+    articles: expected.articles,
+    published: 0,
+    emptyPlainText: 0,
+    emptyContentJson: 0,
+    duplicateSourceIds: 0,
+    articlesWithoutTopic: 0,
+    uniqueAssetFilesReferenced: expected.assets,
+    missingAssetFiles: 0,
   }
-
-  throw runtimeError(
-    `La importación se pausó antes de exceder el presupuesto de memoria durante ${stage}. Reintenta la operación para continuar de forma segura.`,
-    'IMPORT_MEMORY_BUDGET',
-    503,
-  )
+  const mismatches = Object.entries(required)
+    .filter(([key, value]) => Number(validation?.[key]) !== value)
+    .map(([key, value]) => ({ key, expected: value, actual: Number(validation?.[key]) }))
+  if (mismatches.length > 0) {
+    throw gateError('La persistencia cloud no coincide con el corpus esperado de RESUMMO MIR.', mismatches)
+  }
+  return true
 }

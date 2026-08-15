@@ -3,7 +3,6 @@ import test from 'node:test'
 import { deflateRawSync } from 'node:zlib'
 import { parseNotionExportZip } from './notionExportZip.js'
 import { buildNotionExportModel, toPublicNotionExportPreview } from './notionExportModel.js'
-import { importNotionExportConstrainedPhase } from './notionExportImportService.js'
 import { parseNotionMarkdown } from './notionExportMarkdown.js'
 
 let crcTable
@@ -262,79 +261,4 @@ test('treats missing heading fragments as broken internal links instead of silen
   const source = model.articles.find((article) => article.sourceId === ids.metabolismBio)
   const valid = source.contentJson.blocks.flatMap((block) => block.children || []).find((node) => node.type === 'link' && node.internal)
   assert.match(valid.href, /#h-[a-f0-9]{12}$/)
-})
-
-function constrainedTestClient() {
-  const zero = { count: async () => 0 }
-  return {
-    user: zero,
-    topic: { ...zero, findMany: async () => [] },
-    article: { ...zero, findMany: async () => [] },
-    question: zero,
-    questionOption: zero,
-    userArticleProgress: zero,
-    userFlashcardProgress: zero,
-    studySession: zero,
-    studySessionQuestion: zero,
-    studyAnswer: zero,
-    recentActivity: zero,
-  }
-}
-
-const constrainedEnvironment = {
-  RESUMMO_IMPORT_PROFILE: 'constrained',
-  RESUMMO_IMPORT_MAX_RSS_MB: '2048',
-  RESUMMO_CONTENT_ASSET_BACKEND: 'supabase',
-  RESUMMO_STORAGE_BRIDGE_URL: 'https://storage.invalid',
-  RESUMMO_STORAGE_BRIDGE_TOKEN: 'test-token',
-}
-
-test('constrained asset phase is idempotent and resumes through content-addressed dedupe', async () => {
-  const stored = new Set()
-  const fetchImpl = async (url, options = {}) => {
-    const fileName = decodeURIComponent(String(url).split('/objects/')[1] || '')
-    if (options.method === 'PUT') {
-      const existed = stored.has(fileName)
-      stored.add(fileName)
-      return new Response('', { status: existed ? 200 : 201 })
-    }
-    return new Response('', { status: 404 })
-  }
-
-  const first = await importNotionExportConstrainedPhase({ buffer: makeZip(corpusFiles()) }, {
-    archiveName: 'resummo.zip',
-    client: constrainedTestClient(),
-    phase: 'assets',
-    environment: constrainedEnvironment,
-    fetchImpl,
-  })
-  const retry = await importNotionExportConstrainedPhase({ buffer: makeZip(corpusFiles()) }, {
-    archiveName: 'resummo.zip',
-    client: constrainedTestClient(),
-    phase: 'assets',
-    environment: constrainedEnvironment,
-    fetchImpl,
-  })
-
-  assert.equal(first.status, 'IN_PROGRESS')
-  assert.equal(first.nextPhase, 'content')
-  assert.equal(first.assets.newlyWritten, 1)
-  assert.equal(retry.assets.newlyWritten, 0)
-  assert.equal(retry.assets.existing, 1)
-  assert.equal(stored.size, 1)
-})
-
-test('constrained content phase refuses database writes until every asset exists', async () => {
-  const fetchImpl = async (_url, options = {}) => new Response('', { status: options.method === 'HEAD' ? 404 : 500 })
-
-  await assert.rejects(
-    importNotionExportConstrainedPhase({ buffer: makeZip(corpusFiles()) }, {
-      archiveName: 'resummo.zip',
-      client: constrainedTestClient(),
-      phase: 'content',
-      environment: constrainedEnvironment,
-      fetchImpl,
-    }),
-    (error) => error.code === 'IMPORT_ASSET_PHASE_INCOMPLETE' && error.statusCode === 409,
-  )
 })

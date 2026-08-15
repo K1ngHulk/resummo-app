@@ -144,25 +144,26 @@ Dudas abiertas:
 
 - Ninguna para Cloud V1.
 
-### 2026-08-15 - Perfil constrained temporal para importar RESUMMO MIR en Render Free
+### 2026-08-15 - Bootstrap editorial cloud fuera del web service
 
-Estado: decidido temporalmente.
+Estado: decidido; reemplaza el perfil constrained temporal de Render Free.
 
-Decision: Mientras Resummo opere con el límite de 512 MB de Render Free, la importación completa de Notion usa `RESUMMO_IMPORT_PROFILE=constrained`. El botón de importación encadena dos peticiones idempotentes: primero assets y después contenido. El servidor mantiene un presupuesto de RSS, sube imágenes secuencialmente y persiste artículos en lotes pequeños.
+Decision: La carga inicial de RESUMMO MIR se ejecuta desde un CLI local que usa la PC como ejecutor y escribe directamente en Supabase PostgreSQL + Storage. El web service de Render deja de aplicar límites especiales de RSS, fases o reintentos para este bootstrap.
 
-Motivo: El import combinado superó 512 MB y Render terminó la instancia. El problema es de presupuesto de memoria del runtime, no de validez del ZIP.
+Motivo: El ZIP auditado es válido, pero la importación pesada dentro del web service gratuito de Render supera o deja demasiado cerca el límite de 512 MB. El perfil constrained evitó el OOM, pero terminó pausándose antes de poder iniciar de forma fiable sobre una instancia con memoria residente alta. Mantener lógica temporal en producción no aporta valor una vez que el bootstrap puede ejecutarse fuera del servidor web.
 
 Consecuencias:
 
-- Assets se importan primero y se deduplican por SHA-256; una repetición segura continúa sobre los ya existentes.
-- La fase de contenido no escribe mientras falte cualquier asset requerido.
-- Topics y Articles se crean/actualizan por `sourceType + sourceId`, siempre como `DRAFT`.
-- Si RSS supera el presupuesto configurado, la operación se detiene antes del OOM y la UI reintenta la fase de forma acotada.
-- Este perfil es infraestructura temporal. `standard` sigue siendo el default de código y debe volver a activarse cuando exista capacidad suficiente y se complete la prueba de importación sin límites de Render Free.
+- Se retiraron de Render `RESUMMO_IMPORT_PROFILE`, `RESUMMO_IMPORT_MAX_RSS_MB` y `RESUMMO_IMPORT_ARTICLE_BATCH_SIZE`.
+- La UI y el endpoint web vuelven al flujo estándar; no contienen lógica especial de memoria ni reintentos por fases.
+- El CLI local exige el proyecto Supabase Resummo exacto, valida el corpus `35 / 427 / 386 / 462 / 0 / 0` y requiere una base editorial vacía antes de escribir.
+- Los assets se pueden cargar localmente por chunks idempotentes; el contenido se persiste solo cuando Storage está completo.
+- Topics y Articles permanecen `DRAFT`; el bootstrap no publica automáticamente.
+- El CLI queda como herramienta operacional reproducible para migraciones/bootstrap, no como dependencia del runtime web.
 
 Dudas abiertas:
 
-- Retirar el perfil constrained después de validar el import estándar en infraestructura con memoria suficiente.
+- Si futuras importaciones masivas pasan a ser una función recurrente de producto, diseñar un worker/job asíncrono independiente del web service en vez de reintroducir límites ad hoc en Render.
 
 ### 2026-08-06 - Biblioteca como producto vendible inicial
 

@@ -220,7 +220,6 @@ export default function AdminArticleImportPage({ onNavigate }) {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [zipProgress, setZipProgress] = useState('')
 
   const resetMarkdown = () => {
     setFileName('')
@@ -236,7 +235,6 @@ export default function AdminArticleImportPage({ onNavigate }) {
     setZipResult(null)
     setReplaceEditorial(false)
     setError('')
-    setZipProgress('')
   }
 
   const changeSourceMode = (nextMode) => {
@@ -259,7 +257,6 @@ export default function AdminArticleImportPage({ onNavigate }) {
     setZipResult(null)
     setReplaceEditorial(false)
     setError('')
-    setZipProgress('Validando estructura, imágenes y enlaces…')
     setIsProcessing(true)
 
     try {
@@ -274,7 +271,6 @@ export default function AdminArticleImportPage({ onNavigate }) {
       setError(previewError.message || 'No se pudo validar el export de Notion.')
     } finally {
       setIsProcessing(false)
-      setZipProgress('')
     }
   }
 
@@ -289,44 +285,20 @@ export default function AdminArticleImportPage({ onNavigate }) {
     if (!zipFile || zipPreview?.status !== 'VALID') return
     setIsProcessing(true)
     setError('')
-    setZipProgress('Preparando imágenes…')
     try {
-      let phase = 'assets'
-      let payload = null
-
-      while (phase) {
-        let attempt = 0
-        while (true) {
-          setZipProgress(phase === 'assets'
-            ? 'Procesando imágenes de forma segura · fase 1 de 2…'
-            : 'Guardando especialidades y artículos · fase 2 de 2…')
-          try {
-            payload = await request('/api/admin/content/import/notion-export/confirm', {
-              method: 'POST',
-              body: zipFile,
-              headers: {
-                'X-Resummo-File-Name': zipFile.name,
-                'X-Resummo-Replace-Editorial': String(replaceEditorial),
-                'X-Resummo-Import-Phase': phase,
-              },
-            })
-            break
-          } catch (phaseError) {
-            if (phaseError.code !== 'IMPORT_MEMORY_BUDGET' || attempt >= 2) throw phaseError
-            attempt += 1
-            setZipProgress('Liberando memoria antes de continuar…')
-            await new Promise((resolve) => setTimeout(resolve, 2000))
-          }
-        }
-        phase = payload?.nextPhase || null
-      }
-
+      const payload = await request('/api/admin/content/import/notion-export/confirm', {
+        method: 'POST',
+        body: zipFile,
+        headers: {
+          'X-Resummo-File-Name': zipFile.name,
+          'X-Resummo-Replace-Editorial': String(replaceEditorial),
+        },
+      })
       setZipResult(payload)
     } catch (confirmError) {
       setError(confirmError.message || 'No se pudo importar el export de Notion.')
     } finally {
       setIsProcessing(false)
-      setZipProgress('')
     }
   }
 
@@ -451,7 +423,7 @@ export default function AdminArticleImportPage({ onNavigate }) {
             {isProcessing && !zipResult ? (
               <div className="admin-import-processing" role="status">
                 <span className="admin-import-processing__dot" aria-hidden="true" />
-                {zipProgress || 'Procesando…'}
+                Validando estructura, imágenes y enlaces…
               </div>
             ) : null}
 

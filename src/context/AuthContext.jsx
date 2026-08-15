@@ -23,10 +23,7 @@ async function apiRequest(path, { method = 'GET', body, token, headers = {} } = 
   const payload = text ? JSON.parse(text) : null
 
   if (!response.ok) {
-    const error = new Error(payload?.message || 'No fue posible completar la solicitud')
-    error.code = payload?.code || null
-    error.retryable = Boolean(payload?.retryable)
-    throw error
+    throw new Error(payload?.message || 'No fue posible completar la solicitud')
   }
 
   const mutatesEditorialContent = method !== 'GET'

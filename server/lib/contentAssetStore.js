@@ -140,20 +140,13 @@ async function persistLocalAssets(assets, environment) {
   return { backend: 'local', directory, created, existing, uniqueCount: created.length + existing.length }
 }
 
-async function persistSupabaseAssets(assets, environment, fetchImpl, {
-  releaseData = false,
-  beforeAsset,
-  afterAsset,
-} = {}) {
+async function persistSupabaseAssets(assets, environment, fetchImpl, { releaseData = false } = {}) {
   const created = []
   const existing = []
   const unique = uniqueAssets(assets)
 
-  let index = 0
   for (const [fileName, asset] of unique) {
-    index += 1
     try {
-      if (beforeAsset) await beforeAsset({ fileName, index, total: unique.size })
       const data = await readAssetData(asset)
       const response = await bridgeRequest(`/objects/${encodeURIComponent(fileName)}`, {
         environment,
@@ -182,7 +175,6 @@ async function persistSupabaseAssets(assets, environment, fetchImpl, {
         asset.data = null
         asset.loadData = null
       }
-      if (afterAsset) await afterAsset({ fileName, index, total: unique.size })
     }
   }
 
@@ -193,11 +185,9 @@ export async function persistContentAssets(assets, {
   environment = process.env,
   fetchImpl = globalThis.fetch,
   releaseData = false,
-  beforeAsset,
-  afterAsset,
 } = {}) {
   return resolveContentAssetBackend(environment) === 'supabase'
-    ? persistSupabaseAssets(assets, environment, fetchImpl, { releaseData, beforeAsset, afterAsset })
+    ? persistSupabaseAssets(assets, environment, fetchImpl, { releaseData })
     : persistLocalAssets(assets, environment)
 }
 
@@ -230,33 +220,43 @@ export async function cleanupCreatedContentAssets(assetResult, {
 export async function findMissingContentAssets(fileNames, {
   environment = process.env,
   fetchImpl = globalThis.fetch,
+  concurrency = 1,
 } = {}) {
   const backend = resolveContentAssetBackend(environment)
   const missing = []
+  const parsedFiles = []
 
   for (const rawFileName of fileNames || []) {
     const parsed = parseContentAssetFileName(rawFileName)
-    if (!parsed) {
-      missing.push(String(rawFileName || ''))
-      continue
-    }
+    if (!parsed) missing.push(String(rawFileName || ''))
+    else parsedFiles.push(parsed)
+  }
 
-    if (backend === 'local') {
+  if (backend === 'local') {
+    for (const parsed of parsedFiles) {
       try {
         await fs.access(path.join(localAssetDirectory(environment), parsed.fileName))
       } catch {
         missing.push(parsed.fileName)
       }
-      continue
     }
+    return missing
+  }
 
-    const response = await bridgeRequest(`/objects/${encodeURIComponent(parsed.fileName)}`, {
-      environment,
-      fetchImpl,
-      method: 'HEAD',
-    })
-    if (response.status === 404) missing.push(parsed.fileName)
-    else if (!response.ok) throw assetError('No se pudo validar un asset persistente.', 'ASSET_STORAGE_READ_FAILED', 503)
+  const batchSize = Number.isInteger(concurrency) && concurrency > 0 ? Math.min(concurrency, 32) : 1
+  for (let offset = 0; offset < parsedFiles.length; offset += batchSize) {
+    const batch = parsedFiles.slice(offset, offset + batchSize)
+    const results = await Promise.all(batch.map(async (parsed) => {
+      const response = await bridgeRequest(`/objects/${encodeURIComponent(parsed.fileName)}`, {
+        environment,
+        fetchImpl,
+        method: 'HEAD',
+      })
+      if (response.status === 404) return parsed.fileName
+      if (!response.ok) throw assetError('No se pudo validar un asset persistente.', 'ASSET_STORAGE_READ_FAILED', 503)
+      return null
+    }))
+    missing.push(...results.filter(Boolean))
   }
 
   return missing

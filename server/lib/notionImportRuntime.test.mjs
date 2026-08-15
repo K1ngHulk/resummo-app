@@ -1,31 +1,34 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { resolveNotionImportRuntime } from './notionImportRuntime.js'
+import {
+  assertExpectedNotionExportStats,
+  assertExpectedNotionPersistence,
+  compareNotionExportStats,
+  expectedNotionCorpus,
+} from './notionImportRuntime.js'
 
-test('defaults to the removable standard import profile', () => {
-  const runtime = resolveNotionImportRuntime({})
-  assert.equal(runtime.profile, 'standard')
-  assert.equal(runtime.maxRssMb, 430)
-  assert.equal(runtime.articleBatchSize, 20)
+test('accepts the audited RESUMMO MIR export gate', () => {
+  assert.deepEqual(compareNotionExportStats(expectedNotionCorpus), [])
+  assert.equal(assertExpectedNotionExportStats(expectedNotionCorpus), true)
 })
 
-test('enables constrained import limits from environment without accepting unsafe values', () => {
-  const runtime = resolveNotionImportRuntime({
-    RESUMMO_IMPORT_PROFILE: 'constrained',
-    RESUMMO_IMPORT_MAX_RSS_MB: '410',
-    RESUMMO_IMPORT_ARTICLE_BATCH_SIZE: '15',
-  })
-  assert.deepEqual(runtime, {
-    profile: 'constrained',
-    maxRssMb: 410,
-    articleBatchSize: 15,
-  })
+test('rejects a corpus whose audited counts drift', () => {
+  assert.throws(
+    () => assertExpectedNotionExportStats({ ...expectedNotionCorpus, articles: 426 }),
+    (error) => error.code === 'NOTION_CORPUS_GATE_FAILED' && error.details?.[0]?.key === 'articles',
+  )
+})
 
-  const guarded = resolveNotionImportRuntime({
-    RESUMMO_IMPORT_PROFILE: 'constrained',
-    RESUMMO_IMPORT_MAX_RSS_MB: '128',
-    RESUMMO_IMPORT_ARTICLE_BATCH_SIZE: '500',
-  })
-  assert.equal(guarded.maxRssMb, 430)
-  assert.equal(guarded.articleBatchSize, 20)
+test('accepts only complete DRAFT persistence with all referenced assets', () => {
+  assert.equal(assertExpectedNotionPersistence({
+    topics: 35,
+    articles: 427,
+    published: 0,
+    emptyPlainText: 0,
+    emptyContentJson: 0,
+    duplicateSourceIds: 0,
+    articlesWithoutTopic: 0,
+    uniqueAssetFilesReferenced: 386,
+    missingAssetFiles: 0,
+  }), true)
 })

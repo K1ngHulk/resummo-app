@@ -12,6 +12,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --test server/lib/articleMarkdownImport.test.mjs server/lib/contentAssetStore.test.mjs server/lib/notionDocumentNormalizer.test.mjs server/lib/notionImportService.test.mjs server/lib/notionImportRuntime.test.mjs server/lib/notionExportImport.test.mjs server/lib/localEditorialReset.test.mjs server/lib/httpErrors.test.mjs server/lib/runtimeConfig.test.mjs server/routes/adminContentRoutes.test.mjs src/data/libraryDataCache.test.mjs src/data/libraryTree.test.mjs",
+    "import:notion:cloud": "node scripts/import-notion-cloud.mjs",
     "smoke:private-access": "node scripts/smoke-http-private-access.mjs",
     "smoke:readiness": "node scripts/smoke-http-readiness.mjs",
     "smoke:error-handling": "node scripts/smoke-http-error-handling.mjs",
