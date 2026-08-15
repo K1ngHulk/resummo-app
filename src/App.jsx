@@ -1,33 +1,35 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import AppHeader from './components/layout/AppHeader'
 import { learningRoutes } from './constants/navigation'
+import { prefetchLibraryTopics } from './data/libraryDataCache.js'
 import { useAuth } from './context/AuthContext.jsx'
-import DashboardPage from './pages/DashboardPage'
-import AnalysisPage from './pages/AnalysisPage'
-import LibraryArticlePage from './pages/LibraryArticlePage'
 import LibraryPage from './pages/LibraryPage'
 import LoadingScreen from './pages/LoadingScreen'
 import LoginPage from './pages/LoginPage'
-import QuestionSessionPage from './pages/QuestionSessionPage'
-import QbankNewSessionPage from './pages/QbankNewSessionPage'
-import QbankPage from './pages/QbankPage'
-import StudyPlanCurrentPage from './pages/StudyPlanCurrentPage'
-import StudyPlanWizardPage from './pages/StudyPlanWizardPage'
-import StudyPlansPage from './pages/StudyPlansPage'
-import StudyFlashcardsPage from './pages/StudyFlashcardsPage'
-import AdminHomePage from './pages/admin/AdminHomePage'
-import AdminAnkiImportPage from './pages/admin/AdminAnkiImportPage'
-import AdminArticleImportPage from './pages/admin/AdminArticleImportPage'
-import AdminQuestionsPage from './pages/admin/AdminQuestionsPage'
-import AdminQuestionReviewPage from './pages/admin/AdminQuestionReviewPage'
-import AdminArticlesPage from './pages/admin/AdminArticlesPage'
-import AdminArticleReviewPage from './pages/admin/AdminArticleReviewPage'
-import AdminArticleCreatePage from './pages/admin/AdminArticleCreatePage'
-import AdminQuestionCreatePage from './pages/admin/AdminQuestionCreatePage'
-import AdminTopicsPage from './pages/admin/AdminTopicsPage'
-import AdminTopicCreatePage from './pages/admin/AdminTopicCreatePage'
-import AdminTopicReviewPage from './pages/admin/AdminTopicReviewPage'
-import AdminLayout from './components/admin/AdminLayout'
+
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const AnalysisPage = lazy(() => import('./pages/AnalysisPage'))
+const LibraryArticlePage = lazy(() => import('./pages/LibraryArticlePage'))
+const QuestionSessionPage = lazy(() => import('./pages/QuestionSessionPage'))
+const QbankNewSessionPage = lazy(() => import('./pages/QbankNewSessionPage'))
+const QbankPage = lazy(() => import('./pages/QbankPage'))
+const StudyPlanCurrentPage = lazy(() => import('./pages/StudyPlanCurrentPage'))
+const StudyPlanWizardPage = lazy(() => import('./pages/StudyPlanWizardPage'))
+const StudyPlansPage = lazy(() => import('./pages/StudyPlansPage'))
+const StudyFlashcardsPage = lazy(() => import('./pages/StudyFlashcardsPage'))
+const AdminHomePage = lazy(() => import('./pages/admin/AdminHomePage'))
+const AdminAnkiImportPage = lazy(() => import('./pages/admin/AdminAnkiImportPage'))
+const AdminArticleImportPage = lazy(() => import('./pages/admin/AdminArticleImportPage'))
+const AdminQuestionsPage = lazy(() => import('./pages/admin/AdminQuestionsPage'))
+const AdminQuestionReviewPage = lazy(() => import('./pages/admin/AdminQuestionReviewPage'))
+const AdminArticlesPage = lazy(() => import('./pages/admin/AdminArticlesPage'))
+const AdminArticleReviewPage = lazy(() => import('./pages/admin/AdminArticleReviewPage'))
+const AdminArticleCreatePage = lazy(() => import('./pages/admin/AdminArticleCreatePage'))
+const AdminQuestionCreatePage = lazy(() => import('./pages/admin/AdminQuestionCreatePage'))
+const AdminTopicsPage = lazy(() => import('./pages/admin/AdminTopicsPage'))
+const AdminTopicCreatePage = lazy(() => import('./pages/admin/AdminTopicCreatePage'))
+const AdminTopicReviewPage = lazy(() => import('./pages/admin/AdminTopicReviewPage'))
 
 const routeConfig = [
   { path: '/login', id: 'login', component: LoginPage, hideHeader: true },
@@ -69,6 +71,17 @@ const routeConfig = [
 
 const defaultLearningRoute = routeConfig.find((route) => route.path === '/learning/library')
 
+function RouteLoading() {
+  return (
+    <div className="route-loading" role="status" aria-live="polite">
+      <span className="route-loading__line route-loading__line--title" />
+      <span className="route-loading__line" />
+      <span className="route-loading__line route-loading__line--short" />
+      <span className="sr-only">Cargando sección</span>
+    </div>
+  )
+}
+
 function normalizePath(pathname) {
   if (pathname === '/') {
     return '/learning/library'
@@ -87,7 +100,7 @@ function getLocationState() {
 
 function App() {
   const [locationState, setLocationState] = useState(getLocationState)
-  const { isAuthenticated, isLoading, logout, user } = useAuth()
+  const { isAuthenticated, isLoading, logout, request, user } = useAuth()
 
   useEffect(() => {
     const handleLocationChange = () => setLocationState(getLocationState())
@@ -99,6 +112,13 @@ function App() {
       window.removeEventListener('hashchange', handleLocationChange)
     }
   }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return
+    prefetchLibraryTopics({ request, user }).catch(() => {
+      // Library owns the visible loading/error state. Prefetch stays silent.
+    })
+  }, [isAuthenticated, request, user])
 
   const navigate = (path) => {
     const nextUrl = new URL(path, window.location.href)
@@ -153,14 +173,16 @@ function App() {
 
   if (activeRoute.isAdmin) {
     return (
-      <AdminLayout currentPath={locationState.path} onNavigate={navigate}>
-        <ActivePage
-          currentUser={user}
-          onNavigate={navigate}
-          searchParams={new URLSearchParams(locationState.search)}
-          hash={locationState.hash}
-        />
-      </AdminLayout>
+      <Suspense fallback={<RouteLoading />}>
+        <AdminLayout currentPath={locationState.path} onNavigate={navigate}>
+          <ActivePage
+            currentUser={user}
+            onNavigate={navigate}
+            searchParams={new URLSearchParams(locationState.search)}
+            hash={locationState.hash}
+          />
+        </AdminLayout>
+      </Suspense>
     )
   }
 
@@ -177,12 +199,14 @@ function App() {
           user={user}
         />
       )}
-      <ActivePage
-        currentUser={user}
-        onNavigate={navigate}
-        searchParams={new URLSearchParams(locationState.search)}
-        hash={locationState.hash}
-      />
+      <Suspense fallback={<RouteLoading />}>
+        <ActivePage
+          currentUser={user}
+          onNavigate={navigate}
+          searchParams={new URLSearchParams(locationState.search)}
+          hash={locationState.hash}
+        />
+      </Suspense>
     </main>
   )
 }

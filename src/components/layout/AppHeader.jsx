@@ -57,7 +57,9 @@ function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, route
             </button>
           </div>
         </div>
+      </div>
 
+      <div className="app-header__nav-band">
         <nav className="section-nav" aria-label="Secciones Learning">
           {navigationItems.map((item) => (
             <button

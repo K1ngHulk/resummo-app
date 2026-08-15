@@ -19,6 +19,7 @@ const app = express()
 const port = Number(process.env.PORT || 3001)
 const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
 const runtimeConfig = resolveRuntimeConfig()
+const productionDistDirectory = path.resolve(process.cwd(), 'dist')
 
 app.disable('x-powered-by')
 app.use((request, response, next) => {
@@ -82,6 +83,31 @@ app.use('/api', (_request, response) => {
   response.status(404).json({ message: 'Ruta no encontrada.' })
 })
 
+if (runtimeConfig.nodeEnvironment === 'production') {
+  app.use(express.static(productionDistDirectory, {
+    dotfiles: 'deny',
+    index: false,
+    maxAge: '1h',
+    setHeaders(response, filePath) {
+      if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+        response.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+      }
+    },
+  }))
+
+  app.use((request, response, next) => {
+    if (request.method !== 'GET' || path.extname(request.path)) {
+      next()
+      return
+    }
+
+    response.setHeader('Cache-Control', 'no-cache')
+    response.sendFile(path.join(productionDistDirectory, 'index.html'), (error) => {
+      if (error) next(error)
+    })
+  })
+}
+
 app.use((error, _request, response, next) => {
   void next
 
@@ -105,6 +131,6 @@ app.use((error, _request, response, next) => {
   })
 })
 
-app.listen(port, () => {
-  console.log(`Resummo API escuchando en http://localhost:${port}`)
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Resummo escuchando en el puerto ${port}`)
 })

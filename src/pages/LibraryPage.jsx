@@ -10,6 +10,10 @@ import {
   getLibraryRootNodes,
   libraryTopicNodeMap,
 } from '../data/libraryTree.js'
+import {
+  fetchLibraryTopics,
+  getCachedLibraryTopics,
+} from '../data/libraryDataCache.js'
 
 const activeNodeStorageKey = 'resummo_library_active_node'
 const legacyTopicStorageKey = 'resummo_library_active_topic'
@@ -115,26 +119,29 @@ function LibraryPage({ onNavigate, searchParams }) {
   const { request, user } = useAuth()
   const routedQuery = searchParams?.get('q') || ''
   const editorialView = user?.role === 'EDITOR' || user?.role === 'ADMIN'
-  const [topics, setTopics] = useState([])
+  const cachedTopics = getCachedLibraryTopics(user)
+  const [topics, setTopics] = useState(() => cachedTopics ?? [])
   const [activeNodeId, setActiveNodeId] = useState(readStoredNodeId)
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(() => !cachedTopics)
 
   useEffect(() => {
     let isMounted = true
+    const hadCachedTopics = Boolean(getCachedLibraryTopics(user))
 
     async function loadTopics() {
       try {
-        const payload = await request(`/api/topics${editorialView ? '?view=editorial' : ''}`)
+        const nextTopics = await fetchLibraryTopics({ request, user })
         if (!isMounted) return
 
-        const nextTopics = Array.isArray(payload.topics) ? payload.topics : []
         const nextTree = buildLibraryTree(nextTopics)
         setTopics(nextTopics)
         setActiveNodeId((current) => getLibraryNode(nextTree, current) ? current : '')
         setError('')
       } catch (loadError) {
-        if (isMounted) setError(loadError.message || 'No se pudo cargar la Biblioteca.')
+        if (isMounted && !hadCachedTopics) {
+          setError(loadError.message || 'No se pudo cargar la Biblioteca.')
+        }
       } finally {
         if (isMounted) setIsLoading(false)
       }
@@ -144,7 +151,7 @@ function LibraryPage({ onNavigate, searchParams }) {
     return () => {
       isMounted = false
     }
-  }, [editorialView, request])
+  }, [editorialView, request, user])
 
   const nodes = useMemo(() => buildLibraryTree(topics), [topics])
   const rootNodes = useMemo(() => getLibraryRootNodes(nodes), [nodes])
@@ -190,8 +197,10 @@ function LibraryPage({ onNavigate, searchParams }) {
     }
   }
 
+  const showMetricSkeletons = isLoading && topics.length === 0
+
   return (
-    <section className="library-page" aria-label="Biblioteca médica">
+    <section className="library-page" aria-label="Biblioteca médica" aria-busy={isLoading}>
       <header className="library-hero">
         <div className="library-hero__copy">
           <span className="library-context-label">
@@ -204,8 +213,14 @@ function LibraryPage({ onNavigate, searchParams }) {
           </p>
         </div>
         <dl className="library-hero__summary" aria-label="Resumen de Biblioteca">
-          <div><dt>Especialidades</dt><dd>{topics.length}</dd></div>
-          <div><dt>Artículos</dt><dd>{totalArticleCount}</dd></div>
+          <div>
+            <dt>Especialidades</dt>
+            <dd>{showMetricSkeletons ? <span className="library-metric-skeleton" aria-hidden="true" /> : topics.length}</dd>
+          </div>
+          <div>
+            <dt>Artículos</dt>
+            <dd>{showMetricSkeletons ? <span className="library-metric-skeleton library-metric-skeleton--wide" aria-hidden="true" /> : totalArticleCount}</dd>
+          </div>
         </dl>
       </header>
 

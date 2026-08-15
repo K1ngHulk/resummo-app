@@ -22,11 +22,27 @@ router.get('/', requireAuth, async (request, response, next) => {
           { questions: { some: { status: 'PUBLISHED' } } },
         ],
       },
-      include: {
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        summary: true,
+        description: true,
+        color: true,
+        status: true,
+        sourceType: true,
         articles: {
           where: { status: { in: visibleStatuses } },
           orderBy: { title: 'asc' },
-          include: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            summary: true,
+            readTimeMinutes: true,
+            tags: true,
+            status: true,
+            sourceType: true,
             progresses: {
               where: { userId: request.user.id },
               select: {
