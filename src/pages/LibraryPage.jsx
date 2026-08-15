@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AppIcon from '../components/ui/AppIcon'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
@@ -17,6 +17,13 @@ import {
 
 const activeNodeStorageKey = 'resummo_library_active_node'
 const legacyTopicStorageKey = 'resummo_library_active_topic'
+
+function normalizeLibrarySearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es')
+}
 
 function formatProgressStatus(status) {
   if (!status) return null
@@ -122,6 +129,8 @@ function LibraryPage({ onNavigate, searchParams }) {
   const cachedTopics = getCachedLibraryTopics(user)
   const [topics, setTopics] = useState(() => cachedTopics ?? [])
   const [activeNodeId, setActiveNodeId] = useState(readStoredNodeId)
+  const [specialtyQuery, setSpecialtyQuery] = useState('')
+  const mainPanelRef = useRef(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(() => !cachedTopics)
 
@@ -163,7 +172,15 @@ function LibraryPage({ onNavigate, searchParams }) {
   const childFolders = activeChildren.filter((node) => node.type === 'folder')
   const directArticles = activeChildren.filter((node) => node.type === 'article')
   const normalizedQuery = routedQuery.trim().toLocaleLowerCase('es')
+  const normalizedSpecialtyQuery = normalizeLibrarySearchText(specialtyQuery.trim())
   const isSearching = normalizedQuery.length > 0
+  const filteredRootNodes = useMemo(() => {
+    if (!normalizedSpecialtyQuery) return rootNodes
+    return rootNodes.filter((node) => normalizeLibrarySearchText([node.label, node.description]
+      .filter(Boolean)
+      .join(' '))
+      .includes(normalizedSpecialtyQuery))
+  }, [normalizedSpecialtyQuery, rootNodes])
   const totalArticleCount = useMemo(
     () => topics.reduce((total, topic) => total + (Array.isArray(topic.articles) ? topic.articles.length : 0), 0),
     [topics],
@@ -195,6 +212,19 @@ function LibraryPage({ onNavigate, searchParams }) {
     } catch {
       // Navigation still works when local persistence is unavailable.
     }
+  }
+
+  const handleSelectSpecialty = (nodeId) => {
+    handleSelectNode(nodeId)
+    if (!nodeId) return
+
+    window.requestAnimationFrame(() => {
+      const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      mainPanelRef.current?.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      })
+    })
   }
 
   const showMetricSkeletons = isLoading && topics.length === 0
@@ -286,7 +316,7 @@ function LibraryPage({ onNavigate, searchParams }) {
               <span>Especialidad</span>
               <select
                 value={activeRoot?.id || ''}
-                onChange={(event) => handleSelectNode(event.target.value)}
+                onChange={(event) => handleSelectSpecialty(event.target.value)}
               >
                 <option value="">Todas las especialidades</option>
                 {rootNodes.map((node) => (
@@ -309,19 +339,39 @@ function LibraryPage({ onNavigate, searchParams }) {
             >
               Inicio de Biblioteca
             </button>
-            <div className="library-tree-rail__list">
-              {rootNodes.map((node) => (
+            <label className="library-tree-rail__search">
+              <span className="visually-hidden">Buscar especialidad</span>
+              <AppIcon name="search" aria-hidden="true" />
+              <input
+                type="search"
+                value={specialtyQuery}
+                onChange={(event) => setSpecialtyQuery(event.target.value)}
+                placeholder="Buscar especialidad"
+                autoComplete="off"
+              />
+            </label>
+            <div className="library-tree-rail__list" aria-label="Especialidades disponibles">
+              {filteredRootNodes.length > 0 ? filteredRootNodes.map((node) => (
                 <FolderButton
                   key={node.id}
                   node={node}
                   active={activeRoot?.id === node.id}
-                  onSelect={handleSelectNode}
+                  onSelect={handleSelectSpecialty}
                 />
-              ))}
+              )) : (
+                <div className="library-tree-rail__empty">
+                  No hay especialidades que coincidan con “{specialtyQuery.trim()}”.
+                </div>
+              )}
+            </div>
+            <div className="library-tree-rail__footer" aria-live="polite">
+              {normalizedSpecialtyQuery
+                ? `${filteredRootNodes.length} de ${rootNodes.length} especialidades`
+                : `${rootNodes.length} especialidades`}
             </div>
           </aside>
 
-          <section className="library-tree-main" aria-labelledby="library-tree-heading">
+          <section ref={mainPanelRef} className="library-tree-main" aria-labelledby="library-tree-heading">
             {activeNode ? (
               <>
                 <header className="library-tree-main__header">
@@ -403,7 +453,7 @@ function LibraryPage({ onNavigate, searchParams }) {
                 {rootNodes.length > 0 ? (
                   <div className="library-specialty-directory">
                     {rootNodes.map((node) => (
-                      <button key={node.id} type="button" className="library-specialty-directory__item" onClick={() => handleSelectNode(node.id)}>
+                      <button key={node.id} type="button" className="library-specialty-directory__item" onClick={() => handleSelectSpecialty(node.id)}>
                         <span>
                           <strong>{node.label}</strong>
                           <small>{formatFolderMeta(node)}</small>
