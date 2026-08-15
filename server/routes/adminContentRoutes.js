@@ -8,6 +8,12 @@ import {
   mapArticlePreviewToCreateData,
   validateArticleMarkdownDocument,
 } from '../lib/articleMarkdownImport.js'
+import { fetchNotionPagePreview } from '../lib/notionImportService.js'
+import {
+  buildNotionExportPreview,
+  importNotionExportBuffer,
+} from '../lib/notionExportImportService.js'
+import { getLocalDatabaseTarget } from '../lib/localEditorialReset.js'
 
 const router = express.Router()
 
@@ -21,14 +27,34 @@ function validationError(message) {
 
 const pendingEditorialContentPattern = /\[FALTA CITA\]|\b(?:TODO|PENDIENTE|placeholder|mock)\b/i
 
+function hasArticleSection(article) {
+  const structuredHeadings = Array.isArray(article.contentJson?.headings) ? article.contentJson.headings : []
+  return structuredHeadings.some((heading) => Number(heading?.level) >= 2)
+    || /^#{2,6}\s+\S.*$/m.test(article.body || '')
+}
+
+function hasCurrentEditorialApproval(article) {
+  if (article.sourceType !== 'NOTION_EXPORT') return true
+  return Boolean(
+    article.editorialApprovedAt
+    && article.editorialApprovedByUserId
+    && article.editorialApprovedSnapshotHash
+    && article.sourceSnapshotHash
+    && article.editorialApprovedSnapshotHash === article.sourceSnapshotHash,
+  )
+}
+
 export function getArticlePublicationIssues(article, topic) {
   const issues = []
   if (!article.title?.trim()) issues.push('falta el titulo')
   if (!article.summary?.trim()) issues.push('falta el resumen')
   if (!article.body?.trim()) issues.push('falta el cuerpo')
-  if (!/^##\s+\S.*$/m.test(article.body || '')) issues.push('falta al menos una seccion con encabezado ##')
+  if (!hasArticleSection(article)) issues.push('falta al menos una seccion estructurada')
   if (!Number.isInteger(article.readTimeMinutes) || article.readTimeMinutes <= 0) issues.push('el tiempo de lectura no es valido')
   if (pendingEditorialContentPattern.test(article.body || '')) issues.push('el cuerpo contiene citas o pendientes editoriales')
+  if (!hasCurrentEditorialApproval(article)) {
+    issues.push('el articulo importado desde Notion requiere aprobacion editorial explicita para el snapshot actual antes de publicar')
+  }
 
   const hasFrontmatter = String(article.body || '').trimStart().startsWith('---')
   if (hasFrontmatter) {
@@ -273,6 +299,11 @@ router.get('/articles', async (request, response, next) => {
         topic: { select: { title: true, slug: true, status: true } },
         readTimeMinutes: true,
         tags: true,
+        sourceType: true,
+        sourceSnapshotHash: true,
+        editorialApprovedAt: true,
+        editorialApprovedByUserId: true,
+        editorialApprovedSnapshotHash: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -280,6 +311,113 @@ router.get('/articles', async (request, response, next) => {
     })
 
     response.json({ articles })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/articles/bulk-action', async (request, response, next) => {
+  try {
+    const schema = z.object({
+      articleIds: z.array(z.string().trim().min(1)).min(1).max(500),
+      action: z.enum(['APPROVE', 'PUBLISH']),
+    })
+    const result = schema.safeParse(request.body)
+    if (!result.success) throw validationError('Seleccion de articulos invalida')
+
+    const articleIds = [...new Set(result.data.articleIds)]
+    const articles = await prisma.article.findMany({
+      where: { id: { in: articleIds } },
+      include: { topic: true },
+    })
+    if (articles.length !== articleIds.length) {
+      throw validationError('Uno o mas articulos seleccionados ya no existen. Recarga la lista e intenta nuevamente.')
+    }
+
+    if (result.data.action === 'APPROVE') {
+      const invalidImports = articles.filter((article) => (
+        article.sourceType === 'NOTION_EXPORT'
+        && (!article.sourceSnapshotHash || !Array.isArray(article.contentJson?.blocks) || article.contentJson.blocks.length === 0)
+      ))
+      if (invalidImports.length > 0) {
+        throw validationError(`No se puede aprobar la seleccion: ${invalidImports.length} articulo(s) importado(s) no tienen un snapshot estructurado valido.`)
+      }
+
+      const importedArticles = articles.filter((article) => article.sourceType === 'NOTION_EXPORT')
+      const approvedAt = new Date()
+      if (importedArticles.length > 0) {
+        await prisma.$transaction(importedArticles.map((article) => prisma.article.update({
+          where: { id: article.id },
+          data: {
+            editorialApprovedAt: approvedAt,
+            editorialApprovedByUserId: request.user.id,
+            editorialApprovedSnapshotHash: article.sourceSnapshotHash,
+          },
+        })))
+      }
+
+      response.json({
+        action: 'APPROVE',
+        selected: articles.length,
+        approved: importedArticles.length,
+        alreadyApprovalFree: articles.length - importedArticles.length,
+      })
+      return
+    }
+
+    const blocked = articles.map((article) => ({
+      article,
+      issues: getArticlePublicationIssues(article, { ...article.topic, status: 'PUBLISHED' }),
+    })).filter((item) => item.issues.length > 0)
+
+    if (blocked.length > 0) {
+      const sample = blocked.slice(0, 5).map((item) => `${item.article.title}: ${item.issues[0]}`).join(' | ')
+      throw validationError(`No se puede publicar la seleccion: ${blocked.length} articulo(s) requieren revision. ${sample}`)
+    }
+
+    const topicIds = [...new Set(articles.map((article) => article.topicId))]
+    const publication = await prisma.$transaction(async (transaction) => {
+      await transaction.topic.updateMany({
+        where: { id: { in: topicIds } },
+        data: { status: 'PUBLISHED' },
+      })
+
+      let published = 0
+      for (const article of articles) {
+        if (article.sourceType === 'NOTION_EXPORT') {
+          const update = await transaction.article.updateMany({
+            where: {
+              id: article.id,
+              sourceSnapshotHash: article.sourceSnapshotHash,
+              editorialApprovedAt: { not: null },
+              editorialApprovedByUserId: { not: null },
+              editorialApprovedSnapshotHash: article.sourceSnapshotHash,
+            },
+            data: { status: 'PUBLISHED' },
+          })
+          if (update.count !== 1) {
+            const error = new Error('La seleccion cambio durante la publicacion. Recarga la lista y vuelve a intentarlo.')
+            error.statusCode = 409
+            throw error
+          }
+        } else {
+          await transaction.article.update({
+            where: { id: article.id },
+            data: { status: 'PUBLISHED' },
+          })
+        }
+        published += 1
+      }
+
+      return { published }
+    }, { isolationLevel: 'Serializable', timeout: 30000 })
+
+    response.json({
+      action: 'PUBLISH',
+      selected: articles.length,
+      published: publication.published,
+      topicsPublished: topicIds.length,
+    })
   } catch (error) {
     next(error)
   }
@@ -357,6 +495,64 @@ router.post('/articles', async (request, response, next) => {
   }
 })
 
+router.post('/articles/:id/editorial-approval', async (request, response, next) => {
+  try {
+    const schema = z.object({ approved: z.boolean().default(true) })
+    const result = schema.safeParse(request.body ?? {})
+    if (!result.success) throw validationError('Payload invalido')
+
+    const article = await prisma.article.findUnique({ where: { id: request.params.id } })
+    if (!article) {
+      const error = new Error('Articulo no encontrado')
+      error.statusCode = 404
+      throw error
+    }
+    if (article.sourceType !== 'NOTION_EXPORT') {
+      throw validationError('La aprobacion estructurada solo aplica a articulos importados desde Notion')
+    }
+    if (!article.sourceSnapshotHash || !Array.isArray(article.contentJson?.blocks) || article.contentJson.blocks.length === 0) {
+      throw validationError('El articulo importado no tiene un snapshot estructurado valido para aprobar')
+    }
+
+    const approved = result.data.approved
+    const updated = await prisma.article.update({
+      where: { id: article.id },
+      data: approved
+        ? {
+            editorialApprovedAt: new Date(),
+            editorialApprovedByUserId: request.user.id,
+            editorialApprovedSnapshotHash: article.sourceSnapshotHash,
+          }
+        : {
+            editorialApprovedAt: null,
+            editorialApprovedByUserId: null,
+            editorialApprovedSnapshotHash: null,
+            ...(article.status === 'PUBLISHED' ? { status: 'DRAFT' } : {}),
+          },
+      select: {
+        id: true,
+        status: true,
+        editorialApprovedAt: true,
+        editorialApprovedByUserId: true,
+        editorialApprovedSnapshotHash: true,
+        sourceSnapshotHash: true,
+      },
+    })
+
+    response.json({
+      approval: {
+        approved: hasCurrentEditorialApproval({ ...article, ...updated }),
+        approvedAt: updated.editorialApprovedAt,
+        approvedByUserId: updated.editorialApprovedByUserId,
+        snapshotHash: updated.editorialApprovedSnapshotHash,
+        articleStatus: updated.status,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 router.patch('/articles/:id', async (request, response, next) => {
   try {
     const schema = z.object({
@@ -381,6 +577,10 @@ router.patch('/articles/:id', async (request, response, next) => {
       const error = new Error('Articulo no encontrado')
       error.statusCode = 404
       throw error
+    }
+
+    if (existingArticle.contentJson && parsed.body !== undefined && parsed.body !== existingArticle.body) {
+      throw validationError('El Markdown fuente de un articulo estructurado es de solo lectura en esta fase; edita metadata o reimporta la fuente para evitar desincronizar contentJson.')
     }
 
     const finalTopic = await prisma.topic.findUnique({
@@ -410,10 +610,30 @@ router.patch('/articles/:id', async (request, response, next) => {
       }
     }
 
-    const article = await prisma.article.update({
-      where: { id: request.params.id },
-      data: parsed,
-    })
+    let article
+    if (parsed.status === 'PUBLISHED' && existingArticle.sourceType === 'NOTION_EXPORT') {
+      const publicationUpdate = await prisma.article.updateMany({
+        where: {
+          id: request.params.id,
+          sourceSnapshotHash: existingArticle.sourceSnapshotHash,
+          editorialApprovedAt: { not: null },
+          editorialApprovedByUserId: { not: null },
+          editorialApprovedSnapshotHash: existingArticle.sourceSnapshotHash,
+        },
+        data: parsed,
+      })
+      if (publicationUpdate.count !== 1) {
+        const error = new Error('El articulo cambió durante la revisión editorial. Recarga el contenido y vuelve a validar el snapshot antes de publicar.')
+        error.statusCode = 409
+        throw error
+      }
+      article = await prisma.article.findUnique({ where: { id: request.params.id } })
+    } else {
+      article = await prisma.article.update({
+        where: { id: request.params.id },
+        data: parsed,
+      })
+    }
 
     response.json({ article })
   } catch (error) {
@@ -658,6 +878,118 @@ router.patch('/questions/:id', async (request, response, next) => {
     })
 
     response.json({ question })
+  } catch (error) {
+    next(error)
+  }
+})
+
+function toPublicNotionImportPreview(preview) {
+  const unsupported = preview.warnings.filter((warning) => warning.code === 'UNSUPPORTED_NOTION_BLOCK')
+
+  return {
+    status: 'VALID',
+    source: {
+      title: preview.page.title,
+      url: preview.page.url,
+      lastEditedAt: preview.page.lastEditedAt,
+    },
+    stats: {
+      blockCount: preview.blockCount,
+      headingCount: preview.document.headings.length,
+      childPageCount: preview.childPages.length,
+      assetCount: preview.assets.length,
+      unsupportedCount: unsupported.length,
+      searchChunkCount: preview.searchChunks.length,
+    },
+    childPages: preview.childPages.map((page) => ({
+      pageId: page.pageId,
+      title: page.title,
+    })),
+    warnings: preview.warnings.map((warning) => warning.message),
+    unsupported: unsupported.map((warning) => ({
+      blockType: warning.blockType,
+      message: warning.message,
+    })),
+    document: preview.document,
+    assets: preview.assets.map((asset) => ({
+      assetKey: asset.assetKey,
+      kind: asset.kind,
+      sourceType: asset.sourceType,
+      previewUrl: asset.transientUrl,
+      expiresAt: asset.expiresAt,
+      captionText: asset.captionText,
+      requiresControlledCopy: asset.requiresControlledCopy,
+    })),
+    internalLinks: preview.internalLinks,
+  }
+}
+
+router.post('/import/notion/preview', async (request, response, next) => {
+  try {
+    const schema = z.object({
+      url: z.string().trim().min(1).max(2048),
+    })
+    const result = schema.safeParse(request.body)
+    if (!result.success) {
+      throw validationError('Pega una URL de Notion válida')
+    }
+
+    const preview = await fetchNotionPagePreview({
+      pageUrl: result.data.url,
+      token: process.env.NOTION_API_TOKEN,
+    })
+
+    response.json(toPublicNotionImportPreview(preview))
+  } catch (error) {
+    next(error)
+  }
+})
+
+const notionExportBody = express.raw({ type: () => true, limit: '180mb' })
+
+function notionArchiveName(request) {
+  const raw = String(request.headers['x-resummo-file-name'] || 'notion-export.zip')
+  const safe = [...raw]
+    .map((character) => (character === '/' || character === '\\' || character.charCodeAt(0) < 32 ? '_' : character))
+    .join('')
+    .trim()
+    .slice(0, 180)
+  return safe || 'notion-export.zip'
+}
+
+function requireZipBody(request) {
+  if (!Buffer.isBuffer(request.body) || request.body.length === 0) {
+    throw validationError('Selecciona el ZIP original exportado desde Notion.')
+  }
+  return request.body
+}
+
+router.post('/import/notion-export/preview', notionExportBody, async (request, response, next) => {
+  try {
+    getLocalDatabaseTarget()
+    const { preview } = await buildNotionExportPreview(requireZipBody(request), {
+      archiveName: notionArchiveName(request),
+      client: prisma,
+    })
+    response.json(preview)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/import/notion-export/confirm', notionExportBody, async (request, response, next) => {
+  try {
+    getLocalDatabaseTarget()
+    const replaceEditorial = String(request.headers['x-resummo-replace-editorial'] || '').toLowerCase() === 'true'
+    const result = await importNotionExportBuffer(requireZipBody(request), {
+      archiveName: notionArchiveName(request),
+      client: prisma,
+      replaceEditorial,
+    })
+    response.status(201).json({
+      ...result,
+      message: 'Export de Notion importado como borrador. Ningún Topic ni Article fue publicado automáticamente.',
+    })
   } catch (error) {
     next(error)
   }

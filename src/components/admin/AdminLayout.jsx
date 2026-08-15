@@ -1,5 +1,6 @@
 import './AdminLayout.css'
 import { useAuth } from '../../context/AuthContext'
+import AppIcon from '../ui/AppIcon'
 
 function formatAdminRole(role) {
   if (role === 'ADMIN') return 'Administrador'
@@ -11,12 +12,12 @@ export default function AdminLayout({ children, currentPath, onNavigate }) {
   const { user, logout } = useAuth()
 
   const navItems = [
-    { id: 'dashboard', path: '/admin', label: 'Panel', icon: '📊' },
-    { id: 'topics', path: '/admin/topics', label: 'Temas', icon: '📚' },
-    { id: 'articles', path: '/admin/articles', label: 'Artículos', icon: '📄' },
-    { id: 'questions', path: '/admin/questions', label: 'Preguntas', icon: '❓' },
-    { id: 'article-import', path: '/admin/import/articles', label: 'Importar artículos', icon: '📥' },
-    { id: 'anki-import', path: '/admin/import/anki', label: 'Importar Anki', icon: '🗂️' },
+    { id: 'dashboard', path: '/admin', label: 'Panel', icon: 'dashboard' },
+    { id: 'article-import', path: '/admin/import/articles', label: 'Importar contenido', icon: 'upload' },
+    { id: 'articles', path: '/admin/articles', label: 'Artículos', icon: 'article' },
+    { id: 'topics', path: '/admin/topics', label: 'Temas', icon: 'folder' },
+    { id: 'questions', path: '/admin/questions', label: 'Preguntas', icon: 'question' },
+    { id: 'anki-import', path: '/admin/import/anki', label: 'Importar Anki', icon: 'cards' },
   ]
 
   // Get current section name for top bar
@@ -28,34 +29,27 @@ export default function AdminLayout({ children, currentPath, onNavigate }) {
       {/* SIDEBAR */}
       <aside className="admin-sidebar">
         <div className="admin-sidebar__header">
-          <a 
-            href="#" 
-            className="admin-sidebar__logo" 
-            onClick={(e) => { e.preventDefault(); onNavigate('/admin'); }}
-          >
-            Resummo <span className="admin-sidebar__badge">Admin</span>
-          </a>
+          <button type="button" className="admin-sidebar__logo" onClick={() => onNavigate('/admin')}>
+            Resummo <span className="admin-sidebar__badge">Editorial</span>
+          </button>
         </div>
         
         <nav className="admin-sidebar__nav">
           {navItems.map((item) => (
-            <a
+            <button
               key={item.id}
-              href="#"
+              type="button"
               className={`admin-nav-item ${
-                (item.path === '/admin' && currentPath === '/admin') || 
+                (item.path === '/admin' && currentPath === '/admin') ||
                 (item.path !== '/admin' && currentPath.startsWith(item.path))
                   ? 'active'
                   : ''
               }`}
-              onClick={(e) => {
-                e.preventDefault()
-                onNavigate(item.path)
-              }}
+              onClick={() => onNavigate(item.path)}
             >
-              <span className="admin-nav-icon">{item.icon}</span>
-              {item.label}
-            </a>
+              <span className="admin-nav-icon" aria-hidden="true"><AppIcon name={item.icon} /></span>
+              <span>{item.label}</span>
+            </button>
           ))}
         </nav>
 
@@ -82,7 +76,7 @@ export default function AdminLayout({ children, currentPath, onNavigate }) {
           <div className="admin-topbar-actions">
             <button 
               className="admin-btn-outline" 
-              onClick={() => onNavigate('/learning')}
+              onClick={() => onNavigate('/learning/library')}
             >
               Ir a la App
             </button>

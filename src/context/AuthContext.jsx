@@ -4,14 +4,18 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 const AuthContext = createContext(null)
 const TOKEN_STORAGE_KEY = 'resummo_auth_token'
 
-async function apiRequest(path, { method = 'GET', body, token } = {}) {
+async function apiRequest(path, { method = 'GET', body, token, headers = {} } = {}) {
+  const isBinaryBody = typeof Blob !== 'undefined' && body instanceof Blob
+  const requestBody = body ? (isBinaryBody ? body : JSON.stringify(body)) : undefined
   const response = await fetch(path, {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      ...(!isBinaryBody && body ? { 'Content-Type': 'application/json' } : {}),
+      ...(isBinaryBody && body.type ? { 'Content-Type': body.type } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: requestBody,
   })
 
   const text = await response.text()

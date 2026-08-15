@@ -43,6 +43,10 @@ const topics = [
   },
 ]
 
+test('does not render demo taxonomy when the backend has no Library content', () => {
+  assert.deepEqual(buildLibraryTree([]), [])
+})
+
 test('maps a known backend topic into a human Library path', () => {
   const nodes = buildLibraryTree(topics)
   const topicNode = nodes.find((node) => node.topic?.slug === 'cardiology-basics')
@@ -77,6 +81,38 @@ test('keeps an unmapped topic visible under Otros temas publicados', () => {
     getLibraryPath(nodes, fallbackTopic.id).map((node) => node.label),
     ['Otros temas publicados', 'Neurología introductoria'],
   )
+})
+
+test('places Notion-imported specialties at the Library root instead of the legacy fallback', () => {
+  const importedTopic = {
+    id: 'topic-bioquimica-id',
+    slug: 'bioquimica',
+    title: 'Bioquímica',
+    summary: 'Especialidad importada.',
+    description: 'Contenido de RESUMMO MIR.',
+    sourceType: 'NOTION_EXPORT',
+    status: 'DRAFT',
+    articles: [{
+      id: 'article-metabolismo-id',
+      slug: 'bioquimica-metabolismo',
+      title: 'Metabolismo',
+      summary: 'Artículo importado.',
+      readTimeMinutes: 8,
+      tags: [],
+      status: 'DRAFT',
+      sourceType: 'NOTION_EXPORT',
+    }],
+  }
+
+  const nodes = buildLibraryTree([importedTopic])
+  const topicNode = nodes.find((node) => node.topic?.slug === 'bioquimica')
+  const articleNode = nodes.find((node) => node.article?.slug === 'bioquimica-metabolismo')
+
+  assert.ok(topicNode)
+  assert.equal(topicNode.parentId, null)
+  assert.equal(topicNode.label, 'Bioquímica')
+  assert.deepEqual(getLibraryPath(nodes, articleNode.id).map((node) => node.label), ['Bioquímica', 'Metabolismo'])
+  assert.deepEqual(getTopicLibraryPath(importedTopic), ['Bioquímica'])
 })
 
 test('builds article-header paths without exposing mapped or fallback slugs', () => {

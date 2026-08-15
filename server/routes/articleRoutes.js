@@ -9,6 +9,11 @@ import {
 
 const router = express.Router()
 
+function canUseEditorialLibrary(request) {
+  return request.query.view === 'editorial'
+    && (request.user.role === 'EDITOR' || request.user.role === 'ADMIN')
+}
+
 function createSectionId(title, index) {
   const normalizedTitle = title
     .normalize('NFD')
@@ -66,8 +71,10 @@ export function parseArticleBody(body) {
 
 router.get('/:slug', requireAuth, async (request, response, next) => {
   try {
+    const editorialView = canUseEditorialLibrary(request)
+    const visibleStatuses = editorialView ? ['DRAFT', 'PUBLISHED'] : ['PUBLISHED']
     const article = await prisma.article.findUnique({
-      where: { slug: request.params.slug, status: 'PUBLISHED' },
+      where: { slug: request.params.slug },
       include: {
         topic: true,
         progresses: {
@@ -77,7 +84,7 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
       },
     })
 
-    if (!article || article.topic.status !== 'PUBLISHED') {
+    if (!article || !visibleStatuses.includes(article.status) || !visibleStatuses.includes(article.topic.status)) {
       const error = new Error('Articulo no encontrado')
       error.statusCode = 404
       throw error
@@ -87,9 +94,9 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
       where: {
         topicId: article.topicId,
         NOT: { id: article.id },
-        status: 'PUBLISHED',
+        status: { in: visibleStatuses },
         topic: {
-          status: 'PUBLISHED',
+          status: { in: visibleStatuses },
         },
       },
       orderBy: { createdAt: 'asc' },
@@ -121,13 +128,18 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
         slug: article.slug,
         title: article.title,
         summary: article.summary,
+        status: article.status,
+        sourceType: article.sourceType,
         topic: {
           slug: article.topic.slug,
           title: article.topic.title,
+          status: article.topic.status,
+          sourceType: article.topic.sourceType,
         },
         readTimeMinutes: article.readTimeMinutes,
         tags: article.tags,
-        sections: parseArticleBody(articleDocument.body),
+        document: article.contentJson || null,
+        sections: article.contentJson ? [] : parseArticleBody(articleDocument.body),
         editorial,
         progress: article.progresses[0] || null,
         relatedArticles,

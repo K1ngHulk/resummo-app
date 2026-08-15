@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import AppIcon from '../components/ui/AppIcon'
+import StructuredArticleContent from '../components/library/StructuredArticleContent.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getTopicLibraryPath } from '../data/libraryTree.js'
 
@@ -52,13 +53,15 @@ function getSectionParagraphs(section) {
     .filter(Boolean)
 }
 
-function LibraryArticlePage({ onNavigate, searchParams }) {
-  const { request } = useAuth()
+function LibraryArticlePage({ onNavigate, searchParams, hash = '' }) {
+  const { request, user } = useAuth()
   const slug = searchParams.get('slug')
+  const editorialView = user?.role === 'EDITOR' || user?.role === 'ADMIN'
   const [article, setArticle] = useState(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const autoProgressRef = useRef(false)
+  const articleId = article?.id
 
   useEffect(() => {
     let isMounted = true
@@ -76,7 +79,7 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
       }
 
       try {
-        const payload = await request(`/api/articles/${slug}`)
+        const payload = await request(`/api/articles/${slug}${editorialView ? '?view=editorial' : ''}`)
         if (isMounted) {
           setArticle(payload.article)
           setError('')
@@ -92,11 +95,28 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
     return () => {
       isMounted = false
     }
-  }, [request, slug])
+  }, [editorialView, request, slug])
+
+  useEffect(() => {
+    if (!articleId || !hash) return undefined
+
+    let targetId = hash.slice(1)
+    try {
+      targetId = decodeURIComponent(targetId)
+    } catch {
+      // Keep the raw fragment when it is not valid percent-encoding.
+    }
+    if (!targetId) return undefined
+
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(targetId)?.scrollIntoView({ block: 'start' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [articleId, hash])
 
   useEffect(() => {
     async function syncInProgress() {
-      if (!article || autoProgressRef.current) return
+      if (!article || article.status !== 'PUBLISHED' || autoProgressRef.current) return
       autoProgressRef.current = true
 
       if (!article.progress || article.progress.status === 'NOT_STARTED') {
@@ -153,6 +173,10 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
   }
 
   const sections = article?.sections || []
+  const structuredHeadings = article?.document?.headings || []
+  const articleOutline = structuredHeadings.length > 0
+    ? structuredHeadings.filter((heading) => heading.level <= 3).map((heading) => ({ id: heading.anchor, title: heading.text }))
+    : sections.map((section) => ({ id: section.id, title: section.title }))
   const relatedArticles = article?.relatedArticles || []
   const editorialSummary = getEditorialSummary(article?.editorial)
 
@@ -170,10 +194,10 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
         <div className="library-article-layout">
           <aside className="library-article-index" aria-label="Índice del artículo">
             <strong>En este artículo</strong>
-            {sections.length > 0 ? (
+            {articleOutline.length > 0 ? (
               <nav>
-                {sections.map((section) => (
-                  <a key={section.id} href={`#${section.id}`}>{section.title}</a>
+                {articleOutline.map((item) => (
+                  <a key={item.id} href={`#${item.id}`}>{item.title}</a>
                 ))}
               </nav>
             ) : (
@@ -193,7 +217,9 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
                     </span>
                   ))}
                 </nav>
-                <span className="library-context-label">Artículo educativo</span>
+                <span className="library-context-label">
+                  {article.status === 'DRAFT' ? 'Vista editorial' : 'Artículo educativo'}
+                </span>
                 <h1>{article.title}</h1>
                 <p>{article.summary}</p>
                 <div className="library-article-editorial-meta" aria-label="Información editorial">
@@ -211,14 +237,20 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
                   ) : null}
                 </div>
               </div>
-              <button type="button" className={`library-save-button ${isCompleted ? 'library-save-button--active' : ''}`} onClick={handleComplete}>
-                {isCompleted ? 'Artículo completado' : 'Marcar como completado'}
-              </button>
+              {article.status === 'PUBLISHED' ? (
+                <button type="button" className={`library-save-button ${isCompleted ? 'library-save-button--active' : ''}`} onClick={handleComplete}>
+                  {isCompleted ? 'Artículo completado' : 'Marcar como completado'}
+                </button>
+              ) : (
+                <button type="button" className="outline-pill-button" onClick={() => onNavigate(`/admin/articles/review?id=${article.id}`)}>
+                  Revisar en Panel editorial
+                </button>
+              )}
             </header>
 
             <div className="library-article-meta" aria-label="Información del artículo">
               <span>{article.topic.title}</span>
-              <span>{article.progress?.progressPercent || 0}% de avance</span>
+              <span>{article.status === 'DRAFT' ? 'Solo visible para revisión editorial' : `${article.progress?.progressPercent || 0}% de avance`}</span>
             </div>
 
             {article.tags?.length > 0 ? (
@@ -228,7 +260,9 @@ function LibraryArticlePage({ onNavigate, searchParams }) {
             ) : null}
 
             <div className="library-article-sections">
-              {sections.length > 0 ? sections.map((section) => {
+              {article.document?.blocks?.length ? (
+                <StructuredArticleContent document={article.document} onNavigate={onNavigate} />
+              ) : sections.length > 0 ? sections.map((section) => {
                 const paragraphs = getSectionParagraphs(section)
                 return (
                   <section key={section.id} id={section.id} className="library-article-section">

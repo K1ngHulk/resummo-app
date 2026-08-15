@@ -81,6 +81,7 @@ function getLocationState() {
   return {
     path: normalizePath(window.location.pathname),
     search: window.location.search,
+    hash: window.location.hash,
   }
 }
 
@@ -89,24 +90,30 @@ function App() {
   const { isAuthenticated, isLoading, logout, user } = useAuth()
 
   useEffect(() => {
-    const handlePopState = () => setLocationState(getLocationState())
+    const handleLocationChange = () => setLocationState(getLocationState())
 
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
+    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('hashchange', handleLocationChange)
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('hashchange', handleLocationChange)
+    }
   }, [])
 
   const navigate = (path) => {
-    const nextUrl = new URL(path, window.location.origin)
+    const nextUrl = new URL(path, window.location.href)
     const nextState = {
       path: normalizePath(nextUrl.pathname),
       search: nextUrl.search,
+      hash: nextUrl.hash,
     }
 
     if (
       nextState.path !== locationState.path ||
-      nextState.search !== locationState.search
+      nextState.search !== locationState.search ||
+      nextState.hash !== locationState.hash
     ) {
-      window.history.pushState({}, '', `${nextState.path}${nextState.search}`)
+      window.history.pushState({}, '', `${nextState.path}${nextState.search}${nextState.hash}`)
       setLocationState(nextState)
     }
   }
@@ -151,6 +158,7 @@ function App() {
           currentUser={user}
           onNavigate={navigate}
           searchParams={new URLSearchParams(locationState.search)}
+          hash={locationState.hash}
         />
       </AdminLayout>
     )
@@ -160,10 +168,12 @@ function App() {
     <main className={`dashboard-shell ${activeRoute.hideHeader ? 'dashboard-shell--loading' : ''}`}>
       {activeRoute.hideHeader || !isAuthenticated ? null : (
         <AppHeader
+          key={`${locationState.path}:${new URLSearchParams(locationState.search).get('q') || ''}`}
           activeSection={activeRoute.id}
           navigationItems={learningRoutes}
           onLogout={logout}
           onNavigate={navigate}
+          routedSearchQuery={new URLSearchParams(locationState.search).get('q') || ''}
           user={user}
         />
       )}
@@ -171,6 +181,7 @@ function App() {
         currentUser={user}
         onNavigate={navigate}
         searchParams={new URLSearchParams(locationState.search)}
+        hash={locationState.hash}
       />
     </main>
   )

@@ -41,6 +41,49 @@ test('keeps legacy articles publishable when their existing fields are complete'
   assert.deepEqual(issues, [])
 })
 
+test('accepts a generic structured section without requiring Markdown ## syntax', () => {
+  const issues = getArticlePublicationIssues({
+    ...baseArticle,
+    body: '# Título\n\nTexto estructurado.',
+    contentJson: {
+      headings: [{ level: 2, anchor: 'h-section', text: 'Sección estructurada' }],
+    },
+  }, topic)
+
+  assert.deepEqual(issues, [])
+})
+
+test('blocks publishing a NOTION_EXPORT article until the current snapshot has explicit editorial approval', () => {
+  const article = {
+    ...baseArticle,
+    body: '# Título\n\nTexto importado.',
+    sourceType: 'NOTION_EXPORT',
+    sourceSnapshotHash: 'snapshot-current',
+    contentJson: {
+      headings: [{ level: 2, anchor: 'h-section', text: 'Sección estructurada' }],
+    },
+  }
+
+  const missingApproval = getArticlePublicationIssues(article, topic)
+  assert.ok(missingApproval.includes('el articulo importado desde Notion requiere aprobacion editorial explicita para el snapshot actual antes de publicar'))
+
+  const staleApproval = getArticlePublicationIssues({
+    ...article,
+    editorialApprovedAt: new Date('2026-08-11T00:00:00Z'),
+    editorialApprovedByUserId: 'editor-id',
+    editorialApprovedSnapshotHash: 'snapshot-old',
+  }, topic)
+  assert.ok(staleApproval.includes('el articulo importado desde Notion requiere aprobacion editorial explicita para el snapshot actual antes de publicar'))
+
+  const approved = getArticlePublicationIssues({
+    ...article,
+    editorialApprovedAt: new Date('2026-08-11T00:00:00Z'),
+    editorialApprovedByUserId: 'editor-id',
+    editorialApprovedSnapshotHash: 'snapshot-current',
+  }, topic)
+  assert.ok(!approved.some((issue) => issue.includes('requiere aprobacion editorial explicita')))
+})
+
 test('blocks imported Markdown while editorial approval metadata is incomplete', () => {
   const issues = getArticlePublicationIssues({
     ...baseArticle,

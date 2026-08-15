@@ -1,6 +1,6 @@
 .admin-review-page {
   padding: 1.5rem;
-  max-width: 900px;
+  max-width: 1240px;
   margin: 0 auto;
 }
 
@@ -48,9 +48,52 @@
 
 .admin-review-content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.34fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(330px, 0.65fr);
   gap: 2rem;
   align-items: start;
+}
+
+.admin-review-side-column {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.admin-structured-preview {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.admin-structured-preview > span {
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-structured-preview h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.admin-structured-preview > p {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.admin-structured-preview__content {
+  min-width: 0;
+  max-height: 720px;
+  overflow: auto;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--color-border);
 }
 
 .admin-form-section {
@@ -219,6 +262,47 @@
 
 .admin-review-feedback {
   margin-bottom: 1rem;
+}
+
+.admin-import-approval {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.1rem;
+  border: 1px solid var(--color-primary-border);
+  border-radius: 10px;
+  background: var(--color-primary-tint);
+}
+
+.admin-import-approval--approved {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.admin-import-approval > span {
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-import-approval h2,
+.admin-import-approval p {
+  margin: 0;
+}
+
+.admin-import-approval h2 {
+  font-size: 1.05rem;
+}
+
+.admin-import-approval p {
+  color: var(--color-text-soft);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.admin-import-approval .admin-btn {
+  justify-self: start;
 }
 
 .admin-editorial-checklist {

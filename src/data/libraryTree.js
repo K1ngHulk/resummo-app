@@ -110,6 +110,7 @@ export function getLibraryRootNodes(nodes) {
 
 export function getTopicLibraryPath(topic) {
   if (!topic) return []
+  if (topic.sourceType === 'NOTION_EXPORT') return [topic.title]
 
   const mappedNodeId = libraryTopicNodeMap[topic.slug]
   if (!mappedNodeId) {
@@ -143,16 +144,45 @@ function createFallbackTopicNode(topic) {
   }
 }
 
+function createImportedTopicNode(topic) {
+  return {
+    id: `library-topic-${topic.id || topic.slug}`,
+    parentId: null,
+    type: 'folder',
+    label: topic.title,
+    description: topic.description || topic.summary || 'Especialidad importada desde RESUMMO MIR.',
+    topic,
+    isImportedTopic: true,
+  }
+}
+
+function ensureDefinedFolderPath(nodes, nodeId) {
+  for (const definition of getLibraryPath(libraryFolderDefinitions, nodeId)) {
+    if (!nodes.some((node) => node.id === definition.id)) nodes.push({ ...definition })
+  }
+}
+
 export function buildLibraryTree(topics = []) {
-  const nodes = libraryFolderDefinitions.map((node) => ({ ...node }))
+  const nodes = []
   const mappedNodeIds = new Set()
   const fallbackTopics = []
 
   for (const topic of topics) {
-    const mappedNodeId = libraryTopicNodeMap[topic.slug]
-    const mappedNodeIndex = nodes.findIndex((node) => node.id === mappedNodeId)
+    if (topic.sourceType === 'NOTION_EXPORT') {
+      const topicNode = createImportedTopicNode(topic)
+      nodes.push(topicNode)
+      const articles = Array.isArray(topic.articles) ? topic.articles : []
+      for (const article of articles) {
+        nodes.push(createArticleNode(article, topic, topicNode.id))
+      }
+      continue
+    }
 
-    if (mappedNodeIndex >= 0 && !mappedNodeIds.has(mappedNodeId)) {
+    const mappedNodeId = libraryTopicNodeMap[topic.slug]
+
+    if (mappedNodeId && !mappedNodeIds.has(mappedNodeId)) {
+      ensureDefinedFolderPath(nodes, mappedNodeId)
+      const mappedNodeIndex = nodes.findIndex((node) => node.id === mappedNodeId)
       mappedNodeIds.add(mappedNodeId)
       nodes[mappedNodeIndex] = {
         ...nodes[mappedNodeIndex],

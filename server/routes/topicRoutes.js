@@ -4,20 +4,27 @@ import { requireAuth } from '../middleware/requireAuth.js'
 
 const router = express.Router()
 
+function canUseEditorialLibrary(request) {
+  return request.query.view === 'editorial'
+    && (request.user.role === 'EDITOR' || request.user.role === 'ADMIN')
+}
+
 router.get('/', requireAuth, async (request, response, next) => {
   try {
     const query = String(request.query.query || '').trim().toLowerCase()
+    const editorialView = canUseEditorialLibrary(request)
+    const visibleStatuses = editorialView ? ['DRAFT', 'PUBLISHED'] : ['PUBLISHED']
     const topics = await prisma.topic.findMany({
       where: {
-        status: 'PUBLISHED',
+        status: { in: visibleStatuses },
         OR: [
-          { articles: { some: { status: 'PUBLISHED' } } },
+          { articles: { some: { status: { in: visibleStatuses } } } },
           { questions: { some: { status: 'PUBLISHED' } } },
         ],
       },
       include: {
         articles: {
-          where: { status: 'PUBLISHED' },
+          where: { status: { in: visibleStatuses } },
           orderBy: { title: 'asc' },
           include: {
             progresses: {
@@ -64,6 +71,8 @@ router.get('/', requireAuth, async (request, response, next) => {
         summary: topic.summary,
         description: topic.description,
         color: topic.color,
+        status: topic.status,
+        sourceType: topic.sourceType,
         articleCount: topic.articles.length,
         availableQuestionCount: topic._count.questions,
         articles: topic.articles.map((article) => ({
@@ -73,6 +82,8 @@ router.get('/', requireAuth, async (request, response, next) => {
           summary: article.summary,
           readTimeMinutes: article.readTimeMinutes,
           tags: article.tags,
+          status: article.status,
+          sourceType: article.sourceType,
           progress: article.progresses[0] || null,
         })),
       })),
@@ -84,11 +95,13 @@ router.get('/', requireAuth, async (request, response, next) => {
 
 router.get('/:slug', requireAuth, async (request, response, next) => {
   try {
+    const editorialView = canUseEditorialLibrary(request)
+    const visibleStatuses = editorialView ? ['DRAFT', 'PUBLISHED'] : ['PUBLISHED']
     const topic = await prisma.topic.findUnique({
       where: { slug: request.params.slug },
       include: {
         articles: {
-          where: { status: 'PUBLISHED' },
+          where: { status: { in: visibleStatuses } },
           orderBy: { title: 'asc' },
         },
         _count: {
@@ -101,7 +114,7 @@ router.get('/:slug', requireAuth, async (request, response, next) => {
       },
     })
 
-    if (!topic || topic.status !== 'PUBLISHED' || (topic.articles.length === 0 && topic._count.questions === 0)) {
+    if (!topic || !visibleStatuses.includes(topic.status) || (topic.articles.length === 0 && topic._count.questions === 0)) {
       const error = new Error('Tema no encontrado')
       error.statusCode = 404
       throw error

@@ -86,14 +86,16 @@ function ArticleRow({ node, nodes, onNavigate }) {
         <strong>{article.title}</strong>
         <span className="library-node-row__path">Biblioteca / {pathLabel}</span>
         <p>{article.summary}</p>
-        <div className="library-chip-row">
-          {(article.tags || []).map((tag) => (
-            <span key={tag} className="library-chip">{tag}</span>
-          ))}
-          {progressStatus ? (
-            <span className="library-chip library-chip--strong">{progressStatus}</span>
-          ) : null}
-        </div>
+        {(article.tags?.length || progressStatus) ? (
+          <div className="library-chip-row">
+            {(article.tags || []).map((tag) => (
+              <span key={tag} className="library-chip">{tag}</span>
+            ))}
+            {progressStatus ? (
+              <span className="library-chip library-chip--strong">{progressStatus}</span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
       <div className="library-node-row__action">
         <small>{article.readTimeMinutes} min</small>
@@ -102,7 +104,7 @@ function ArticleRow({ node, nodes, onNavigate }) {
           className="outline-pill-button"
           onClick={() => onNavigate(`/learning/library/article?slug=${article.slug}`)}
         >
-          Leer artículo
+          Abrir artículo
         </button>
       </div>
     </article>
@@ -110,26 +112,20 @@ function ArticleRow({ node, nodes, onNavigate }) {
 }
 
 function LibraryPage({ onNavigate, searchParams }) {
-  const { request } = useAuth()
+  const { request, user } = useAuth()
   const routedQuery = searchParams?.get('q') || ''
+  const editorialView = user?.role === 'EDITOR' || user?.role === 'ADMIN'
   const [topics, setTopics] = useState([])
-  const [query, setQuery] = useState(routedQuery)
-  const [previousRoutedQuery, setPreviousRoutedQuery] = useState(routedQuery)
   const [activeNodeId, setActiveNodeId] = useState(readStoredNodeId)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-
-  if (routedQuery !== previousRoutedQuery) {
-    setPreviousRoutedQuery(routedQuery)
-    setQuery(routedQuery)
-  }
 
   useEffect(() => {
     let isMounted = true
 
     async function loadTopics() {
       try {
-        const payload = await request('/api/topics')
+        const payload = await request(`/api/topics${editorialView ? '?view=editorial' : ''}`)
         if (!isMounted) return
 
         const nextTopics = Array.isArray(payload.topics) ? payload.topics : []
@@ -148,7 +144,7 @@ function LibraryPage({ onNavigate, searchParams }) {
     return () => {
       isMounted = false
     }
-  }, [request])
+  }, [editorialView, request])
 
   const nodes = useMemo(() => buildLibraryTree(topics), [topics])
   const rootNodes = useMemo(() => getLibraryRootNodes(nodes), [nodes])
@@ -159,9 +155,12 @@ function LibraryPage({ onNavigate, searchParams }) {
   const activeChildren = activeNode ? getLibraryChildren(nodes, activeNode.id) : []
   const childFolders = activeChildren.filter((node) => node.type === 'folder')
   const directArticles = activeChildren.filter((node) => node.type === 'article')
-  const normalizedQuery = query.trim().toLocaleLowerCase('es')
+  const normalizedQuery = routedQuery.trim().toLocaleLowerCase('es')
   const isSearching = normalizedQuery.length > 0
-
+  const totalArticleCount = useMemo(
+    () => topics.reduce((total, topic) => total + (Array.isArray(topic.articles) ? topic.articles.length : 0), 0),
+    [topics],
+  )
   const searchResults = useMemo(() => {
     if (!normalizedQuery) return []
 
@@ -194,22 +193,20 @@ function LibraryPage({ onNavigate, searchParams }) {
   return (
     <section className="library-page" aria-label="Biblioteca médica">
       <header className="library-hero">
-        <div>
-          <span className="library-context-label">Biblioteca Resummo</span>
-          <h1>Aprende desde una biblioteca organizada</h1>
-          <p>Explora contenidos publicados por área, abre artículos y conecta cada lectura con tu práctica.</p>
+        <div className="library-hero__copy">
+          <span className="library-context-label">
+            {editorialView ? 'Biblioteca médica · Vista editorial' : 'Biblioteca médica'}
+          </span>
+          <h1>Biblioteca médica de Resummo</h1>
+          <p>
+            Navega por especialidades, encuentra artículos estructurados y mantén el contexto de cada lectura.
+            {editorialView ? ' La vista editorial también permite revisar contenido antes de publicarlo.' : ''}
+          </p>
         </div>
-
-        <label className="library-search">
-          <AppIcon name="search" />
-          <span className="visually-hidden">Buscar en Biblioteca médica</span>
-          <input
-            type="search"
-            value={query}
-            placeholder="Buscar artículos, temas o etiquetas"
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </label>
+        <dl className="library-hero__summary" aria-label="Resumen de Biblioteca">
+          <div><dt>Especialidades</dt><dd>{topics.length}</dd></div>
+          <div><dt>Artículos</dt><dd>{totalArticleCount}</dd></div>
+        </dl>
       </header>
 
       {error ? <div className="app-feedback app-feedback--error">{error}</div> : null}
@@ -239,7 +236,7 @@ function LibraryPage({ onNavigate, searchParams }) {
       {isLoading ? (
         <div className="library-empty-state" aria-live="polite">
           <strong>Organizando la Biblioteca</strong>
-          <p>Cargando temas y artículos publicados.</p>
+          <p>{editorialView ? 'Cargando especialidades y contenido editorial.' : 'Cargando especialidades y artículos publicados.'}</p>
         </div>
       ) : isSearching ? (
         <section className="library-search-results" aria-labelledby="library-search-results-heading">
@@ -250,7 +247,7 @@ function LibraryPage({ onNavigate, searchParams }) {
             </div>
             <div className="library-search-results__summary">
               <span>{searchResults.length} {searchResults.length === 1 ? 'resultado' : 'resultados'}</span>
-              <button type="button" className="text-link" onClick={() => setQuery('')}>Cerrar búsqueda</button>
+              <button type="button" className="text-link" onClick={() => onNavigate('/learning/library')}>Cerrar búsqueda</button>
             </div>
           </div>
 
@@ -268,11 +265,26 @@ function LibraryPage({ onNavigate, searchParams }) {
           )}
         </section>
       ) : (
-        <div className="library-tree-shell">
+        <>
+          {rootNodes.length > 0 ? (
+            <label className="library-mobile-specialty-picker">
+              <span>Especialidad</span>
+              <select
+                value={activeRoot?.id || ''}
+                onChange={(event) => handleSelectNode(event.target.value)}
+              >
+                <option value="">Todas las especialidades</option>
+                {rootNodes.map((node) => (
+                  <option key={node.id} value={node.id}>{node.label}</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <div className={`library-tree-shell ${rootNodes.length === 0 ? 'library-tree-shell--empty' : ''}`}>
           <aside className="library-tree-rail" aria-label="Áreas de la Biblioteca">
             <div className="library-tree-rail__header">
-              <strong>Áreas de estudio</strong>
-              <span>Navegación principal</span>
+              <strong>Especialidades</strong>
+              <span>{editorialView ? 'RESUMMO MIR · Vista editorial' : 'Biblioteca médica'}</span>
             </div>
             <button
               type="button"
@@ -316,7 +328,7 @@ function LibraryPage({ onNavigate, searchParams }) {
                   <small>{formatFolderMeta(activeNode)}</small>
                 </header>
 
-                {activeNode.topic ? (
+                {activeNode.topic?.status === 'PUBLISHED' ? (
                   <div className="library-flashcard-cta">
                     <span className="library-flashcard-cta__icon" aria-hidden="true">
                       <AppIcon name="lightning" />
@@ -352,8 +364,8 @@ function LibraryPage({ onNavigate, searchParams }) {
                 {directArticles.length > 0 ? (
                   <section className="library-tree-group" aria-labelledby="library-articles-heading">
                     <div>
-                      <h3 id="library-articles-heading">Artículos publicados</h3>
-                      <p>Contenido disponible directamente en esta carpeta.</p>
+                      <h3 id="library-articles-heading">{editorialView ? 'Artículos de la especialidad' : 'Artículos publicados'}</h3>
+                      <p>{editorialView ? 'Abre cualquier artículo para revisar su contenido y estado editorial.' : 'Contenido publicado disponible directamente en esta especialidad.'}</p>
                     </div>
                     <div className="library-node-list">
                       {directArticles.map((node) => (
@@ -364,27 +376,39 @@ function LibraryPage({ onNavigate, searchParams }) {
                 ) : childFolders.length === 0 ? (
                   <div className="library-empty-state">
                     <strong>No hay artículos directos en esta carpeta</strong>
-                    <p>El tema está publicado, pero todavía no contiene artículos visibles.</p>
+                    <p>{editorialView ? 'Esta especialidad todavía no contiene artículos importados.' : 'Esta especialidad todavía no contiene artículos publicados.'}</p>
                   </div>
                 ) : null}
               </>
             ) : (
               <div className="library-tree-overview">
-                <span className="library-tree-main__context">Exploración jerárquica</span>
-                <h2 id="library-tree-heading">Biblioteca por áreas</h2>
-                <p>Selecciona un área en el panel izquierdo y avanza por sus carpetas hasta encontrar los artículos publicados.</p>
-                <dl>
-                  {rootNodes.map((node) => (
-                    <div key={node.id}>
-                      <dt>{node.label}</dt>
-                      <dd>{node.description} {formatFolderMeta(node)}.</dd>
-                    </div>
-                  ))}
-                </dl>
+                <span className="library-tree-main__context">Directorio médico</span>
+                <h2 id="library-tree-heading">Especialidades</h2>
+                <p>{rootNodes.length > 0 ? 'Selecciona una especialidad para revisar sus artículos y mantener el contexto de navegación.' : editorialView ? 'Todavía no hay contenido editorial. Importa el ZIP de RESUMMO MIR para construir la Biblioteca.' : 'Todavía no hay contenido publicado en Biblioteca.'}</p>
+                {rootNodes.length > 0 ? (
+                  <div className="library-specialty-directory">
+                    {rootNodes.map((node) => (
+                      <button key={node.id} type="button" className="library-specialty-directory__item" onClick={() => handleSelectNode(node.id)}>
+                        <span>
+                          <strong>{node.label}</strong>
+                          <small>{formatFolderMeta(node)}</small>
+                        </span>
+                        <AppIcon name="chevronRight" />
+                      </button>
+                    ))}
+                  </div>
+                ) : editorialView ? (
+                  <div className="library-empty-state library-empty-state--action">
+                    <strong>Biblioteca lista para importar</strong>
+                    <p>El importador reconstruirá especialidades, artículos, imágenes y enlaces internos desde el ZIP de Notion.</p>
+                    <button type="button" className="primary-button" onClick={() => onNavigate('/admin/import/articles')}>Importar RESUMMO MIR</button>
+                  </div>
+                ) : null}
               </div>
             )}
           </section>
         </div>
+        </>
       )}
     </section>
   )

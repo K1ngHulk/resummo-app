@@ -10,7 +10,7 @@
     "start": "node server/index.js",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "node --test server/lib/articleMarkdownImport.test.mjs server/lib/httpErrors.test.mjs server/lib/runtimeConfig.test.mjs server/routes/adminContentRoutes.test.mjs src/data/libraryTree.test.mjs",
+    "test": "node --test server/lib/articleMarkdownImport.test.mjs server/lib/notionDocumentNormalizer.test.mjs server/lib/notionImportService.test.mjs server/lib/notionExportImport.test.mjs server/lib/localEditorialReset.test.mjs server/lib/httpErrors.test.mjs server/lib/runtimeConfig.test.mjs server/routes/adminContentRoutes.test.mjs src/data/libraryTree.test.mjs",
     "smoke:private-access": "node scripts/smoke-http-private-access.mjs",
     "smoke:readiness": "node scripts/smoke-http-readiness.mjs",
     "smoke:error-handling": "node scripts/smoke-http-error-handling.mjs",
@@ -19,6 +19,8 @@
     "smoke:library": "node scripts/smoke-http-library.mjs",
     "smoke:demo": "node scripts/smoke-http-demo-showcase.mjs",
     "smoke:article-import": "node scripts/smoke-http-article-import.mjs",
+    "smoke:notion-export-local": "node scripts/smoke-notion-export-local.mjs",
+    "smoke:notion-export-http": "node scripts/smoke-http-notion-export.mjs",
     "smoke:first-pack": "node scripts/smoke-http-first-learning-pack.mjs",
     "smoke:qbank": "node scripts/smoke-http-qbank.mjs",
     "verify:ci": "npm run db:validate && npm test && npm run lint && npm run smoke:private-access && npm run smoke:readiness && npm run smoke:error-handling && npm run smoke:private-surface && npm run smoke:admin && npm run smoke:library && npm run smoke:demo && npm run smoke:article-import && npm run smoke:first-pack && npm run smoke:qbank && npm run build",
@@ -28,7 +30,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:reset-editorial": "node scripts/reset-editorial-content.mjs"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

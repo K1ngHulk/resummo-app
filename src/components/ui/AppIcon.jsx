@@ -28,6 +28,45 @@ const iconMap = {
   chevronLeft: <path d="m15 18-6-6 6-6" />,
   arrowRight: <path d="M6 12h12m-4.5-4.5L18 12l-4.5 4.5" />,
   lightning: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
+  dashboard: (
+    <>
+      <rect x="4" y="4" width="6" height="6" rx="1" />
+      <rect x="14" y="4" width="6" height="6" rx="1" />
+      <rect x="4" y="14" width="6" height="6" rx="1" />
+      <rect x="14" y="14" width="6" height="6" rx="1" />
+    </>
+  ),
+  question: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M9.8 9.25a2.35 2.35 0 0 1 4.55.8c0 1.75-2.35 2.05-2.35 3.6" />
+      <path d="M12 17.2h.01" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M12 16V5" />
+      <path d="m8.5 8.5 3.5-3.5 3.5 3.5" />
+      <path d="M5 15.5v2.25A2.25 2.25 0 0 0 7.25 20h9.5A2.25 2.25 0 0 0 19 17.75V15.5" />
+    </>
+  ),
+  cards: (
+    <>
+      <rect x="5" y="6" width="13" height="14" rx="2" />
+      <path d="M8 3.5h9.25A2.75 2.75 0 0 1 20 6.25V17" />
+      <path d="M8.5 11h6" />
+      <path d="M8.5 15h4" />
+    </>
+  ),
+  check: <path d="m5 12 4 4L19 6" />,
+  publish: (
+    <>
+      <path d="M12 16V4" />
+      <path d="m7.5 8.5 4.5-4.5 4.5 4.5" />
+      <path d="M5 19h14" />
+    </>
+  ),
+  close: <path d="m7 7 10 10M17 7 7 17" />,
 }
 
 function AppIcon({ name, className = '' }) {

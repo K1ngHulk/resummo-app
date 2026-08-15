@@ -57,36 +57,56 @@ model User {
 }
 
 model Topic {
-  id            String         @id @default(cuid())
-  slug          String         @unique
-  title         String
-  summary       String
-  description   String
-  color         String?
-  status        ContentStatus  @default(DRAFT)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  articles      Article[]
-  questions     Question[]
-  studySessions StudySession[]
+  id                 String         @id @default(cuid())
+  slug               String         @unique
+  title              String
+  summary            String
+  description        String
+  color              String?
+  status             ContentStatus  @default(DRAFT)
+  sourceType         String?
+  sourceId           String?
+  sourcePath         String?
+  sourceSnapshotHash String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  articles           Article[]
+  questions          Question[]
+  studySessions      StudySession[]
+
+  @@unique([sourceType, sourceId])
 }
 
 model Article {
-  id           String                @id @default(cuid())
-  topicId       String
-  slug          String                @unique
-  title         String
-  summary       String
-  body          String
-  readTimeMinutes Int
-  tags          String[]
-  status        ContentStatus         @default(DRAFT)
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
-  topic         Topic                 @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  progresses    UserArticleProgress[]
-  questions     Question[]
-  activities    RecentActivity[]
+  id                  String                @id @default(cuid())
+  topicId             String
+  slug                String                @unique
+  title               String
+  summary             String
+  body                String
+  contentJson         Json?
+  plainText           String?
+  readTimeMinutes     Int
+  tags                String[]
+  status              ContentStatus         @default(DRAFT)
+  sourceType          String?
+  sourceId            String?
+  sourcePath          String?
+  sourceUrl           String?
+  sourceImportedAt    DateTime?
+  sourceLastEditedAt  DateTime?
+  sourceSnapshotHash  String?
+  editorialApprovedAt DateTime?
+  editorialApprovedByUserId String?
+  editorialApprovedSnapshotHash String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  topic               Topic                 @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  progresses          UserArticleProgress[]
+  questions           Question[]
+  activities          RecentActivity[]
+
+  @@unique([sourceType, sourceId])
 }
 
 model UserArticleProgress {

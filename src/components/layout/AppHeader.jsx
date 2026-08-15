@@ -9,8 +9,8 @@ function formatHeaderRole(role) {
   return 'Usuario'
 }
 
-function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, user }) {
-  const [searchQuery, setSearchQuery] = useState('')
+function AppHeader({ activeSection, navigationItems, onNavigate, onLogout, routedSearchQuery = '', user }) {
+  const [searchQuery, setSearchQuery] = useState(routedSearchQuery)
 
   const handleLibrarySearch = () => {
     const query = searchQuery.trim()

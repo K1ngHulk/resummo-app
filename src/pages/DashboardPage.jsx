@@ -3,7 +3,6 @@ import ContinueLearningCard from '../components/dashboard/ContinueLearningCard'
 import ProgressOverviewCard from '../components/dashboard/ProgressOverviewCard'
 import QuestionSessionCard from '../components/dashboard/QuestionSessionCard'
 import RecentArticlesCard from '../components/dashboard/RecentArticlesCard'
-import SearchBar from '../components/ui/SearchBar'
 import { useAuth } from '../context/AuthContext.jsx'
 
 function DashboardPage({ onNavigate }) {
@@ -46,7 +45,6 @@ function DashboardPage({ onNavigate }) {
     <>
       <section className="dashboard-hero">
         <h1>Complementa tus conocimientos médicos</h1>
-        <SearchBar placeholder="Buscar en Resummo" showAction className="dashboard-hero__search" />
       </section>
 
       {error ? <div className="app-feedback app-feedback--error">{error}</div> : null}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import StructuredArticleContent from '../../components/library/StructuredArticleContent.jsx'
 import { useAuth } from '../../context/AuthContext'
 import './AdminArticleReviewPage.css'
 
@@ -11,14 +12,18 @@ function getHumanStatus(status) {
   return 'Estado desconocido'
 }
 
-function buildEditorialChecklist(formData, topicStatus) {
+function buildEditorialChecklist(formData, topicStatus, contentJson, sourceType, hasCurrentApproval) {
+  const structuredHeadings = Array.isArray(contentJson?.headings) ? contentJson.headings : []
+  const hasSection = structuredHeadings.some((heading) => Number(heading?.level) >= 2)
+    || /^#{2,6}\s+\S.*$/m.test(formData.body)
   return [
     { id: 'title', label: 'Tiene un título claro', passed: Boolean(formData.title.trim()) },
     { id: 'summary', label: 'Tiene un resumen editorial', passed: Boolean(formData.summary.trim()) },
     { id: 'body', label: 'Tiene contenido en el cuerpo', passed: Boolean(formData.body.trim()) },
-    { id: 'sections', label: 'Incluye al menos una sección con ##', passed: /^##\s+\S.*$/m.test(formData.body) },
+    { id: 'sections', label: 'Incluye al menos una sección estructurada', passed: hasSection },
     { id: 'read-time', label: 'Tiene un tiempo de lectura positivo', passed: Number(formData.readTimeMinutes) > 0 },
     { id: 'pending', label: 'No contiene citas o pendientes editoriales', passed: !pendingContentPattern.test(formData.body) },
+    { id: 'structured-approval', label: 'La importación estructurada tiene aprobación editorial explícita para este snapshot', passed: sourceType !== 'NOTION_EXPORT' || hasCurrentApproval },
     { id: 'topic', label: 'El tema asociado está publicado', passed: topicStatus === 'PUBLISHED' },
   ]
 }
@@ -37,11 +42,20 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
   })
   const [isLoading, setIsLoading] = useState(Boolean(articleId))
   const [isSaving, setIsSaving] = useState(false)
+  const [isApproving, setIsApproving] = useState(false)
   const [error, setError] = useState(articleId ? '' : 'No se encontró un artículo válido para revisar.')
   const [successMsg, setSuccessMsg] = useState('')
+  const isStructuredImport = Boolean(article?.contentJson?.blocks?.length)
+  const hasCurrentEditorialApproval = article?.sourceType !== 'NOTION_EXPORT' || Boolean(
+    article?.editorialApprovedAt
+    && article?.editorialApprovedByUserId
+    && article?.editorialApprovedSnapshotHash
+    && article?.sourceSnapshotHash
+    && article.editorialApprovedSnapshotHash === article.sourceSnapshotHash,
+  )
   const checklist = useMemo(
-    () => buildEditorialChecklist(formData, article?.topic?.status),
-    [article?.topic?.status, formData],
+    () => buildEditorialChecklist(formData, article?.topic?.status, article?.contentJson, article?.sourceType, hasCurrentEditorialApproval),
+    [article?.contentJson, article?.sourceType, article?.topic?.status, formData, hasCurrentEditorialApproval],
   )
   const publicationReady = checklist.every((item) => item.passed)
 
@@ -78,6 +92,36 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
     }
   }, [articleId, request])
 
+  const handleEditorialApproval = async () => {
+    if (!article || article.sourceType !== 'NOTION_EXPORT') return
+    setIsApproving(true)
+    setError('')
+    setSuccessMsg('')
+    try {
+      const payload = await request(`/api/admin/content/articles/${article.id}/editorial-approval`, {
+        method: 'POST',
+        body: { approved: !hasCurrentEditorialApproval },
+      })
+      setArticle((current) => current ? {
+        ...current,
+        status: payload.approval.articleStatus || current.status,
+        editorialApprovedAt: payload.approval.approvedAt,
+        editorialApprovedByUserId: payload.approval.approvedByUserId,
+        editorialApprovedSnapshotHash: payload.approval.snapshotHash,
+      } : current)
+      if (payload.approval.articleStatus) {
+        setFormData((current) => ({ ...current, status: payload.approval.articleStatus }))
+      }
+      setSuccessMsg(payload.approval.approved
+        ? 'Aprobación editorial registrada para el snapshot actual.'
+        : 'Aprobación editorial revocada.')
+    } catch (approvalError) {
+      setError(approvalError.message || 'No se pudo actualizar la aprobación editorial.')
+    } finally {
+      setIsApproving(false)
+    }
+  }
+
   const handleChange = (event) => {
     const { name, value } = event.target
     setFormData((current) => ({
@@ -105,7 +149,7 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
         body: {
           title: formData.title.trim(),
           summary: formData.summary.trim(),
-          body: formData.body.trim(),
+          ...(!isStructuredImport ? { body: formData.body.trim() } : {}),
           readTimeMinutes: Number(formData.readTimeMinutes),
           tags: [...new Set(formData.tags.split(',').map((tag) => tag.trim()).filter(Boolean))],
           status: statusToSave,
@@ -185,9 +229,24 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
           </div>
 
           <div className="admin-form-group">
-            <label className="admin-form-label" htmlFor="article-body">Cuerpo del artículo</label>
-            <textarea id="article-body" className="admin-form-textarea admin-form-textarea--body" name="body" value={formData.body} onChange={handleChange} required />
-            <small className="admin-form-help">Usa encabezados como <code>## Definición</code> y separa los párrafos con una línea vacía.</small>
+            <label className="admin-form-label" htmlFor="article-body">
+              {isStructuredImport ? 'Markdown fuente importado' : 'Cuerpo del artículo'}
+            </label>
+            <textarea
+              id="article-body"
+              className="admin-form-textarea admin-form-textarea--body"
+              name="body"
+              value={formData.body}
+              onChange={handleChange}
+              readOnly={isStructuredImport}
+              aria-readonly={isStructuredImport ? 'true' : undefined}
+              required
+            />
+            <small className="admin-form-help">
+              {isStructuredImport
+                ? 'El Markdown original se conserva como respaldo y queda en solo lectura para no desincronizarlo de la vista estructurada. La edición estructurada completa se resolverá en el editor final.'
+                : <>Usa encabezados como <code>## Definición</code> y separa los párrafos con una línea vacía.</>}
+            </small>
           </div>
 
           <div className="admin-form-group">
@@ -231,7 +290,41 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
           </div>
         </form>
 
-        <aside className={`admin-editorial-checklist ${publicationReady ? 'admin-editorial-checklist--ready' : ''}`}>
+        <div className="admin-review-side-column">
+          {article.contentJson?.blocks?.length ? (
+            <section className="admin-structured-preview" aria-labelledby="admin-structured-preview-heading">
+              <span>Vista importada</span>
+              <h2 id="admin-structured-preview-heading">Contenido estructurado</h2>
+              <p>Esta vista conserva tablas, callouts, listas, imágenes y formato del último import. El Markdown original sigue disponible para revisión.</p>
+              <div className="admin-structured-preview__content">
+                <StructuredArticleContent document={article.contentJson} onNavigate={onNavigate} />
+              </div>
+            </section>
+          ) : null}
+
+          {article.sourceType === 'NOTION_EXPORT' ? (
+            <section className={`admin-import-approval ${hasCurrentEditorialApproval ? 'admin-import-approval--approved' : ''}`} aria-label="Aprobación editorial del import">
+              <span>Snapshot importado</span>
+              <h2>{hasCurrentEditorialApproval ? 'Aprobación editorial registrada' : 'Aprobación editorial pendiente'}</h2>
+              <p>
+                La aprobación queda vinculada al hash exacto del contenido importado. Si una reimportación cambia el snapshot, debe aprobarse nuevamente.
+              </p>
+              <button
+                type="button"
+                className={hasCurrentEditorialApproval ? 'admin-btn admin-btn--secondary' : 'admin-btn admin-btn--primary'}
+                disabled={isApproving || isSaving}
+                onClick={handleEditorialApproval}
+              >
+                {isApproving
+                  ? 'Actualizando...'
+                  : hasCurrentEditorialApproval
+                    ? 'Revocar aprobación'
+                    : 'Aprobar contenido importado'}
+              </button>
+            </section>
+          ) : null}
+
+          <aside className={`admin-editorial-checklist ${publicationReady ? 'admin-editorial-checklist--ready' : ''}`}>
           <span>Control editorial</span>
           <h2>{publicationReady ? 'Listo para publicar' : 'Revisión pendiente'}</h2>
           <p>{publicationReady ? 'El artículo cumple los requisitos mínimos de publicación.' : 'Puedes guardar el borrador, pero debes resolver estos puntos antes de publicar.'}</p>
@@ -242,8 +335,9 @@ export default function AdminArticleReviewPage({ onNavigate, searchParams }) {
                 {item.label}
               </li>
             ))}
-          </ul>
-        </aside>
+            </ul>
+          </aside>
+        </div>
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import path from 'node:path'
 import cors from 'cors'
 import express from 'express'
 import { normalizeHttpError } from './lib/httpErrors.js'
@@ -33,6 +34,10 @@ app.use((request, response, next) => {
   next()
 })
 app.use(cors({ origin: corsOrigin, credentials: true }))
+app.use('/content-assets', express.static(
+  process.env.RESUMMO_CONTENT_ASSET_DIR || path.resolve(process.cwd(), '.runtime', 'content-assets'),
+  { dotfiles: 'deny', index: false, fallthrough: true, maxAge: runtimeConfig.nodeEnvironment === 'production' ? '1h' : 0 },
+))
 app.use(express.json({ limit: '1mb' }))
 
 app.get('/api/health', (_request, response) => {

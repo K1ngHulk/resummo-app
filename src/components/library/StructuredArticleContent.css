@@ -1,0 +1,207 @@
+.structured-article-content {
+  display: grid;
+  gap: 1rem;
+  color: var(--color-text);
+  line-height: 1.72;
+}
+
+.structured-article-content p {
+  margin: 0;
+}
+
+.structured-article-content h2,
+.structured-article-content h3,
+.structured-article-content h4,
+.structured-article-content h5,
+.structured-article-content h6 {
+  margin: 1.65rem 0 0.15rem;
+  scroll-margin-top: 6rem;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.structured-article-content h2 {
+  font-size: clamp(1.3rem, 1.2rem + 0.3vw, 1.55rem);
+}
+
+.structured-article-content h3 {
+  font-size: clamp(1.12rem, 1.05rem + 0.2vw, 1.3rem);
+}
+
+.structured-article-content a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.structured-article-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.2rem 0;
+  padding-left: 1.5rem;
+}
+
+.structured-article-list .structured-article-list {
+  margin-top: 0.45rem;
+}
+
+.structured-article-list li > p {
+  display: inline;
+}
+
+.structured-article-check {
+  display: inline-block;
+  min-width: 1.35rem;
+  margin-left: -0.2rem;
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.structured-article-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.structured-article-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+}
+
+.structured-article-table th,
+.structured-article-table td {
+  padding: 0.75rem 0.85rem;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.structured-article-table th:last-child,
+.structured-article-table td:last-child {
+  border-right: 0;
+}
+
+.structured-article-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.structured-article-table th {
+  background: var(--color-primary-tint);
+  color: var(--color-text);
+  font-weight: 750;
+}
+
+.structured-article-callout {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--color-primary-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 0.7rem;
+  background: var(--color-primary-tint);
+}
+
+.structured-article-quote {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.25rem 0;
+  padding: 0.85rem 1.1rem;
+  border-left: 3px solid var(--color-primary);
+  color: var(--color-text-soft);
+}
+
+.structured-article-figure {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.5rem 0;
+}
+
+.structured-article-figure img,
+.structured-article-inline-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.7rem;
+}
+
+.structured-article-figure figcaption {
+  color: var(--color-text-soft);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.structured-article-inline-image {
+  display: block;
+  margin: 0.65rem 0;
+}
+
+.structured-article-code {
+  overflow-x: auto;
+  margin: 0.35rem 0;
+  padding: 0.95rem 1rem;
+  border-radius: 0.65rem;
+  background: #191919;
+  color: #f8f8f2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.structured-article-inline-code,
+.structured-article-inline-equation {
+  padding: 0.12rem 0.3rem;
+  border-radius: 0.3rem;
+  background: var(--color-card);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.structured-article-equation {
+  overflow-x: auto;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  background: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+.structured-article-divider {
+  width: 100%;
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.structured-article-missing,
+.structured-article-unsupported,
+.structured-article-broken-link {
+  color: var(--color-text-soft);
+}
+
+.structured-article-broken-link {
+  text-decoration: line-through;
+  text-decoration-style: dotted;
+}
+
+@media (max-width: 720px) {
+  .structured-article-content {
+    gap: 0.85rem;
+    line-height: 1.66;
+  }
+
+  .structured-article-table {
+    min-width: 440px;
+    font-size: 0.88rem;
+  }
+
+  .structured-article-table th,
+  .structured-article-table td {
+    padding: 0.65rem 0.7rem;
+  }
+}
