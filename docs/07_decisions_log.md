@@ -144,6 +144,26 @@ Dudas abiertas:
 
 - Ninguna para Cloud V1.
 
+### 2026-08-15 - Perfil constrained temporal para importar RESUMMO MIR en Render Free
+
+Estado: decidido temporalmente.
+
+Decision: Mientras Resummo opere con el límite de 512 MB de Render Free, la importación completa de Notion usa `RESUMMO_IMPORT_PROFILE=constrained`. El botón de importación encadena dos peticiones idempotentes: primero assets y después contenido. El servidor mantiene un presupuesto de RSS, sube imágenes secuencialmente y persiste artículos en lotes pequeños.
+
+Motivo: El import combinado superó 512 MB y Render terminó la instancia. El problema es de presupuesto de memoria del runtime, no de validez del ZIP.
+
+Consecuencias:
+
+- Assets se importan primero y se deduplican por SHA-256; una repetición segura continúa sobre los ya existentes.
+- La fase de contenido no escribe mientras falte cualquier asset requerido.
+- Topics y Articles se crean/actualizan por `sourceType + sourceId`, siempre como `DRAFT`.
+- Si RSS supera el presupuesto configurado, la operación se detiene antes del OOM y la UI reintenta la fase de forma acotada.
+- Este perfil es infraestructura temporal. `standard` sigue siendo el default de código y debe volver a activarse cuando exista capacidad suficiente y se complete la prueba de importación sin límites de Render Free.
+
+Dudas abiertas:
+
+- Retirar el perfil constrained después de validar el import estándar en infraestructura con memoria suficiente.
+
 ### 2026-08-06 - Biblioteca como producto vendible inicial
 
 Estado: decidido.

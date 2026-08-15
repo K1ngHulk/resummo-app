@@ -65,7 +65,7 @@ The bridge token itself is not stored in this document or Git.
 
 After the Cloud V1 code changes:
 
-- `npm.cmd test` -> `58/58 PASS` after the 2026-08-15 import incident hardening.
+- `npm.cmd test` -> `62/62 PASS` after the 2026-08-15 import incident hardening.
 - `npm.cmd run lint` -> PASS
 - `npm.cmd run build` -> PASS
 - build runs `prisma generate` through `prebuild`
@@ -113,7 +113,23 @@ A real-ZIP local baseline showed the previous parser/model path reaching approxi
 - ZIP CRC work yields periodically so the Node event loop can continue servicing health checks;
 - normal cloud import remains idempotent and destructive replacement remains local-only.
 
-With the same audited ZIP, the post-hardening local simulation of parse + model + all 386 asset uploads peaked at approximately `435 MiB RSS` while preserving the exact expected corpus counts.
+With the same audited ZIP, the first post-hardening local simulation of parse + model + all 386 asset uploads peaked at approximately `435 MiB RSS` while preserving the exact expected corpus counts. A second manual production attempt still exceeded Render Free's 512 MB instance limit; Render explicitly reported `Ran out of memory (used over 512MB) while running your code` and restarted the instance.
+
+### Temporary constrained profile
+
+Cloud V1 therefore uses a removable runtime profile rather than attempting the whole import in one request:
+
+- Render env: `RESUMMO_IMPORT_PROFILE=constrained`;
+- hard RSS budget: `RESUMMO_IMPORT_MAX_RSS_MB=430`;
+- article batch size: `RESUMMO_IMPORT_ARTICLE_BATCH_SIZE=20`;
+- phase 1 parses the ZIP only far enough to validate and upload assets sequentially; content-addressed SHA-256 writes are resumable and deduplicated;
+- phase 2 reparses the same ZIP, requires every referenced asset to exist, then upserts Topics and Articles in small batches;
+- both phases are idempotent and `DRAFT`-only;
+- a memory-budget breach returns a controlled retryable response instead of allowing the process to approach the platform OOM limit;
+- the Admin UI automatically retries a memory-budget pause up to two times and otherwise surfaces the controlled error;
+- code default remains `standard`; removing the temporary Render env switches back to the combined path after infrastructure is upgraded and tested.
+
+The real audited ZIP was then exercised end-to-end against simulated Storage and Prisma using the constrained two-phase path. It completed with `35 Topics / 427 Articles / 386 assets / 462 internal links / 0 broken / 0 missing / 0 published` and a sampled peak of approximately `409 MiB RSS`, below the configured 430 MB guard and the 512 MB Render ceiling. Unit coverage also verifies asset-phase deduplication on retry and refusal to persist content while assets are incomplete.
 
 ## Current manual completion block
 

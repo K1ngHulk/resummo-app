@@ -1,12 +1,17 @@
 import path from 'node:path'
 import { parseNotionExportZip } from './notionExportZip.js'
-import { buildNotionExportModel, toPublicNotionExportPreview } from './notionExportModel.js'
+import {
+  buildNotionExportAssetManifest,
+  buildNotionExportModel,
+  toPublicNotionExportPreview,
+} from './notionExportModel.js'
 import {
   cleanupCreatedContentAssets,
   findMissingContentAssets,
   persistContentAssets,
 } from './contentAssetStore.js'
 import { createLocalDatabaseBackup, deleteEditorialContent, getEditorialContentCounts, getLocalDatabaseTarget } from './localEditorialReset.js'
+import { resolveNotionImportRuntime, waitForImportMemoryBudget } from './notionImportRuntime.js'
 
 const SOURCE_TYPE = 'NOTION_EXPORT'
 
@@ -145,6 +150,46 @@ async function persistModel(client, model, { replaceEditorial }) {
   }, { isolationLevel: 'Serializable', maxWait: 20_000, timeout: 120_000 })
 }
 
+async function persistModelConstrained(client, model, { environment = process.env } = {}) {
+  const runtime = resolveNotionImportRuntime(environment)
+  const topicIds = new Map()
+
+  for (const topic of model.topics) {
+    await waitForImportMemoryBudget('la persistencia de especialidades', { environment })
+    const stored = await upsertTopic(client, topic)
+    topicIds.set(stored.sourceId, stored.id)
+  }
+
+  const storedArticles = []
+  for (let offset = 0; offset < model.articles.length; offset += runtime.articleBatchSize) {
+    await waitForImportMemoryBudget('la persistencia de artículos', { environment })
+    const batch = model.articles.slice(offset, offset + runtime.articleBatchSize)
+    const storedBatch = await client.$transaction(async (transaction) => {
+      const results = []
+      for (const article of batch) {
+        const topicId = topicIds.get(article.topicSourceId)
+        if (!topicId) throw new Error('No se pudo resolver el Topic de un artículo durante la importación.')
+        results.push(await upsertArticle(transaction, article, topicId))
+      }
+      return results
+    }, { isolationLevel: 'Serializable', maxWait: 20_000, timeout: 60_000 })
+    storedArticles.push(...storedBatch)
+    await waitForImportMemoryBudget('el cierre del lote de artículos', { environment })
+  }
+
+  return { deleted: null, storedArticles }
+}
+
+function assertImportableModel(model) {
+  if (model.stats.brokenInternalLinks > 0) throw validationError('El ZIP contiene enlaces internos sin resolver. Corrige la causa antes de importar.', 'BROKEN_INTERNAL_LINKS')
+  if (model.stats.missingAssets > 0) throw validationError('El ZIP contiene assets referenciados que no están presentes.', 'MISSING_ASSETS')
+  if (model.stats.emptyArticles > 0) throw validationError('El ZIP contiene artículos sin bloques importables después del título. Corrige la fuente antes de importar.', 'EMPTY_ARTICLES')
+}
+
+function fileNameForAsset(asset) {
+  return `${asset.checksum}${asset.extension}`
+}
+
 function collectAssetUrls(blocks, target = []) {
   const visitInline = (nodes) => {
     for (const node of nodes || []) {
@@ -210,6 +255,106 @@ export async function validateNotionExportPersistence(client) {
     articlesWithoutTopic,
     uniqueAssetFilesReferenced: assetUrls.size,
     missingAssetFiles,
+  }
+}
+
+export async function importNotionExportConstrainedPhase(input, {
+  archiveName,
+  client,
+  phase,
+  environment = process.env,
+  fetchImpl = globalThis.fetch,
+} = {}) {
+  if (!client) throw new Error('Prisma client requerido para importar el export de Notion.')
+  const runtime = resolveNotionImportRuntime(environment)
+  if (runtime.profile !== 'constrained') {
+    const error = new Error('El modo constrained no está activo para esta instancia.')
+    error.statusCode = 409
+    error.code = 'IMPORT_PROFILE_MISMATCH'
+    throw error
+  }
+
+  if (phase === 'assets') {
+    await waitForImportMemoryBudget('el inicio de la fase de imágenes', { environment })
+    const archive = await parseNotionExportZip(input)
+    const { assets, warnings } = buildNotionExportAssetManifest(archive.entries)
+    const logicalAssets = assets.length
+    archive.entries.length = 0
+
+    const assetResult = await persistContentAssets(assets, {
+      environment,
+      fetchImpl,
+      releaseData: true,
+      beforeAsset: () => waitForImportMemoryBudget('la carga de imágenes', { environment }),
+      afterAsset: () => waitForImportMemoryBudget('la liberación de imágenes', { environment }),
+    })
+
+    return {
+      status: 'IN_PROGRESS',
+      phase: 'assets',
+      nextPhase: 'content',
+      runtime: { profile: runtime.profile, maxRssMb: runtime.maxRssMb },
+      assets: {
+        logical: logicalAssets,
+        uniqueFiles: assetResult.uniqueCount,
+        newlyWritten: assetResult.created.length,
+        existing: assetResult.existing.length,
+      },
+      warnings: warnings.map((warning) => warning.message),
+    }
+  }
+
+  if (phase !== 'content') {
+    const error = new Error('Fase constrained inválida.')
+    error.statusCode = 400
+    error.code = 'INVALID_IMPORT_PHASE'
+    throw error
+  }
+
+  await waitForImportMemoryBudget('el inicio de la fase de contenido', { environment })
+  const { model, archive } = await buildNotionExportPreview(input, { archiveName, client })
+  assertImportableModel(model)
+
+  const requiredAssetFiles = model.assets.map(fileNameForAsset)
+  const missingAssets = await findMissingContentAssets(requiredAssetFiles, { environment, fetchImpl })
+  if (missingAssets.length > 0) {
+    const error = new Error(`La fase de imágenes aún no está completa (${missingAssets.length} assets pendientes). Reintenta la importación para continuar.`)
+    error.statusCode = 409
+    error.code = 'IMPORT_ASSET_PHASE_INCOMPLETE'
+    throw error
+  }
+
+  const source = { ...model.root }
+  const stats = { ...model.stats }
+  const wrapperDepth = archive.wrapperDepth
+  const ignoredFiles = archive.ignoredPaths.length
+  const logicalAssets = model.assets.length
+  archive.entries.length = 0
+
+  const before = await getEditorialContentCounts(client)
+  const persistence = await persistModelConstrained(client, model, { environment })
+
+  model.assets.length = 0
+  model.allAssets.length = 0
+  model.articles.length = 0
+  model.topics.length = 0
+
+  const after = await getEditorialContentCounts(client)
+  if (after.users !== before.users) throw new Error('La importación alteró la cantidad de usuarios; la operación no es válida.')
+  const validation = await validateNotionExportPersistence(client)
+
+  return {
+    status: 'COMPLETE',
+    phase: 'content',
+    source,
+    stats,
+    wrapperDepth,
+    ignoredFiles,
+    assets: { logical: logicalAssets, uniqueFiles: requiredAssetFiles.length, newlyWritten: 0 },
+    backup: null,
+    deleted: persistence.deleted,
+    validation,
+    runtime: { profile: runtime.profile, maxRssMb: runtime.maxRssMb, articleBatchSize: runtime.articleBatchSize },
   }
 }
 

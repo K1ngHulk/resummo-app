@@ -140,13 +140,20 @@ async function persistLocalAssets(assets, environment) {
   return { backend: 'local', directory, created, existing, uniqueCount: created.length + existing.length }
 }
 
-async function persistSupabaseAssets(assets, environment, fetchImpl, { releaseData = false } = {}) {
+async function persistSupabaseAssets(assets, environment, fetchImpl, {
+  releaseData = false,
+  beforeAsset,
+  afterAsset,
+} = {}) {
   const created = []
   const existing = []
   const unique = uniqueAssets(assets)
 
+  let index = 0
   for (const [fileName, asset] of unique) {
+    index += 1
     try {
+      if (beforeAsset) await beforeAsset({ fileName, index, total: unique.size })
       const data = await readAssetData(asset)
       const response = await bridgeRequest(`/objects/${encodeURIComponent(fileName)}`, {
         environment,
@@ -175,6 +182,7 @@ async function persistSupabaseAssets(assets, environment, fetchImpl, { releaseDa
         asset.data = null
         asset.loadData = null
       }
+      if (afterAsset) await afterAsset({ fileName, index, total: unique.size })
     }
   }
 
@@ -185,9 +193,11 @@ export async function persistContentAssets(assets, {
   environment = process.env,
   fetchImpl = globalThis.fetch,
   releaseData = false,
+  beforeAsset,
+  afterAsset,
 } = {}) {
   return resolveContentAssetBackend(environment) === 'supabase'
-    ? persistSupabaseAssets(assets, environment, fetchImpl, { releaseData })
+    ? persistSupabaseAssets(assets, environment, fetchImpl, { releaseData, beforeAsset, afterAsset })
     : persistLocalAssets(assets, environment)
 }
 

@@ -213,6 +213,12 @@ function buildAssetMap(entries, warnings) {
   return map
 }
 
+export function buildNotionExportAssetManifest(entries) {
+  const warnings = []
+  const assets = [...buildAssetMap(entries, warnings).values()]
+  return { assets, warnings }
+}
+
 function duplicateTitleReport(articles) {
   const groups = new Map()
   for (const article of articles) {

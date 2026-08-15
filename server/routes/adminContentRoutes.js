@@ -12,7 +12,9 @@ import { fetchNotionPagePreview } from '../lib/notionImportService.js'
 import {
   buildNotionExportPreview,
   importNotionExportBuffer,
+  importNotionExportConstrainedPhase,
 } from '../lib/notionExportImportService.js'
+import { resolveNotionImportRuntime } from '../lib/notionImportRuntime.js'
 import { getLocalDatabaseTarget } from '../lib/localEditorialReset.js'
 
 const router = express.Router()
@@ -986,16 +988,43 @@ router.post('/import/notion-export/confirm', notionExportBody, async (request, r
   try {
     const replaceEditorial = String(request.headers['x-resummo-replace-editorial'] || '').toLowerCase() === 'true'
     assertNotionExportImportAllowed({ replaceEditorial })
+    const runtime = resolveNotionImportRuntime()
+
+    if (runtime.profile === 'constrained') {
+      if (replaceEditorial) {
+        throw validationError('El reemplazo destructivo no está disponible mientras el perfil de importación constrained esté activo.')
+      }
+      const requestedPhase = String(request.headers['x-resummo-import-phase'] || 'assets').trim().toLowerCase()
+      const result = await importNotionExportConstrainedPhase(consumeZipBody(request), {
+        archiveName: notionArchiveName(request),
+        client: prisma,
+        phase: requestedPhase,
+      })
+      return response.status(result.status === 'COMPLETE' ? 201 : 202).json({
+        ...result,
+        message: result.status === 'COMPLETE'
+          ? 'Export de Notion importado como borrador. Ningún Topic ni Article fue publicado automáticamente.'
+          : 'Imágenes procesadas. Resummo continuará con el contenido en la siguiente fase.',
+      })
+    }
+
     const result = await importNotionExportBuffer(consumeZipBody(request), {
       archiveName: notionArchiveName(request),
       client: prisma,
       replaceEditorial,
     })
-    response.status(201).json({
+    return response.status(201).json({
       ...result,
       message: 'Export de Notion importado como borrador. Ningún Topic ni Article fue publicado automáticamente.',
     })
   } catch (error) {
+    if (error?.code === 'IMPORT_MEMORY_BUDGET') {
+      return response.status(503).json({
+        message: error.message,
+        code: error.code,
+        retryable: true,
+      })
+    }
     next(error)
   }
 })
